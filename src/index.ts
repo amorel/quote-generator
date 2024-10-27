@@ -1,9 +1,16 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
+import { QuoteService } from './services/quote.service';
+import { QuoteFilters } from './types/quote';
 
-const app = Fastify({ logger: true });
+const app = Fastify({
+  logger: true
+});
 
-// Activer CORS
+// Service des citations
+const quoteService = new QuoteService();
+
+// Enregistrer CORS
 app.register(cors);
 
 // Route de test
@@ -11,14 +18,12 @@ app.get('/health', async () => {
   return { status: 'ok' };
 });
 
-// Route basique pour une citation aléatoire
-app.get('/quotes/random', async () => {
-  return {
-    _id: "1",
-    content: "In the depth of winter, I finally learned that there was within me an invincible summer.",
-    author: "Albert Camus",
-    tags: ["Famous Quotes", "Inspirational"]
-  };
+// Route pour les citations aléatoires
+app.get<{
+  Querystring: QuoteFilters
+}>('/quotes/random', async (request) => {
+  const filters = request.query;
+  return quoteService.getRandomQuotes(filters);
 });
 
 const start = async () => {
