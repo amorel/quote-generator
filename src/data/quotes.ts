@@ -2,14 +2,14 @@ export const quotes = [
   {
     _id: "1",
     content: "Test quote 1",
-    author: "Author 1",
-    tags: ["test", "motivation"]
+    author: "Author",
+    tags: ["test"],
   },
   {
     _id: "2",
-    content: "Test quote 2",
-    author: "Author 2",
-    tags: ["test", "inspiration"]
+    content: "This is a test quote with proper length",
+    author: "Author",
+    tags: ["test", "motivation"],
   },
   {
     _id: "WQbJJwEFP1l9",

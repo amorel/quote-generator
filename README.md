@@ -165,12 +165,19 @@ A request for a non-existing quote ID might return:
 
 ## Testing
 
-Testing is set up with **Jest** and **Supertest** for both unit and integration tests.
+The project uses **Jest** and **Supertest** for comprehensive testing, including unit and integration tests. These tests ensure that all components, including services, error handling, and repositories, function as expected.
 
 ### Test Structure
 
-- **Unit Tests**: Located in `tests/unit/`, these tests validate individual service logic (e.g., `quote.service.test.ts`).
-- **Integration Tests**: Located in `tests/integration/`, these tests validate API endpoints from a user's perspective (e.g., `api.test.ts`).
+- **Unit Tests**: Located in `tests/unit/`, these tests validate individual components such as services, repositories, error handling, and the dependency injection container.
+
+  - **`app.test.ts`**: Verifies the app's configuration, including plugin and route setup.
+  - **`container.test.ts`**: Tests the dependency injection container to ensure services are instantiated and retrieved properly.
+  - **`errors/index.test.ts`**: Validates custom error classes to ensure correct message and status code properties.
+  - **`errorHandler.test.ts`**: Tests the global error handler for correct error formatting and status codes.
+  - **`quote.repository.test.ts`**: Ensures that the `QuoteRepository` correctly filters and retrieves quotes based on criteria such as length, tags, and author.
+- **Service Tests**: Located in `tests/unit/services/`, these tests validate business logic in `QuoteService`, including quote filtering and error handling.
+- **Integration Tests**: Located in `tests/integration/`, these tests validate the API endpoints, ensuring proper responses for various request scenarios.
 
 ### Running Tests
 
