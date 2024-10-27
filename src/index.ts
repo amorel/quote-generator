@@ -4,18 +4,20 @@ import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import { QuoteService } from "./services/quote.service";
 import { QuoteFilters } from "./types/quote";
+import { Container } from './container';
 
 const app = Fastify({
   logger: true,
 });
 
-// Service des citations
-const quoteService = new QuoteService();
-
 const buildApp = async () => {
   const app = Fastify({
     logger: true,
   });
+
+  const container = Container.getInstance();
+  const quoteService = container.get<QuoteService>('quoteService');
+
   // Configuration Swagger - IMPORTANT: enregistrer avant les routes
   await app.register(swagger, {
     swagger: {
@@ -127,7 +129,7 @@ const buildApp = async () => {
     },
     async (request) => {
       const filters = request.query as QuoteFilters;
-      return quoteService.getRandomQuotes(filters);
+      return await quoteService.getRandomQuotes(filters);
     }
   );
   return app;

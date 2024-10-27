@@ -1,4 +1,3 @@
-
 # Quotes API
 
 ### Running the Server
@@ -15,14 +14,28 @@ The server will be running at `http://localhost:3000`.
 
 ```
 src
+├── container.ts                # Dependency injection container
 ├── data
-│   └── quotes.ts             # JSON data containing quotes
+│   └── quotes.ts               # JSON data containing quotes
+├── repositories
+│   └── quote.repository.ts     # Repository for data access
 ├── services
-│   └── quote.service.ts      # Service handling quote retrieval and filtering
+│   └── quote.service.ts        # Service layer handling business logic
 ├── types
-│   └── quote.ts              # Type definitions for Quote and QuoteFilters
-└── index.ts                  # Main entry point for server setup, routes, and Swagger configuration
+│   └── quote.ts                # Type definitions for Quote and QuoteFilters
+└── index.ts                    # Main entry point for server setup, routes, and Swagger configuration
 ```
+
+## Architecture Overview
+
+The project follows a layered architecture with a clear separation of responsibilities:
+
+1. **Repository Layer**: Manages data access and filtering (`quote.repository.ts`)
+2. **Service Layer**: Contains business logic and interacts with the repository (`quote.service.ts`)
+3. **Dependency Injection**: `container.ts` initializes and manages service instances for better modularity and testability
+4. **API Routes**: Defined in `index.ts` using the services, providing endpoints for quote retrieval
+
+This design improves scalability, testability, and flexibility. For example, the repository can be easily replaced to use a database instead of JSON files without changing the service or routes.
 
 ## Endpoints
 
@@ -35,6 +48,13 @@ src
 
 - **GET** `/quotes/random`
   - Retrieves random quotes with optional filters.
+
+### Quote by ID
+
+- **GET** `/quotes/:id`
+  - Retrieves a specific quote by its ID.
+  - **Parameters**:
+    - `id` (string): The ID of the quote to retrieve.
 
 ## Quote Filters
 
@@ -80,6 +100,10 @@ Swagger is configured using Fastify plugins (`@fastify/swagger` and `@fastify/sw
 - Get quotes tagged as "Success":
   ```
   GET http://localhost:3000/quotes/random?tags=Success
+  ```
+- Get quotes by ID:
+  ```
+  GET http://localhost:3000/quotes/:id
   ```
 
 ## Future Improvements

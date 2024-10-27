@@ -1,49 +1,33 @@
 import { Quote, QuoteFilters } from '../types/quote';
-import { quotes } from '../data/quotes';
+import { IQuoteRepository } from '../repositories/quote.repository';
 
 export class QuoteService {
-  getRandomQuotes(filters: QuoteFilters): Quote[] {
-    let filteredQuotes = [...quotes];
+  constructor(private repository: IQuoteRepository) {}
 
-    // Appliquer les filtres
-    if (filters.maxLength) {
-      filteredQuotes = filteredQuotes.filter(
-        quote => quote.content.length <= filters.maxLength!
-      );
+  async getRandomQuotes(filters: QuoteFilters): Promise<Quote[]> {
+    try {
+      const quotes = await this.repository.findRandom(filters);
+      
+      // Mélanger les citations
+      const shuffled = this.shuffle(quotes);
+      
+      // Appliquer la limite
+      const limit = filters.limit || 1;
+      return shuffled.slice(0, limit);
+    } catch (error) {
+      throw new Error('Erreur lors de la récupération des citations');
     }
-
-    if (filters.minLength) {
-      filteredQuotes = filteredQuotes.filter(
-        quote => quote.content.length >= filters.minLength!
-      );
-    }
-
-    if (filters.author) {
-      filteredQuotes = filteredQuotes.filter(
-        quote => quote.author.toLowerCase() === filters.author!.toLowerCase()
-      );
-    }
-
-    if (filters.tags) {
-      const requestedTags = filters.tags.split(',');
-      filteredQuotes = filteredQuotes.filter(quote =>
-        requestedTags.every(tag => 
-          quote.tags.some(quoteTag => 
-            quoteTag.toLowerCase() === tag.toLowerCase()
-          )
-        )
-      );
-    }
-
-    // Mélanger les citations
-    filteredQuotes = this.shuffle(filteredQuotes);
-
-    // Limiter le nombre de résultats
-    const limit = filters.limit || 1;
-    return filteredQuotes.slice(0, limit);
   }
 
-  private shuffle(array: Quote[]): Quote[] {
+  async getQuoteById(id: string): Promise<Quote> {
+    const quote = await this.repository.findById(id);
+    if (!quote) {
+      throw new Error('Citation non trouvée');
+    }
+    return quote;
+  }
+
+  private shuffle<T>(array: T[]): T[] {
     const shuffled = [...array];
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
