@@ -1,37 +1,5 @@
-Bien sûr ! Voici un exemple de fichier `README.md` pour documenter votre projet.
 
-```markdown
 # Quotes API
-
-This project provides a simple API to retrieve random quotes with filtering options. It includes a data management setup, a quote service with customizable filters, and an Express server to serve the API endpoints.
-
-## Table of Contents
-
-- [Getting Started](#getting-started)
-- [Folder Structure](#folder-structure)
-- [Endpoints](#endpoints)
-- [Quote Filters](#quote-filters)
-- [Examples](#examples)
-- [Future Improvements](#future-improvements)
-
-## Getting Started
-
-### Prerequisites
-
-Ensure you have the following installed:
-
-- Node.js (>= 14.x)
-- npm
-
-### Installation
-
-Clone the repository and install dependencies:
-
-```bash
-git clone <repository-url>
-cd <repository-folder>
-npm install
-```
 
 ### Running the Server
 
@@ -53,7 +21,7 @@ src
 │   └── quote.service.ts      # Service handling quote retrieval and filtering
 ├── types
 │   └── quote.ts              # Type definitions for Quote and QuoteFilters
-└── index.ts                  # Main entry point for server setup and routes
+└── index.ts                  # Main entry point for server setup, routes, and Swagger configuration
 ```
 
 ## Endpoints
@@ -80,6 +48,21 @@ The `/quotes/random` endpoint supports the following filters via query parameter
 | `tags`      | string | Comma-separated tags (e.g.,`Success,Inspirational`) |
 | `author`    | string | Author name (exact match, case-insensitive)           |
 
+## Swagger Documentation
+
+This project uses Swagger for automatically generated API documentation.
+
+- After starting the server, you can access the Swagger UI at: `http://localhost:3000/documentation`
+- The Swagger UI provides an interactive interface to test API endpoints, view request and response schemas, and explore all available parameters.
+
+### Swagger Setup
+
+Swagger is configured using Fastify plugins (`@fastify/swagger` and `@fastify/swagger-ui`). The documentation includes the following features:
+
+- **Tags and Descriptions**: Organized by tags for clear navigation
+- **Query Parameter Documentation**: Detailed parameter descriptions for each endpoint
+- **Schemas**: Schemas for request validation and response types (e.g., `Quote`, `QuotesResponse`)
+
 ## Examples
 
 - Get a random quote:
@@ -105,6 +88,10 @@ The `/quotes/random` endpoint supports the following filters via query parameter
 - Extend data with additional quotes and authors
 - Implement pagination for large data sets
 - Consider adding authentication for secured access
+
+## License
+
+This project is licensed under the MIT License. See `LICENSE` for more details.
 
 ## Acknowledgments
 
