@@ -1,5 +1,17 @@
 export const quotes = [
   {
+    _id: "1",
+    content: "Test quote 1",
+    author: "Author 1",
+    tags: ["test", "motivation"]
+  },
+  {
+    _id: "2",
+    content: "Test quote 2",
+    author: "Author 2",
+    tags: ["test", "inspiration"]
+  },
+  {
     _id: "WQbJJwEFP1l9",
     content:
       "In the depth of winter, I finally learned that there was within me an invincible summer.",

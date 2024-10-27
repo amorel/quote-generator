@@ -1,6 +1,6 @@
 # Quotes API
 
-This project provides an API to retrieve random quotes with filtering options. It includes a layered architecture for data management, business logic, and dependency injection, along with a custom error handling setup.
+This project provides an API to retrieve random quotes with filtering options. It includes a layered architecture for data management, business logic, and dependency injection, along with custom error handling and a comprehensive test suite.
 
 ## Table of Contents
 
@@ -11,6 +11,7 @@ This project provides an API to retrieve random quotes with filtering options. I
 - [Quote Filters](#quote-filters)
 - [Swagger Documentation](#swagger-documentation)
 - [Error Handling](#error-handling)
+- [Testing](#testing)
 - [Examples](#examples)
 - [Future Improvements](#future-improvements)
 - [License](#license)
@@ -47,20 +48,28 @@ The server will be running at `http://localhost:3000`.
 
 ```
 src
-├── container.ts                # Dependency injection container
+├── app.ts                     # Application setup for testing and server setup
+├── container.ts               # Dependency injection container
 ├── data
-│   └── quotes.ts               # JSON data containing quotes
+│   └── quotes.ts              # JSON data containing quotes
 ├── errors
-│   └── index.ts                # Custom error classes
+│   └── index.ts               # Custom error classes
 ├── plugins
-│   └── errorHandler.ts         # Global error handler plugin
+│   └── errorHandler.ts        # Global error handler plugin
 ├── repositories
-│   └── quote.repository.ts     # Repository for data access
+│   └── quote.repository.ts    # Repository for data access
 ├── services
-│   └── quote.service.ts        # Service layer handling business logic
+│   └── quote.service.ts       # Service layer handling business logic
 ├── types
-│   └── quote.ts                # Type definitions for Quote and QuoteFilters
-└── index.ts                    # Main entry point for server setup, routes, and Swagger configuration
+│   └── quote.ts               # Type definitions for Quote and QuoteFilters
+└── index.ts                   # Main entry point for server setup and Swagger configuration
+
+tests
+├── integration
+│   └── api.test.ts            # Integration tests for API endpoints
+└── unit
+    └── services
+        └── quote.service.test.ts # Unit tests for QuoteService
 ```
 
 ## Architecture Overview
@@ -71,9 +80,8 @@ The project follows a layered architecture with a clear separation of responsibi
 2. **Service Layer**: Contains business logic and interacts with the repository (`quote.service.ts`)
 3. **Dependency Injection**: `container.ts` initializes and manages service instances for better modularity and testability
 4. **Error Handling**: Centralized in `errorHandler.ts` with custom error classes in `errors/index.ts`
-5. **API Routes**: Defined in `index.ts` using the services, providing endpoints for quote retrieval
-
-This design improves scalability, testability, and flexibility. For example, the repository can be easily replaced to use a database instead of JSON files without changing the service or routes.
+5. **API Routes**: Defined in `app.ts` and loaded by `index.ts` for modularity
+6. **Testing Setup**: Comprehensive unit and integration tests for validation and functionality
 
 ## Endpoints
 
@@ -154,6 +162,37 @@ A request for a non-existing quote ID might return:
   "code": 404
 }
 ```
+
+## Testing
+
+Testing is set up with **Jest** and **Supertest** for both unit and integration tests.
+
+### Test Structure
+
+- **Unit Tests**: Located in `tests/unit/`, these tests validate individual service logic (e.g., `quote.service.test.ts`).
+- **Integration Tests**: Located in `tests/integration/`, these tests validate API endpoints from a user's perspective (e.g., `api.test.ts`).
+
+### Running Tests
+
+To run all tests:
+
+```bash
+npm test
+```
+
+To run tests in watch mode:
+
+```bash
+npm run test:watch
+```
+
+To check test coverage:
+
+```bash
+npm run test:coverage
+```
+
+The test suite verifies that all services and endpoints function as expected, ensuring error handling and filtering logic work correctly.
 
 ## Examples
 
