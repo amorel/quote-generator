@@ -1,6 +1,6 @@
 # Quotes API
 
-This project provides an API to retrieve random quotes with filtering options. It includes a layered architecture for data management, business logic, and dependency injection, along with custom error handling and a comprehensive test suite.
+This project provides an API to retrieve random quotes with filtering options, as well as additional endpoints to manage tags and authors. It includes a layered architecture for data management, business logic, and dependency injection, along with custom error handling and a comprehensive test suite.
 
 ## Table of Contents
 
@@ -51,17 +51,25 @@ src
 ├── app.ts                     # Application setup for testing and server setup
 ├── container.ts               # Dependency injection container
 ├── data
-│   └── quotes.ts              # JSON data containing quotes
+│   ├── quotes.ts              # JSON data containing quotes
+│   ├── authors.ts             # JSON data containing authors
+│   └── tags.ts                # JSON data containing tags
 ├── errors
 │   └── index.ts               # Custom error classes
 ├── plugins
 │   └── errorHandler.ts        # Global error handler plugin
 ├── repositories
-│   └── quote.repository.ts    # Repository for data access
+│   ├── quote.repository.ts    # Repository for quote data access
+│   ├── author.repository.ts   # Repository for author data access
+│   └── tag.repository.ts      # Repository for tag data access
 ├── services
-│   └── quote.service.ts       # Service layer handling business logic
+│   ├── quote.service.ts       # Service layer handling quote business logic
+│   ├── author.service.ts      # Service layer handling author business logic
+│   └── tag.service.ts         # Service layer handling tag business logic
 ├── types
-│   └── quote.ts               # Type definitions for Quote and QuoteFilters
+│   ├── quote.ts               # Type definitions for Quote and QuoteFilters
+│   ├── author.ts              # Type definitions for Author
+│   └── tag.ts                 # Type definitions for Tag
 └── index.ts                   # Main entry point for server setup and Swagger configuration
 
 tests
@@ -76,8 +84,8 @@ tests
 
 The project follows a layered architecture with a clear separation of responsibilities:
 
-1. **Repository Layer**: Manages data access and filtering (`quote.repository.ts`)
-2. **Service Layer**: Contains business logic and interacts with the repository (`quote.service.ts`)
+1. **Repository Layer**: Manages data access and filtering for quotes, authors, and tags
+2. **Service Layer**: Contains business logic and interacts with the repositories
 3. **Dependency Injection**: `container.ts` initializes and manages service instances for better modularity and testability
 4. **Error Handling**: Centralized in `errorHandler.ts` with custom error classes in `errors/index.ts`
 5. **API Routes**: Defined in `app.ts` and loaded by `index.ts` for modularity
@@ -101,6 +109,30 @@ The project follows a layered architecture with a clear separation of responsibi
   - Retrieves a specific quote by its ID.
   - **Parameters**:
     - `id` (string): The ID of the quote to retrieve.
+
+### All Tags
+
+- **GET** `/tags`
+  - Retrieves all available tags.
+
+### Tag by ID
+
+- **GET** `/tags/:id`
+  - Retrieves a specific tag by its ID.
+  - **Parameters**:
+    - `id` (string): The ID of the tag to retrieve.
+
+### All Authors
+
+- **GET** `/authors`
+  - Retrieves all available authors.
+
+### Author by ID
+
+- **GET** `/authors/:id`
+  - Retrieves a specific author by their ID.
+  - **Parameters**:
+    - `id` (string): The ID of the author to retrieve.
 
 ## Quote Filters
 
@@ -127,7 +159,7 @@ Swagger is configured using Fastify plugins (`@fastify/swagger` and `@fastify/sw
 
 - **Tags and Descriptions**: Organized by tags for clear navigation
 - **Query Parameter Documentation**: Detailed parameter descriptions for each endpoint
-- **Schemas**: Schemas for request validation and response types (e.g., `Quote`, `QuotesResponse`)
+- **Schemas**: Schemas for request validation and response types (e.g., `Quote`, `Author`, `Tag`)
 
 ## Error Handling
 
@@ -136,7 +168,7 @@ The API uses structured error handling to provide clear, consistent error respon
 ### Error Types
 
 - **ValidationError** (400): Occurs when the input data is invalid (e.g., invalid filter values).
-- **NotFoundError** (404): Returned if a requested resource, such as a quote by ID, is not found.
+- **NotFoundError** (404): Returned if a requested resource, such as a quote or author by ID, is not found.
 - **ServiceError** (500): Indicates an internal server error.
 
 ### Error Response Format
@@ -153,12 +185,12 @@ Error responses follow this structure:
 
 ### Example
 
-A request for a non-existing quote ID might return:
+A request for a non-existing tag ID might return:
 
 ```json
 {
   "status": "error",
-  "message": "Quote not found",
+  "message": "Tag not found",
   "code": 404
 }
 ```
@@ -170,13 +202,6 @@ The project uses **Jest** and **Supertest** for comprehensive testing, including
 ### Test Structure
 
 - **Unit Tests**: Located in `tests/unit/`, these tests validate individual components such as services, repositories, error handling, and the dependency injection container.
-
-  - **`app.test.ts`**: Verifies the app's configuration, including plugin and route setup.
-  - **`container.test.ts`**: Tests the dependency injection container to ensure services are instantiated and retrieved properly.
-  - **`errors/index.test.ts`**: Validates custom error classes to ensure correct message and status code properties.
-  - **`errorHandler.test.ts`**: Tests the global error handler for correct error formatting and status codes.
-  - **`quote.repository.test.ts`**: Ensures that the `QuoteRepository` correctly filters and retrieves quotes based on criteria such as length, tags, and author.
-- **Service Tests**: Located in `tests/unit/services/`, these tests validate business logic in `QuoteService`, including quote filtering and error handling.
 - **Integration Tests**: Located in `tests/integration/`, these tests validate the API endpoints, ensuring proper responses for various request scenarios.
 
 ### Running Tests
@@ -211,6 +236,10 @@ The test suite verifies that all services and endpoints function as expected, en
   ```
   GET http://localhost:3000/quotes/random?limit=2
   ```
+- Get a quote by ID:
+  ```
+  GET http://localhost:3000/quotes/:id
+  ```
 - Get quotes with a maximum length of 100 characters:
   ```
   GET http://localhost:3000/quotes/random?maxLength=100
@@ -219,16 +248,25 @@ The test suite verifies that all services and endpoints function as expected, en
   ```
   GET http://localhost:3000/quotes/random?tags=Success
   ```
-- Get a quote by ID:
+- Get all tags:
   ```
-  GET http://localhost:3000/quotes/:id
+  GET http://localhost:3000/tags
+  ```
+- Get a tag by ID:
+  ```
+  GET http://localhost:3000/tags/:id
+  ```
+- Get all authors:
+  ```
+  GET http://localhost:3000/authors
+  ```
+- Get an author by ID:
+  ```
+  GET http://localhost:3000/authors/:id
   ```
 
 ## Future Improvements
 
-- Add more extensive error handling and validation for query parameters
-- Extend data with additional quotes and authors
-- Implement pagination for large data sets
 - Consider adding authentication for secured access
 
 ## License
@@ -237,4 +275,4 @@ This project is licensed under the MIT License. See `LICENSE` for more details.
 
 ## Acknowledgments
 
-This project uses quotes data from a curated list for demonstration purposes.
+This project uses quotes, authors, and tags data from a curated list for demonstration purposes.

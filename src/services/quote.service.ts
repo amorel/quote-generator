@@ -1,38 +1,41 @@
-import { Quote, QuoteFilters } from '../types/quote';
-import { IQuoteRepository } from '../repositories/quote.repository';
-import { NotFoundError, ValidationError, ServiceError, AppError } from '../errors';
+import { Quote, QuoteFilters } from "../types/quote";
+import { IQuoteRepository } from "../repositories/quote.repository";
+import {
+  NotFoundError,
+  ValidationError,
+  ServiceError,
+  AppError,
+} from "../errors";
 
 export class QuoteService {
   constructor(private repository: IQuoteRepository) {}
 
   async getRandomQuotes(filters: QuoteFilters): Promise<Quote[]> {
+    console.log("Fetching quotes with filters:", filters);
     try {
-      // Validation des filtres
       this.validateFilters(filters);
-
       const quotes = await this.repository.findRandom(filters);
-      
+      console.log(`Found ${quotes.length} quotes matching filters`);
+
       if (quotes.length === 0) {
-        throw new NotFoundError('Aucune citation ne correspond aux critères');
+        console.log("No quotes found, throwing NotFoundError");
+        throw new NotFoundError("Aucune citation ne correspond aux critères");
       }
 
-      // Mélanger les citations
       const shuffled = this.shuffle(quotes);
-      
-      // Appliquer la limite
       const limit = filters.limit || 1;
-      return shuffled.slice(0, limit);
+      const result = shuffled.slice(0, limit);
+      console.log(`Returning ${result.length} quotes`);
+      return result;
     } catch (error) {
-      if (error instanceof AppError) {
-        throw error;
-      }
-      throw new ServiceError('Erreur lors de la récupération des citations');
+      console.error("Error in getRandomQuotes:", error);
+      throw error;
     }
   }
 
   async getQuoteById(id: string): Promise<Quote> {
     if (!id) {
-      throw new ValidationError('ID manquant');
+      throw new ValidationError("ID manquant");
     }
 
     const quote = await this.repository.findById(id);
@@ -44,21 +47,24 @@ export class QuoteService {
 
   private validateFilters(filters: QuoteFilters): void {
     if (filters.limit && (filters.limit < 1 || filters.limit > 50)) {
-      throw new ValidationError('La limite doit être comprise entre 1 et 50');
+      throw new ValidationError("La limite doit être comprise entre 1 et 50");
     }
 
     if (filters.minLength && filters.minLength < 0) {
-      throw new ValidationError('La longueur minimale doit être positive');
+      throw new ValidationError("La longueur minimale doit être positive");
     }
 
     if (filters.maxLength && filters.maxLength < 0) {
-      throw new ValidationError('La longueur maximale doit être positive');
+      throw new ValidationError("La longueur maximale doit être positive");
     }
 
-    if (filters.minLength && filters.maxLength && 
-        filters.minLength > filters.maxLength) {
+    if (
+      filters.minLength &&
+      filters.maxLength &&
+      filters.minLength > filters.maxLength
+    ) {
       throw new ValidationError(
-        'La longueur minimale ne peut pas être supérieure à la longueur maximale'
+        "La longueur minimale ne peut pas être supérieure à la longueur maximale"
       );
     }
   }

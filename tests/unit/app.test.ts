@@ -137,28 +137,57 @@ describe("App", () => {
       (QuoteService.prototype.getRandomQuotes as jest.Mock).mockRejectedValue(
         new Error("Server error")
       );
-      
+
       const response = await app.inject({
         method: "GET",
-        url: "/quotes/random"
+        url: "/quotes/random",
       });
-      
+
       expect(response.statusCode).toBe(500);
       expect(JSON.parse(response.payload)).toEqual({
-        status: 'error',
-        message: 'Une erreur interne est survenue'
+        status: "error",
+        message: "Une erreur interne est survenue",
       });
     });
-  
+
     it("should handle complex query parameters", async () => {
       const response = await app.inject({
         method: "GET",
-        url: "/quotes/random?limit=2&maxLength=100&minLength=10&tags=test,motivation&author=Author"
+        url: "/quotes/random?limit=2&maxLength=100&minLength=10&tags=test,motivation&author=Author",
       });
-      
+
       expect(response.statusCode).toBe(200);
       const quotes = JSON.parse(response.payload);
       expect(Array.isArray(quotes)).toBe(true);
+    });
+  });
+
+  describe("Tags API", () => {
+    it("should return all tags", async () => {
+      const response = await app.inject({
+        method: "GET",
+        url: "/tags",
+      });
+
+      expect(response.statusCode).toBe(200);
+      const tags = JSON.parse(response.payload);
+      expect(Array.isArray(tags)).toBe(true);
+      expect(tags[0]).toHaveProperty("_id");
+      expect(tags[0]).toHaveProperty("name");
+    });
+  });
+
+  describe("Authors API", () => {
+    it("should return author details", async () => {
+      const response = await app.inject({
+        method: "GET",
+        url: "/authors/7E6EppQX9_ha",
+      });
+
+      expect(response.statusCode).toBe(200);
+      const author = JSON.parse(response.payload);
+      expect(author.name).toBe("Alice Walker");
+      expect(author).toHaveProperty("bio");
     });
   });
 });
