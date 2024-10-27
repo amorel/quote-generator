@@ -4,7 +4,8 @@ import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import { QuoteService } from "./services/quote.service";
 import { QuoteFilters } from "./types/quote";
-import { Container } from './container';
+import { Container } from "./container";
+import { errorHandler } from "./plugins/errorHandler";
 
 const app = Fastify({
   logger: true,
@@ -15,8 +16,10 @@ const buildApp = async () => {
     logger: true,
   });
 
+  await app.register(errorHandler);
+
   const container = Container.getInstance();
-  const quoteService = container.get<QuoteService>('quoteService');
+  const quoteService = container.get<QuoteService>("quoteService");
 
   // Configuration Swagger - IMPORTANT: enregistrer avant les routes
   await app.register(swagger, {
@@ -127,11 +130,35 @@ const buildApp = async () => {
         },
       },
     },
-    async (request) => {
-      const filters = request.query as QuoteFilters;
-      return await quoteService.getRandomQuotes(filters);
+    async (request, reply) => {
+      try {
+        const filters = request.query as QuoteFilters;
+        return await quoteService.getRandomQuotes(filters);
+      } catch (error) {
+        throw error; // L'erreur sera gérée par le gestionnaire global
+      }
     }
   );
+
+  app.get(
+    "/quotes/:id",
+    {
+      schema: {
+        params: {
+          type: "object",
+          required: ["id"],
+          properties: {
+            id: { type: "string" },
+          },
+        },
+      },
+    },
+    async (request, reply) => {
+      const { id } = request.params as { id: string };
+      return await quoteService.getQuoteById(id);
+    }
+  );
+
   return app;
 };
 
