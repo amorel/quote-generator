@@ -4,18 +4,36 @@ This project provides an API to retrieve random quotes with filtering options, a
 
 ## Table of Contents
 
-- [Getting Started](#getting-started)
-- [Folder Structure](#folder-structure)
-- [Architecture Overview](#architecture-overview)
-- [Endpoints](#endpoints)
-- [Quote Filters](#quote-filters)
-- [Swagger Documentation](#swagger-documentation)
-- [Error Handling](#error-handling)
-- [Testing](#testing)
-- [Examples](#examples)
-- [Future Improvements](#future-improvements)
-- [License](#license)
-- [Acknowledgments](#acknowledgments)
+- [Quotes API](#quotes-api)
+  - [Table of Contents](#table-of-contents)
+  - [Getting Started](#getting-started)
+    - [Prerequisites](#prerequisites)
+    - [Installation](#installation)
+    - [Running the Server](#running-the-server)
+  - [Folder Structure](#folder-structure)
+  - [Architecture Overview](#architecture-overview)
+  - [Endpoints](#endpoints)
+    - [Health Check](#health-check)
+    - [Random Quotes](#random-quotes)
+    - [Quote by ID](#quote-by-id)
+    - [All Tags](#all-tags)
+    - [Tag by ID](#tag-by-id)
+    - [All Authors](#all-authors)
+    - [Author by ID](#author-by-id)
+  - [Quote Filters](#quote-filters)
+  - [Swagger Documentation](#swagger-documentation)
+    - [Swagger Setup](#swagger-setup)
+  - [Error Handling](#error-handling)
+    - [Error Types](#error-types)
+    - [Error Response Format](#error-response-format)
+    - [Example](#example)
+  - [Testing](#testing)
+    - [Test Structure](#test-structure)
+    - [Running Tests](#running-tests)
+  - [Examples](#examples)
+  - [Future Improvements](#future-improvements)
+  - [License](#license)
+  - [Acknowledgments](#acknowledgments)
 
 ## Getting Started
 
@@ -48,36 +66,52 @@ The server will be running at `http://localhost:3000`.
 
 ```
 src
-├── app.ts                     # Application setup for testing and server setup
-├── container.ts               # Dependency injection container
-├── data
-│   ├── quotes.ts              # JSON data containing quotes
-│   ├── authors.ts             # JSON data containing authors
-│   └── tags.ts                # JSON data containing tags
-├── errors
-│   └── index.ts               # Custom error classes
-├── plugins
-│   └── errorHandler.ts        # Global error handler plugin
-├── repositories
-│   ├── quote.repository.ts    # Repository for quote data access
-│   ├── author.repository.ts   # Repository for author data access
-│   └── tag.repository.ts      # Repository for tag data access
-├── services
-│   ├── quote.service.ts       # Service layer handling quote business logic
-│   ├── author.service.ts      # Service layer handling author business logic
-│   └── tag.service.ts         # Service layer handling tag business logic
-├── types
-│   ├── quote.ts               # Type definitions for Quote and QuoteFilters
-│   ├── author.ts              # Type definitions for Author
-│   └── tag.ts                 # Type definitions for Tag
-└── index.ts                   # Main entry point for server setup and Swagger configuration
+├── app.ts                                # Application setup for testing and server setup
+├── container.ts                          # Dependency injection container
+├── data            
+│   ├── quotes.ts                         # JSON data containing quotes
+│   ├── authors.ts                        # JSON data containing authors
+│   └── tags.ts                           # JSON data containing tags
+├── errors            
+│   └── index.ts                          # Custom error classes
+├── plugins           
+│   └── errorHandler.ts                   # Global error handler plugin
+├── repositories            
+│   ├── quote.repository.ts               # Repository for quote data access
+│   ├── author.repository.ts              # Repository for author data access
+│   └── tag.repository.ts                 # Repository for tag data access
+├── services            
+│   ├── quote.service.ts                  # Service layer handling quote business logic
+│   ├── author.service.ts                 # Service layer handling author business logic
+│   └── tag.service.ts                    # Service layer handling tag business logic
+├── types           
+│   ├── quote.ts                          # Type definitions for Quote and QuoteFilters
+│   ├── author.ts                         # Type definitions for Author
+│   └── tag.ts                            # Type definitions for Tag
+└── index.ts                              # Main entry point for server setup and Swagger configuration
 
 tests
 ├── integration
-│   └── api.test.ts            # Integration tests for API endpoints
+│   └── api.test.ts                       # Integration tests for API endpoints
 └── unit
-    └── services
-        └── quote.service.test.ts # Unit tests for QuoteService
+    ├── app.test.ts                       # Unit tests for the application (setup and server start)
+    ├── container.test.ts                 # Unit tests for dependency injection container setup
+    ├── errors
+    │   └── index.test.ts                 # Unit tests for custom error classes
+    ├── plugins
+    │   └── errorHandler.test.ts          # Unit tests for error handler plugin
+    ├── repositories
+    │   ├── quote.repository.test.ts      # Unit tests for Quote repository
+    │   ├── author.repository.test.ts     # Unit tests for Author repository
+    │   └── tag.repository.test.ts        # Unit tests for Tag repository
+    ├── services
+    │   ├── quote.service.test.ts         # Unit tests for Quote service
+    │   ├── author.service.test.ts        # Unit tests for Author service
+    │   └── tag.service.test.ts           # Unit tests for Tag service
+    └── types
+        ├── quote.test.ts                 # Tests for Quote and QuoteFilters types
+        ├── author.test.ts                # Tests for Author type
+        └── tag.test.ts                   # Tests for Tag type
 ```
 
 ## Architecture Overview
@@ -225,6 +259,9 @@ npm run test:coverage
 ```
 
 The test suite verifies that all services and endpoints function as expected, ensuring error handling and filtering logic work correctly.
+
+![test:coverage](./images/unit-test-coverage.png "Unit tests coverage")
+
 
 ## Examples
 

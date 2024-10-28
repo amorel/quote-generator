@@ -11,25 +11,25 @@ export class QuoteService {
   constructor(private repository: IQuoteRepository) {}
 
   async getRandomQuotes(filters: QuoteFilters): Promise<Quote[]> {
-    console.log("Fetching quotes with filters:", filters);
     try {
       this.validateFilters(filters);
       const quotes = await this.repository.findRandom(filters);
-      console.log(`Found ${quotes.length} quotes matching filters`);
 
       if (quotes.length === 0) {
-        console.log("No quotes found, throwing NotFoundError");
         throw new NotFoundError("Aucune citation ne correspond aux critères");
       }
 
       const shuffled = this.shuffle(quotes);
       const limit = filters.limit || 1;
-      const result = shuffled.slice(0, limit);
-      console.log(`Returning ${result.length} quotes`);
-      return result;
+      return shuffled.slice(0, limit);
     } catch (error) {
-      console.error("Error in getRandomQuotes:", error);
-      throw error;
+      // Si c'est une de nos erreurs personnalisées, on la propage
+      if (error instanceof NotFoundError || error instanceof ValidationError) {
+        throw error;
+      }
+
+      // Pour toute autre erreur, on la transforme en ServiceError
+      throw new ServiceError("Erreur lors de la récupération des citations");
     }
   }
 
