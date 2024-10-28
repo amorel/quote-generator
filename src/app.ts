@@ -9,13 +9,19 @@ import swaggerUi from "@fastify/swagger-ui";
 import { Container } from "./container";
 import { QuoteService } from "./services/quote.service";
 import { NotFoundError } from "./errors";
-import { QuoteFilters } from "./types/quote";
 import { AuthorService } from "./services/author.service";
 import { TagService } from "./services/tag.service";
+import { QuoteFiltersVO  } from "./domain/value-objects/QuoteFilters";
 
 // Interfaces pour le typage des requêtes
 interface QuoteQueryRequest {
-  Querystring: QuoteFilters;
+  Querystring: {
+    limit?: number;
+    maxLength?: number;
+    minLength?: number;
+    tags?: string;
+    author?: string;
+  };
 }
 
 interface QuoteParamsRequest {
@@ -152,7 +158,10 @@ export async function build(): Promise<FastifyInstance> {
         },
       },
     },
-    async (request) => quoteService.getRandomQuotes(request.query)
+    async (request) => {
+      const filters = QuoteFiltersVO.create(request.query);
+      return quoteService.getRandomQuotes(filters);
+    }
   );
 
   app.get<QuoteParamsRequest>(
@@ -355,7 +364,9 @@ export async function build(): Promise<FastifyInstance> {
       const tagService = container.get<TagService>("tagService");
       const authorService = container.get<AuthorService>("authorService");
 
-      const randomQuote = await quoteService.getRandomQuotes({ limit: 1 });
+      // Utiliser QuoteFiltersVO.create au lieu d'un objet direct
+      const filters = QuoteFiltersVO.create({ limit: 1 });
+      const randomQuote = await quoteService.getRandomQuotes(filters);
       const allTags = await tagService.getAllTags();
       const allAuthors = await authorService.getAllAuthors();
 

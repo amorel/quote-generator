@@ -1,13 +1,13 @@
-import { Quote, QuoteFilters } from "../types/quote";
-import { quotes } from "../data/quotes";
+import { LegacyQuoteFilters, Quote, QuoteFilters } from "../types/quote";
+import { quotes } from "../infrastructure/persistence/in-memory/quotes";
 
 export interface IQuoteRepository {
   findRandom(filters: QuoteFilters): Promise<Quote[]>;
   findById(id: string): Promise<Quote | null>;
 }
 
-export class QuoteRepository implements IQuoteRepository {
-  async findRandom(filters: QuoteFilters): Promise<Quote[]> {
+export class LegacyQuoteRepository  implements IQuoteRepository {
+  async findRandom(filters: LegacyQuoteFilters): Promise<Quote[]> {
     let filteredQuotes = [...quotes];
 
     if (filters.maxLength) {

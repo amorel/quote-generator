@@ -1,41 +1,46 @@
-import { QuoteRepository } from '../../../src/repositories/quote.repository';
-import { quotes } from '../../../src/data/quotes';
+import { quotes } from '../../../src/infrastructure/persistence/in-memory/quotes';
+import { LegacyQuoteRepository } from '../../../src/repositories/LegacyQuoteRepository';
+import { Quote, LegacyQuoteFilters } from '../../../src/types/quote';
 
-describe('QuoteRepository', () => {
-  let repository: QuoteRepository;
+describe('LegacyQuoteRepository', () => {
+  let repository: LegacyQuoteRepository;
 
   beforeEach(() => {
-    repository = new QuoteRepository();
+    repository = new LegacyQuoteRepository();
   });
 
   describe('findRandom', () => {
     it('should filter by maxLength', async () => {
-      const result = await repository.findRandom({ maxLength: 20 });
-      result.forEach(quote => {
+      const filters: LegacyQuoteFilters = { maxLength: 20 };
+      const result = await repository.findRandom(filters);
+      result.forEach((quote: Quote) => {
         expect(quote.content.length).toBeLessThanOrEqual(20);
       });
     });
 
     it('should filter by minLength', async () => {
-      const result = await repository.findRandom({ minLength: 10 });
-      result.forEach(quote => {
+      const filters: LegacyQuoteFilters = { minLength: 10 };
+      const result = await repository.findRandom(filters);
+      result.forEach((quote: Quote) => {
         expect(quote.content.length).toBeGreaterThanOrEqual(10);
       });
     });
 
     it('should filter by author', async () => {
       const author = quotes[0].author;
-      const result = await repository.findRandom({ author });
-      result.forEach(quote => {
+      const filters: LegacyQuoteFilters = { author };
+      const result = await repository.findRandom(filters);
+      result.forEach((quote: Quote) => {
         expect(quote.author).toBe(author);
       });
     });
 
     it('should filter by tags', async () => {
-      const tags = quotes[0].tags[0];
-      const result = await repository.findRandom({ tags });
-      result.forEach(quote => {
-        expect(quote.tags).toContain(tags);
+      const tag = quotes[0].tags[0];
+      const filters: LegacyQuoteFilters = { tags: tag };
+      const result = await repository.findRandom(filters);
+      result.forEach((quote: Quote) => {
+        expect(quote.tags).toContain(tag);
       });
     });
   });

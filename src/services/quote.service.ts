@@ -1,5 +1,6 @@
-import { Quote, QuoteFilters } from "../types/quote";
-import { IQuoteRepository } from "../repositories/quote.repository";
+import { LegacyQuoteFilters, Quote, QuoteFilters } from "../types/quote";
+import { QuoteFiltersVO } from "../domain/value-objects/QuoteFilters";
+import { LegacyQuoteRepository } from "../repositories/LegacyQuoteRepository";
 import {
   NotFoundError,
   ValidationError,
@@ -8,20 +9,27 @@ import {
 } from "../errors";
 
 export class QuoteService {
-  constructor(private repository: IQuoteRepository) {}
+  constructor(private repository: LegacyQuoteRepository) {}
 
-  async getRandomQuotes(filters: QuoteFilters): Promise<Quote[]> {
+  async getRandomQuotes(filters: QuoteFiltersVO): Promise<Quote[]> {
     try {
-      this.validateFilters(filters);
-      const quotes = await this.repository.findRandom(filters);
+      // Convertir le nouveau QuoteFilters en ancien format pour le legacy repository
+      const legacyFilters: LegacyQuoteFilters = {
+        limit: filters.limit,
+        maxLength: filters.maxLength,
+        minLength: filters.minLength,
+        tags: filters.tags ? filters.tags.join(',') : undefined,
+        author: filters.author
+    };
+
+      const quotes = await this.repository.findRandom(legacyFilters);
 
       if (quotes.length === 0) {
         throw new NotFoundError("Aucune citation ne correspond aux critères");
       }
 
       const shuffled = this.shuffle(quotes);
-      const limit = filters.limit || 1;
-      return shuffled.slice(0, limit);
+      return shuffled.slice(0, filters.limit);
     } catch (error) {
       // Si c'est une de nos erreurs personnalisées, on la propage
       if (error instanceof NotFoundError || error instanceof ValidationError) {

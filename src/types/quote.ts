@@ -12,3 +12,11 @@ export interface QuoteFilters {
   tags?: string;
   author?: string;
 }
+
+export interface LegacyQuoteFilters {
+  limit?: number;
+  maxLength?: number;
+  minLength?: number;
+  tags?: string;
+  author?: string;
+}

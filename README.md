@@ -1,6 +1,6 @@
 # Quotes API
 
-This project provides an API to retrieve random quotes with filtering options, as well as additional endpoints to manage tags and authors. It includes a layered architecture for data management, business logic, and dependency injection, along with custom error handling and a comprehensive test suite.
+This project provides an API to retrieve random quotes with filtering options, along with additional endpoints to manage tags and authors. It is structured with a Clean Architecture approach to separate domain, application, and infrastructure layers. This design improves modularity, testability, and flexibility in managing dependencies and business logic.
 
 ## Table of Contents
 
@@ -66,64 +66,44 @@ The server will be running at `http://localhost:3000`.
 
 ```
 src
-├── app.ts                                # Application setup for testing and server setup
-├── container.ts                          # Dependency injection container
-├── data            
-│   ├── quotes.ts                         # JSON data containing quotes
-│   ├── authors.ts                        # JSON data containing authors
-│   └── tags.ts                           # JSON data containing tags
-├── errors            
-│   └── index.ts                          # Custom error classes
-├── plugins           
-│   └── errorHandler.ts                   # Global error handler plugin
-├── repositories            
-│   ├── quote.repository.ts               # Repository for quote data access
-│   ├── author.repository.ts              # Repository for author data access
-│   └── tag.repository.ts                 # Repository for tag data access
-├── services            
-│   ├── quote.service.ts                  # Service layer handling quote business logic
-│   ├── author.service.ts                 # Service layer handling author business logic
-│   └── tag.service.ts                    # Service layer handling tag business logic
-├── types           
-│   ├── quote.ts                          # Type definitions for Quote and QuoteFilters
-│   ├── author.ts                         # Type definitions for Author
-│   └── tag.ts                            # Type definitions for Tag
-└── index.ts                              # Main entry point for server setup and Swagger configuration
+├── application/                       # Use cases and DTOs
+│   ├── dtos/                          # Data transfer objects (DTOs) for quotes, authors, and tags
+│   └── use-cases/                     # Application use cases organized by entity
+├── container.ts                       # Dependency injection container
+├── domain/                            # Core business logic and domain models
+│   ├── entities/                      # Entities representing core business models
+│   ├── repositories/                  # Interfaces for data access (repositories)
+│   └── value-objects/                 # Value objects encapsulating business rules
+├── infrastructure/                    # Implementation of repositories and persistence
+│   ├── repositories/                  # Concrete repository implementations
+│   └── persistence/                   # In-memory storage for quotes, authors, and tags
+├── interface/                         # API interface layer
+│   ├── api/                           # Routes, controllers, and presenters
+│   └── errors/                        # Error handling for API responses
+├── plugins                            # Fastify plugins (e.g., error handlers)
+└── index.ts                           # Main entry point for server setup and Swagger configuration
 
 tests
 ├── integration
-│   └── api.test.ts                       # Integration tests for API endpoints
+│   └── api.test.ts                    # Integration tests for API endpoints
 └── unit
-    ├── app.test.ts                       # Unit tests for the application (setup and server start)
-    ├── container.test.ts                 # Unit tests for dependency injection container setup
-    ├── errors
-    │   └── index.test.ts                 # Unit tests for custom error classes
-    ├── plugins
-    │   └── errorHandler.test.ts          # Unit tests for error handler plugin
-    ├── repositories
-    │   ├── quote.repository.test.ts      # Unit tests for Quote repository
-    │   ├── author.repository.test.ts     # Unit tests for Author repository
-    │   └── tag.repository.test.ts        # Unit tests for Tag repository
-    ├── services
-    │   ├── quote.service.test.ts         # Unit tests for Quote service
-    │   ├── author.service.test.ts        # Unit tests for Author service
-    │   └── tag.service.test.ts           # Unit tests for Tag service
-    └── types
-        ├── quote.test.ts                 # Tests for Quote and QuoteFilters types
-        ├── author.test.ts                # Tests for Author type
-        └── tag.test.ts                   # Tests for Tag type
+    ├── application                    # Tests for application layer (use cases and DTOs)
+    ├── domain                         # Tests for entities, value objects, and domain repositories
+    ├── infrastructure                 # Tests for repository implementations
+    ├── interface                      # Tests for controllers and presenters
+    └── plugins                        # Tests for Fastify plugins (e.g., error handler)
 ```
 
 ## Architecture Overview
 
-The project follows a layered architecture with a clear separation of responsibilities:
+The project adheres to Clean Architecture principles, ensuring a clear separation of responsibilities:
 
-1. **Repository Layer**: Manages data access and filtering for quotes, authors, and tags
-2. **Service Layer**: Contains business logic and interacts with the repositories
-3. **Dependency Injection**: `container.ts` initializes and manages service instances for better modularity and testability
-4. **Error Handling**: Centralized in `errorHandler.ts` with custom error classes in `errors/index.ts`
-5. **API Routes**: Defined in `app.ts` and loaded by `index.ts` for modularity
-6. **Testing Setup**: Comprehensive unit and integration tests for validation and functionality
+1. **Domain Layer**: Contains entities, value objects, and repository interfaces for domain logic.
+2. **Application Layer**: Houses the use cases, serving as an intermediary for business logic in the domain layer, while abstracting away infrastructure dependencies.
+3. **Infrastructure Layer**: Implements repositories and persistence mechanisms.
+4. **Interface Layer**: Provides API routes, controllers, and presenters for transforming domain data for external use.
+5. **Dependency Injection**: Manages dependencies across layers for modularity and testability.
+6. **Error Handling**: Centralized error management with custom error types for consistency.
 
 ## Endpoints
 
@@ -305,6 +285,8 @@ The test suite verifies that all services and endpoints function as expected, en
 ## Future Improvements
 
 - Consider adding authentication for secured access
+- Implement caching for frequently requested data
+- Add additional filters for enhanced quote querying
 
 ## License
 
