@@ -285,8 +285,10 @@ The test suite verifies that all services and endpoints function as expected, en
 ## Future Improvements
 
 - Consider adding authentication for secured access
-- Implement caching for frequently requested data
-- Add additional filters for enhanced quote querying
+- Containerize the backend project along with a database using a Dockerfile and docker-compose
+- Develop a frontend for the application using React
+- Implement end-to-end tests with Cypress for comprehensive testing across user interactions
+- Plan deployments with Kubernetes to enable scalable, resilient, and containerized application management
 
 ## License
 
