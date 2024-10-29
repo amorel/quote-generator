@@ -1,114 +1,63 @@
-export class QuoteFiltersVO  {
-    private constructor(
-        private readonly _limit: number = 1,
-        private readonly _maxLength: number | undefined = undefined,
-        private readonly _minLength: number | undefined = undefined,
-        private readonly _tags: string[] | undefined = undefined,
-        private readonly _author: string | undefined = undefined
-    ) {
-        this.validate();
+import { ValidationError } from "../../errors";
+
+interface QuoteFiltersProps {
+  limit?: number;
+  maxLength?: number;
+  minLength?: number;
+  tags?: string;
+  author?: string;
+}
+
+export class QuoteFiltersVO {
+  private readonly _limit: number;
+  private readonly _maxLength?: number;
+  private readonly _minLength?: number;
+  private readonly _tags: string[];
+  private readonly _author?: string;
+
+  private constructor(props: QuoteFiltersProps) {
+    this._limit = this.validateLimit(props.limit ?? 1);
+    this._maxLength = props.maxLength;
+    this._minLength = props.minLength;
+    this._tags = this.parseTags(props.tags);
+    this._author = props.author;
+  }
+
+  private validateLimit(limit: number): number {
+    if (limit < 1 || limit > 50) {
+      throw new ValidationError("Limit must be between 1 and 50");
     }
+    return limit;
+  }
 
-    static create(params: {
-        limit?: number;
-        maxLength?: number;
-        minLength?: number;
-        tags?: string;
-        author?: string;
-    }): QuoteFiltersVO {
-        return new QuoteFiltersVO(
-            params.limit || 1,
-            params.maxLength,
-            params.minLength,
-            params.tags?.split(',').map(tag => tag.trim()),
-            params.author
-        );
+  private parseTags(tags?: string): string[] {
+    if (!tags) {
+      return [];
     }
+    return tags.split(",").map((tag) => tag.trim());
+  }
 
-    private validate(): void {
-        if (this._limit < 1 || this._limit > 50) {
-            throw new Error('La limite doit être comprise entre 1 et 50');
-        }
+  public static create(props: QuoteFiltersProps): QuoteFiltersVO {
+    return new QuoteFiltersVO(props);
+  }
 
-        if (this._minLength !== undefined && this._minLength < 0) {
-            throw new Error('La longueur minimale doit être positive');
-        }
+  get limit(): number {
+    return this._limit;
+  }
 
-        if (this._maxLength !== undefined && this._maxLength < 0) {
-            throw new Error('La longueur maximale doit être positive');
-        }
+  get maxLength(): number | undefined {
+    return this._maxLength;
+  }
 
-        if (this._minLength !== undefined && 
-            this._maxLength !== undefined && 
-            this._minLength > this._maxLength) {
-            throw new Error('La longueur minimale ne peut pas être supérieure à la longueur maximale');
-        }
-    }
+  get minLength(): number | undefined {
+    return this._minLength;
+  }
 
-    // Getters
-    get limit(): number {
-        return this._limit;
-    }
+  get tags(): string[] {
+    return [...this._tags];
+  }
 
-    get maxLength(): number | undefined {
-        return this._maxLength;
-    }
-
-    get minLength(): number | undefined {
-        return this._minLength;
-    }
-
-    get tags(): string[] | undefined {
-        return this._tags ? [...this._tags] : undefined;
-    }
-
-    get author(): string | undefined {
-        return this._author;
-    }
-
-    // Méthodes utilitaires
-    public hasLengthFilter(): boolean {
-        return this._maxLength !== undefined || this._minLength !== undefined;
-    }
-
-    public hasTagFilter(): boolean {
-        return this._tags !== undefined && this._tags.length > 0;
-    }
-
-    public hasAuthorFilter(): boolean {
-        return this._author !== undefined;
-    }
-
-    // Pour le débogage
-    toString(): string {
-        return JSON.stringify({
-            limit: this._limit,
-            maxLength: this._maxLength,
-            minLength: this._minLength,
-            tags: this._tags,
-            author: this._author
-        }, null, 2);
-    }
-
-    // Pour comparer deux instances de QuoteFilters
-    equals(other: QuoteFiltersVO ): boolean {
-        return this.toString() === other.toString();
-    }
-
-    // Clone avec modifications partielles
-    with(modifications: Partial<{
-        limit: number;
-        maxLength: number;
-        minLength: number;
-        tags: string[];
-        author: string;
-    }>): QuoteFiltersVO  {
-        return new QuoteFiltersVO (
-            modifications.limit ?? this._limit,
-            modifications.maxLength ?? this._maxLength,
-            modifications.minLength ?? this._minLength,
-            modifications.tags ?? this._tags,
-            modifications.author ?? this._author
-        );
-    }
+  get author(): string | undefined {
+    return this._author;
+  }
 }

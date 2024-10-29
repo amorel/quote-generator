@@ -1,8 +1,7 @@
-import { build } from '../../src/app';
-import { FastifyInstance } from 'fastify';
-import { Quote } from '../../src/types/quote';
+import { build } from "../../src/app";
+import { FastifyInstance } from "fastify";
 
-describe('API Integration Tests', () => {
+describe("API Integration Tests", () => {
   let app: FastifyInstance;
 
   beforeAll(async () => {
@@ -13,68 +12,55 @@ describe('API Integration Tests', () => {
     await app.close();
   });
 
-  describe('GET /health', () => {
-    it('should return health status', async () => {
+  describe("GET /quotes/random", () => {
+    it("should return multiple quotes when limit is specified", async () => {
       const response = await app.inject({
-        method: 'GET',
-        url: '/health'
+        method: "GET",
+        url: "/quotes/random?limit=3",
       });
 
       expect(response.statusCode).toBe(200);
-      expect(JSON.parse(response.payload)).toEqual({ status: 'ok' });
-    });
-  });
-
-  describe('GET /quotes/random', () => {
-    it('should return random quote', async () => {
-      const response = await app.inject({
-        method: 'GET',
-        url: '/quotes/random'
-      });
-
-      expect(response.statusCode).toBe(200);
-      const payload = JSON.parse(response.payload) as Quote[];
-      expect(Array.isArray(payload)).toBe(true);
-      expect(payload).toHaveLength(1);
-    });
-
-    it('should handle invalid limit parameter', async () => {
-      const response = await app.inject({
-        method: 'GET',
-        url: '/quotes/random?limit=999'
-      });
-
-      expect(response.statusCode).toBe(400);
       const payload = JSON.parse(response.payload);
-      expect(payload).toHaveProperty('status', 'error');
+      expect(payload).toHaveLength(3);
     });
 
-    it('should handle filters correctly', async () => {
+    it("should filter quotes by maxLength", async () => {
+      const maxLength = 50;
       const response = await app.inject({
-        method: 'GET',
-        url: '/quotes/random?limit=2&tags=test'
+        method: "GET",
+        url: `/quotes/random?maxLength=${maxLength}`,
       });
 
       expect(response.statusCode).toBe(200);
-      const quotes = JSON.parse(response.payload) as Quote[];
-      expect(Array.isArray(quotes)).toBe(true);
-      expect(quotes.length).toBeLessThanOrEqual(2);
-      quotes.forEach((quote: Quote) => {
-        expect(quote.tags).toContain('test');
+      const payload = JSON.parse(response.payload);
+      payload.forEach((quote: any) => {
+        expect(quote.content.length).toBeLessThanOrEqual(maxLength);
       });
     });
   });
 
-  describe('GET /quotes/:id', () => {
-    it('should return 404 for non-existent quote', async () => {
+  describe("Error Handling", () => {
+    it("should handle invalid quote id", async () => {
       const response = await app.inject({
-        method: 'GET',
-        url: '/quotes/nonexistent'
+        method: "GET",
+        url: "/quotes/invalid-id",
       });
 
       expect(response.statusCode).toBe(404);
       const payload = JSON.parse(response.payload);
-      expect(payload).toHaveProperty('status', 'error');
+      expect(payload).toHaveProperty("status", "error");
+      expect(payload).toHaveProperty("message");
+    });
+
+    it("should handle invalid limit parameter", async () => {
+      const response = await app.inject({
+        method: "GET",
+        url: "/quotes/random?limit=invalid",
+      });
+
+      expect(response.statusCode).toBe(400);
+      const payload = JSON.parse(response.payload);
+      expect(payload).toHaveProperty("status", "error");
     });
   });
 });

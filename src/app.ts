@@ -7,11 +7,11 @@ import cors from "@fastify/cors";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import { Container } from "./container";
-import { QuoteService } from "./services/quote.service";
 import { NotFoundError } from "./errors";
-import { AuthorService } from "./services/author.service";
-import { TagService } from "./services/tag.service";
-import { QuoteFiltersVO  } from "./domain/value-objects/QuoteFilters";
+import { QuoteFiltersVO } from "./domain/value-objects/QuoteFilters";
+import { TagController } from "./interface/api/controllers/TagController";
+import { AuthorController } from "./interface/api/controllers/AuthorController";
+import { QuoteController } from "./interface/api/controllers/QuoteController";
 
 // Interfaces pour le typage des requêtes
 interface QuoteQueryRequest {
@@ -48,7 +48,6 @@ export async function build(): Promise<FastifyInstance> {
   });
 
   const container = Container.getInstance();
-  const quoteService = container.get<QuoteService>("quoteService");
 
   // Configuration des gestionnaires d'erreur
   app.setErrorHandler((error: FastifyError, request, reply) => {
@@ -158,9 +157,9 @@ export async function build(): Promise<FastifyInstance> {
         },
       },
     },
-    async (request) => {
-      const filters = QuoteFiltersVO.create(request.query);
-      return quoteService.getRandomQuotes(filters);
+    async (request, reply) => {
+      const quoteController = container.get<QuoteController>("quoteController");
+      return quoteController.getRandomQuotes(request, reply);
     }
   );
 
@@ -191,8 +190,8 @@ export async function build(): Promise<FastifyInstance> {
       },
     },
     async (request, reply) => {
-      const { id } = request.params;
-      return quoteService.getQuoteById(id);
+      const quoteController = container.get<QuoteController>("quoteController");
+      return quoteController.getQuoteById(request, reply);
     }
   );
 
@@ -216,9 +215,9 @@ export async function build(): Promise<FastifyInstance> {
         },
       },
     },
-    async () => {
-      const tagService = container.get<TagService>("tagService");
-      return tagService.getAllTags();
+    async (request, reply) => {
+      const tagController = container.get<TagController>("tagController");
+      return tagController.getAllTags(request, reply);
     }
   );
 
@@ -246,9 +245,9 @@ export async function build(): Promise<FastifyInstance> {
         },
       },
     },
-    async (request) => {
-      const tagService = container.get<TagService>("tagService");
-      return tagService.getTagById(request.params.id);
+    async (request, reply) => {
+      const tagController = container.get<TagController>("tagController");
+      return tagController.getTagById(request, reply);
     }
   );
 
@@ -275,9 +274,10 @@ export async function build(): Promise<FastifyInstance> {
         },
       },
     },
-    async () => {
-      const authorService = container.get<AuthorService>("authorService");
-      return authorService.getAllAuthors();
+    async (request, reply) => {
+      const authorController =
+        container.get<AuthorController>("authorController");
+      return authorController.getAllAuthors(request, reply);
     }
   );
 
@@ -308,9 +308,10 @@ export async function build(): Promise<FastifyInstance> {
         },
       },
     },
-    async (request) => {
-      const authorService = container.get<AuthorService>("authorService");
-      return authorService.getAuthorById(request.params.id);
+    async (request, reply) => {
+      const authorController =
+        container.get<AuthorController>("authorController");
+      return authorController.getAuthorById(request, reply);
     }
   );
 
@@ -358,20 +359,25 @@ export async function build(): Promise<FastifyInstance> {
         },
       },
     },
-    async () => {
+    async (request, reply) => {
       const container = Container.getInstance();
-      const quoteService = container.get<QuoteService>("quoteService");
-      const tagService = container.get<TagService>("tagService");
-      const authorService = container.get<AuthorService>("authorService");
 
-      // Utiliser QuoteFiltersVO.create au lieu d'un objet direct
+      const quoteController = container.get<QuoteController>("quoteController");
+      const tagController = container.get<TagController>("tagController");
+      const authorController =
+        container.get<AuthorController>("authorController");
+
       const filters = QuoteFiltersVO.create({ limit: 1 });
-      const randomQuote = await quoteService.getRandomQuotes(filters);
-      const allTags = await tagService.getAllTags();
-      const allAuthors = await authorService.getAllAuthors();
+      const randomQuoteRequest = { query: { limit: 1 } } as any;
+      const randomQuote = await quoteController.getRandomQuotes(
+        randomQuoteRequest,
+        reply
+      );
+      const allTags = await tagController.getAllTags(request, reply);
+      const allAuthors = await authorController.getAllAuthors(request, reply);
 
       return {
-        quote: randomQuote[0],
+        quote: randomQuote,
         tagsCount: allTags.length,
         authorsCount: allAuthors.length,
         exampleTag: allTags[0],

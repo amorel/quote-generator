@@ -1,21 +1,24 @@
+import { ValidationError } from "../../errors";
+
 export default class QuoteContent {
-    private constructor(private readonly value: string) {}
+  private readonly value: string;
 
-    public static create(content: string): QuoteContent {
-        if (!content || content.trim().length === 0) {
-            throw new Error('Quote content cannot be empty');
-        }
-        if (content.length > 500) {
-            throw new Error('Quote content cannot exceed 500 characters');
-        }
-        return new QuoteContent(content.trim());
-    }
+  private constructor(content: string) {
+    this.value = content;
+    Object.freeze(this);
+  }
 
-    public getValue(): string {
-        return this.value;
+  public static create(content: string): QuoteContent {
+    if (!content || content.trim().length === 0) {
+      throw new ValidationError("Quote content cannot be empty");
     }
+    if (content.length > 500) {
+      throw new ValidationError("Quote content cannot exceed 500 characters");
+    }
+    return new QuoteContent(content.trim());
+  }
 
-    public getLength(): number {
-        return this.value.length;
-    }
+  public getValue(): string {
+    return this.value;
+  }
 }

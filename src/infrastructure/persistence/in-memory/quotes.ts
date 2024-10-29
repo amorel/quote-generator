@@ -1,4 +1,11 @@
-export const quotes = [
+interface QuoteData {
+  _id: string;
+  content: string;
+  author: string;
+  tags: string[];
+}
+
+export const quotes: QuoteData[] = [
   {
     _id: "1",
     content: "Test quote 1",
