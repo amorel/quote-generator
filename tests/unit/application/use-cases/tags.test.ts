@@ -4,7 +4,7 @@ import { TagRepository } from "../../../../src/infrastructure/repositories/TagRe
 import { TagPresenter } from "../../../../src/interface/api/presenters/TagPresenter";
 import { Tag } from "../../../../src/domain/entities/Tag";
 import TagName from "../../../../src/domain/value-objects/TagName";
-import { NotFoundError } from "../../../../src/errors";
+import { NotFoundError } from "../../../../src/interface/errors";
 
 jest.mock("../../../../src/infrastructure/repositories/TagRepository");
 jest.mock("../../../../src/interface/api/presenters/TagPresenter");

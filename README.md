@@ -1,6 +1,6 @@
 # Quotes API
 
-This project provides an API to retrieve random quotes with filtering options, along with additional endpoints to manage tags and authors. It is structured with a Clean Architecture approach to separate domain, application, and infrastructure layers. This design improves modularity, testability, and flexibility in managing dependencies and business logic.
+This project provides an API to retrieve random quotes with filtering options, along with additional endpoints to manage tags and authors. It is structured with a Clean Architecture approach, strictly separating domain, application, infrastructure and interface layers. This design improves modularity, testability, and flexibility while enforcing domain-driven design principles.
 
 ## Table of Contents
 

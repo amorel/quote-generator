@@ -7,8 +7,8 @@ import cors from "@fastify/cors";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import { Container } from "./container";
-import { NotFoundError } from "./errors";
-import { QuoteFiltersVO } from "./domain/value-objects/QuoteFilters";
+import { NotFoundError } from "./interface/errors";
+import { QuoteFilters } from "./domain/value-objects/QuoteFilters";
 import { TagController } from "./interface/api/controllers/TagController";
 import { AuthorController } from "./interface/api/controllers/AuthorController";
 import { QuoteController } from "./interface/api/controllers/QuoteController";
@@ -316,6 +316,8 @@ export async function build(): Promise<FastifyInstance> {
   );
 
   // Route de debug qui montre l'état actuel du système
+  // Dans src/app.ts, modifions la route /debug :
+
   app.get(
     "/debug",
     {
@@ -327,12 +329,15 @@ export async function build(): Promise<FastifyInstance> {
             type: "object",
             properties: {
               quote: {
-                type: "object",
-                properties: {
-                  _id: { type: "string" },
-                  content: { type: "string" },
-                  author: { type: "string" },
-                  tags: { type: "array", items: { type: "string" } },
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    id: { type: "string" },
+                    content: { type: "string" },
+                    authorName: { type: "string" },
+                    tags: { type: "array", items: { type: "string" } },
+                  },
                 },
               },
               tagsCount: { type: "number" },
@@ -340,14 +345,14 @@ export async function build(): Promise<FastifyInstance> {
               exampleTag: {
                 type: "object",
                 properties: {
-                  _id: { type: "string" },
+                  id: { type: "string" },
                   name: { type: "string" },
                 },
               },
               exampleAuthor: {
                 type: "object",
                 properties: {
-                  _id: { type: "string" },
+                  id: { type: "string" },
                   name: { type: "string" },
                   link: { type: "string" },
                   bio: { type: "string" },
@@ -360,29 +365,68 @@ export async function build(): Promise<FastifyInstance> {
       },
     },
     async (request, reply) => {
-      const container = Container.getInstance();
+      try {
+        console.log("Debug route called");
+        const container = Container.getInstance();
 
-      const quoteController = container.get<QuoteController>("quoteController");
-      const tagController = container.get<TagController>("tagController");
-      const authorController =
-        container.get<AuthorController>("authorController");
+        // Récupération des contrôleurs
+        const quoteController =
+          container.get<QuoteController>("quoteController");
+        const tagController = container.get<TagController>("tagController");
+        const authorController =
+          container.get<AuthorController>("authorController");
 
-      const filters = QuoteFiltersVO.create({ limit: 1 });
-      const randomQuoteRequest = { query: { limit: 1 } } as any;
-      const randomQuote = await quoteController.getRandomQuotes(
-        randomQuoteRequest,
-        reply
-      );
-      const allTags = await tagController.getAllTags(request, reply);
-      const allAuthors = await authorController.getAllAuthors(request, reply);
+        console.log("Controllers retrieved");
 
-      return {
-        quote: randomQuote,
-        tagsCount: allTags.length,
-        authorsCount: allAuthors.length,
-        exampleTag: allTags[0],
-        exampleAuthor: allAuthors[0],
-      };
+        // Récupération d'une citation aléatoire
+        const randomQuoteRequest = {
+          query: { limit: 1 },
+          log: request.log,
+        } as FastifyRequest<{ Querystring: { limit: number } }>;
+
+        console.log("Getting random quote...");
+        const quote = await quoteController.getRandomQuotes(
+          randomQuoteRequest,
+          reply
+        );
+        console.log("Random quote retrieved:", quote);
+
+        // Récupération des tags
+        console.log("Getting tags...");
+        const tags = await tagController.getAllTags(request, reply);
+        console.log("Tags retrieved:", tags?.length);
+
+        // Récupération des auteurs
+        console.log("Getting authors...");
+        const authors = await authorController.getAllAuthors(request, reply);
+        console.log("Authors retrieved:", authors?.length);
+
+        const debugResponse = {
+          quote,
+          tagsCount: tags?.length || 0,
+          authorsCount: authors?.length || 0,
+          exampleTag: tags?.[0] || null,
+          exampleAuthor: authors?.[0] || null,
+        };
+
+        console.log("Sending debug response:", debugResponse);
+
+        // Vérifier si la réponse n'a pas déjà été envoyée
+        if (!reply.sent) {
+          return reply.status(200).send(debugResponse);
+        }
+      } catch (error) {
+        console.error("Debug route error:", error);
+        // Vérifier si la réponse n'a pas déjà été envoyée
+        if (!reply.sent) {
+          return reply.status(500).send({
+            status: "error",
+            message:
+              "Une erreur est survenue lors de la récupération des données de debug",
+            details: error instanceof Error ? error.message : "Unknown error",
+          });
+        }
+      }
     }
   );
 

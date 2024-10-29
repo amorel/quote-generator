@@ -4,7 +4,7 @@ import { AuthorRepository } from "../../../../src/infrastructure/repositories/Au
 import { AuthorPresenter } from "../../../../src/interface/api/presenters/AuthorPresenter";
 import { Author } from "../../../../src/domain/entities/Author";
 import AuthorName from "../../../../src/domain/value-objects/AuthorName";
-import { NotFoundError } from "../../../../src/errors";
+import { NotFoundError } from "../../../../src/interface/errors";
 
 jest.mock("../../../../src/infrastructure/repositories/AuthorRepository");
 jest.mock("../../../../src/interface/api/presenters/AuthorPresenter");

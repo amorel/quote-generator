@@ -1,7 +1,7 @@
 import { Quote } from "../entities/Quote";
-import { QuoteFiltersVO } from "../value-objects/QuoteFilters";
+import { QuoteFilters } from "../value-objects/QuoteFilters";
 
 export interface IQuoteRepository {
-  findRandom(filters: QuoteFiltersVO): Promise<Quote[]>;
+  findRandom(filters: QuoteFilters): Promise<Quote[]>;
   findById(id: string): Promise<Quote | null>;
 }

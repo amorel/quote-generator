@@ -1,63 +1,71 @@
-import { ValidationError } from "../../errors";
+import { ValidationError } from "../../interface/errors";
 
-interface QuoteFiltersProps {
-  limit?: number;
-  maxLength?: number;
-  minLength?: number;
-  tags?: string;
-  author?: string;
-}
-
-export class QuoteFiltersVO {
-  private readonly _limit: number;
-  private readonly _maxLength?: number;
-  private readonly _minLength?: number;
-  private readonly _tags: string[];
-  private readonly _author?: string;
-
-  private constructor(props: QuoteFiltersProps) {
-    this._limit = this.validateLimit(props.limit ?? 1);
-    this._maxLength = props.maxLength;
-    this._minLength = props.minLength;
-    this._tags = this.parseTags(props.tags);
-    this._author = props.author;
-  }
-
-  private validateLimit(limit: number): number {
-    if (limit < 1 || limit > 50) {
-      throw new ValidationError("Limit must be between 1 and 50");
+export class QuoteFilters {
+  private constructor(
+    public readonly limit?: number,
+    public readonly maxLength?: number,
+    public readonly minLength?: number,
+    public readonly tags?: readonly string[],
+    public readonly author?: string
+  ) {
+    // Geler l'objet et les tableaux pour une immutabilité complète
+    Object.freeze(this);
+    if (this.tags) {
+      Object.freeze(this.tags);
     }
-    return limit;
   }
 
-  private parseTags(tags?: string): string[] {
-    if (!tags) {
-      return [];
+  public static create(filters: {
+    limit?: number;
+    maxLength?: number;
+    minLength?: number;
+    tags?: string;
+    author?: string;
+  }): QuoteFilters {
+    // Validate limit
+    if (filters.limit !== undefined) {
+      if (filters.limit < 1 || filters.limit > 50) {
+        throw new ValidationError("Limit must be between 1 and 50");
+      }
     }
-    return tags.split(",").map((tag) => tag.trim());
-  }
 
-  public static create(props: QuoteFiltersProps): QuoteFiltersVO {
-    return new QuoteFiltersVO(props);
-  }
+    // Validate lengths
+    if (filters.maxLength !== undefined && filters.maxLength < 0) {
+      throw new ValidationError("Maximum length cannot be negative");
+    }
+    if (filters.minLength !== undefined && filters.minLength < 0) {
+      throw new ValidationError("Minimum length cannot be negative");
+    }
+    if (
+      filters.maxLength !== undefined &&
+      filters.minLength !== undefined &&
+      filters.minLength > filters.maxLength
+    ) {
+      throw new ValidationError(
+        "Minimum length cannot be greater than maximum length"
+      );
+    }
 
-  get limit(): number {
-    return this._limit;
-  }
+    // Process tags
+    let processedTags: string[] | undefined;
+    if (filters.tags) {
+      processedTags = filters.tags
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter((tag) => tag.length > 0);
+      if (processedTags.length === 0) {
+        processedTags = undefined;
+      }
+    }
 
-  get maxLength(): number | undefined {
-    return this._maxLength;
-  }
+    const processedAuthor = filters.author?.trim() || undefined;
 
-  get minLength(): number | undefined {
-    return this._minLength;
-  }
-
-  get tags(): string[] {
-    return [...this._tags];
-  }
-
-  get author(): string | undefined {
-    return this._author;
+    return new QuoteFilters(
+      filters.limit,
+      filters.maxLength,
+      filters.minLength,
+      processedTags,
+      processedAuthor
+    );
   }
 }

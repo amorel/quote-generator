@@ -1,6 +1,6 @@
 import { IAuthorRepository } from "../../../domain/repositories/IAuthorRepository";
 import { AuthorDTO } from "../../dtos/AuthorDTO";
-import { NotFoundError } from "../../../errors";
+import { NotFoundError } from "../../../interface/errors";
 import { AuthorPresenter } from "../../../interface/api/presenters/AuthorPresenter";
 
 export class GetAuthorByIdUseCase {

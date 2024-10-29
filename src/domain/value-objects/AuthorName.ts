@@ -1,5 +1,7 @@
 export default class AuthorName {
-  private constructor(private readonly value: string) {}
+  private constructor(private readonly value: string) {
+    Object.freeze(this);
+  }
 
   public static create(name: string): AuthorName {
     if (!name || name.trim().length === 0) {

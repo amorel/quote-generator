@@ -1,6 +1,6 @@
 // tests/unit/infrastructure/repositories/quote-repository.test.ts
 import { QuoteRepository } from "../../../../src/infrastructure/repositories/QuoteRepository";
-import { QuoteFiltersVO } from "../../../../src/domain/value-objects/QuoteFilters";
+import { QuoteFilters } from "../../../../src/domain/value-objects/QuoteFilters";
 import { Quote } from "../../../../src/domain/entities/Quote";
 
 describe("QuoteRepository", () => {
@@ -13,7 +13,7 @@ describe("QuoteRepository", () => {
   describe("findRandom", () => {
     it("should respect limit filter", async () => {
       const limit = 3;
-      const filters = QuoteFiltersVO.create({ limit });
+      const filters = QuoteFilters.create({ limit });
 
       const quotes = await repository.findRandom(filters);
 
@@ -25,7 +25,7 @@ describe("QuoteRepository", () => {
 
     it("should filter by maxLength", async () => {
       const maxLength = 50;
-      const filters = QuoteFiltersVO.create({ maxLength });
+      const filters = QuoteFilters.create({ maxLength });
 
       const quotes = await repository.findRandom(filters);
 
@@ -39,7 +39,7 @@ describe("QuoteRepository", () => {
 
     it("should filter by minLength", async () => {
       const minLength = 20;
-      const filters = QuoteFiltersVO.create({ minLength });
+      const filters = QuoteFilters.create({ minLength });
 
       const quotes = await repository.findRandom(filters);
 
@@ -53,7 +53,7 @@ describe("QuoteRepository", () => {
 
     it("should filter by tags", async () => {
       const tags = "Success,Wisdom";
-      const filters = QuoteFiltersVO.create({ tags });
+      const filters = QuoteFilters.create({ tags });
 
       const quotes = await repository.findRandom(filters);
 
@@ -69,7 +69,7 @@ describe("QuoteRepository", () => {
 
     it("should filter by author", async () => {
       const author = "Albert Camus";
-      const filters = QuoteFiltersVO.create({ author });
+      const filters = QuoteFilters.create({ author });
 
       const quotes = await repository.findRandom(filters);
 
@@ -80,7 +80,7 @@ describe("QuoteRepository", () => {
     });
 
     it("should handle empty filters", async () => {
-      const filters = QuoteFiltersVO.create({});
+      const filters = QuoteFilters.create({});
 
       const quotes = await repository.findRandom(filters);
 
@@ -88,7 +88,7 @@ describe("QuoteRepository", () => {
     });
 
     it("should handle multiple filters together", async () => {
-      const filters = QuoteFiltersVO.create({
+      const filters = QuoteFilters.create({
         limit: 2,
         maxLength: 100,
         tags: "Success",

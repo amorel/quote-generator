@@ -1,6 +1,6 @@
 import { ITagRepository } from "../../../domain/repositories/ITagRepository";
 import { TagDTO } from "../../dtos/TagDTO";
-import { NotFoundError } from "../../../errors";
+import { NotFoundError } from "../../../interface/errors";
 import { TagPresenter } from "../../../interface/api/presenters/TagPresenter";
 
 export class GetTagByIdUseCase {

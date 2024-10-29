@@ -1,19 +1,14 @@
-import { ValidationError } from "../../errors";
-
 export default class TagName {
-  private readonly value: string;
-
-  private constructor(name: string) {
-    this.value = name;
+  private constructor(private readonly value: string) {
     Object.freeze(this);
   }
 
   public static create(name: string): TagName {
     if (!name || name.trim().length === 0) {
-      throw new ValidationError("Tag name cannot be empty");
+      throw new Error("Tag name cannot be empty");
     }
     if (name.length > 50) {
-      throw new ValidationError("Tag name cannot exceed 50 characters");
+      throw new Error("Tag name cannot exceed 50 characters");
     }
     return new TagName(name.trim());
   }

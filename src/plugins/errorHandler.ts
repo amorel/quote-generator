@@ -1,6 +1,6 @@
 import { FastifyError, FastifyInstance, FastifyPluginAsync } from 'fastify';
 import fp from 'fastify-plugin';
-import { AppError } from '../errors';
+import { AppError } from '../interface/errors';
 
 export const errorHandler: FastifyPluginAsync = fp(async (fastify: FastifyInstance) => {
   fastify.setErrorHandler((error: FastifyError | AppError, request, reply) => {

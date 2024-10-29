@@ -2,11 +2,11 @@
 import { Quote } from "../../domain/entities/Quote";
 import { IQuoteRepository } from "../../domain/repositories/IQuoteRepository";
 import { quotes } from "../persistence/in-memory/quotes";
-import { QuoteFiltersVO } from "../../domain/value-objects/QuoteFilters";
+import { QuoteFilters } from "../../domain/value-objects/QuoteFilters";
 import QuoteContent from "../../domain/value-objects/QuoteContent";
 
 export class QuoteRepository implements IQuoteRepository {
-  async findRandom(filters: QuoteFiltersVO): Promise<Quote[]> {
+  async findRandom(filters: QuoteFilters): Promise<Quote[]> {
     let filteredQuotes = [...quotes];
 
     // Appliquer les filtres

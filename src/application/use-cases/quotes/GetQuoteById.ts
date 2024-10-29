@@ -1,6 +1,6 @@
 import { IQuoteRepository } from "../../../domain/repositories/IQuoteRepository";
 import { QuoteDTO } from "../../dtos/QuoteDTO";
-import { NotFoundError } from "../../../errors";
+import { NotFoundError } from "../../../interface/errors";
 import { QuotePresenter } from "../../../interface/api/presenters/QuotePresenter";
 
 export class GetQuoteByIdUseCase {

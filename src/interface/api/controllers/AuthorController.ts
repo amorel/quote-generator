@@ -1,7 +1,7 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { GetAllAuthorsUseCase } from "../../../application/use-cases/authors/GetAllAuthors";
 import { GetAuthorByIdUseCase } from "../../../application/use-cases/authors/GetAuthorById";
-import { NotFoundError } from "../../../errors";
+import { NotFoundError } from "../../errors";
 
 export class AuthorController {
   constructor(
@@ -11,14 +11,13 @@ export class AuthorController {
 
   async getAllAuthors(request: FastifyRequest, reply: FastifyReply) {
     try {
+      console.log("AuthorController: Getting all authors");
       const authors = await this.getAllAuthorsUseCase.execute();
-      reply.send(authors);
+      console.log("AuthorController: Authors retrieved:", authors?.length);
       return authors;
     } catch (error) {
-      return reply.status(500).send({
-        status: "error",
-        message: "Internal server error",
-      });
+      console.error("AuthorController error:", error);
+      throw error;
     }
   }
 

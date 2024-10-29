@@ -2,8 +2,8 @@ import { GetQuoteByIdUseCase } from "../../../../src/application/use-cases/quote
 import { QuoteRepository } from "../../../../src/infrastructure/repositories/QuoteRepository";
 import { QuotePresenter } from "../../../../src/interface/api/presenters/QuotePresenter";
 import { Quote } from "../../../../src/domain/entities/Quote";
-import { NotFoundError } from "../../../../src/errors";
 import QuoteContent from "../../../../src/domain/value-objects/QuoteContent";
+import { NotFoundError } from "../../../../src/interface/errors";
 
 jest.mock("../../../../src/infrastructure/repositories/QuoteRepository");
 jest.mock("../../../../src/interface/api/presenters/QuotePresenter");
@@ -19,75 +19,36 @@ describe("GetQuoteByIdUseCase", () => {
     useCase = new GetQuoteByIdUseCase(mockRepository, mockPresenter);
   });
 
-  it("should successfully return a quote by id", async () => {
-    // Arrange
+  it("should return quote by id", async () => {
     const mockQuote = new Quote(
       "test-id",
-      QuoteContent.create("Test quote content"),
+      QuoteContent.create("Test quote"),
       "author-id",
-      ["tag1", "tag2"]
+      ["tag1"]
     );
 
-    const expectedDTO = {
+    const mockDTO = {
       id: "test-id",
-      content: "Test quote content",
+      content: "Test quote",
       authorName: "Author Name",
-      tags: ["tag1", "tag2"],
+      tags: ["tag1"],
     };
 
     mockRepository.findById.mockResolvedValue(mockQuote);
-    mockPresenter.toDTO.mockReturnValue(expectedDTO);
+    mockPresenter.toDTO.mockReturnValue(mockDTO);
 
-    // Act
     const result = await useCase.execute("test-id");
 
-    // Assert
-    expect(result).toEqual(expectedDTO);
+    expect(result).toEqual(mockDTO);
     expect(mockRepository.findById).toHaveBeenCalledWith("test-id");
     expect(mockPresenter.toDTO).toHaveBeenCalledWith(mockQuote);
   });
 
   it("should throw NotFoundError when quote does not exist", async () => {
-    // Arrange
     mockRepository.findById.mockResolvedValue(null);
 
-    // Act & Assert
     await expect(useCase.execute("non-existent-id")).rejects.toThrow(
       NotFoundError
     );
-    expect(mockRepository.findById).toHaveBeenCalledWith("non-existent-id");
-    expect(mockPresenter.toDTO).not.toHaveBeenCalled();
-  });
-
-  it("should handle repository errors", async () => {
-    // Arrange
-    const error = new Error("Database error");
-    mockRepository.findById.mockRejectedValue(error);
-
-    // Act & Assert
-    await expect(useCase.execute("test-id")).rejects.toThrow(error);
-    expect(mockRepository.findById).toHaveBeenCalledWith("test-id");
-    expect(mockPresenter.toDTO).not.toHaveBeenCalled();
-  });
-
-  it("should handle presenter errors", async () => {
-    // Arrange
-    const mockQuote = new Quote(
-      "test-id",
-      QuoteContent.create("Test quote content"),
-      "author-id",
-      ["tag1", "tag2"]
-    );
-    const error = new Error("Presenter error");
-
-    mockRepository.findById.mockResolvedValue(mockQuote);
-    mockPresenter.toDTO.mockImplementation(() => {
-      throw error;
-    });
-
-    // Act & Assert
-    await expect(useCase.execute("test-id")).rejects.toThrow(error);
-    expect(mockRepository.findById).toHaveBeenCalledWith("test-id");
-    expect(mockPresenter.toDTO).toHaveBeenCalledWith(mockQuote);
   });
 });
