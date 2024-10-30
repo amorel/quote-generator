@@ -1,0 +1,71 @@
+services:
+  shared:
+    build: 
+      context: .
+      dockerfile: shared/Dockerfile
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: services/auth-service/Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - JWT_SECRET=your_secret
+      - DB_CONNECTION=mongodb://auth-db:27017/auth
+    depends_on:
+      - shared
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: services/api-gateway/Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      - auth-service
+      - quote-service
+      - user-service
+
+  quote-service:
+    build:
+      context: .
+      dockerfile: services/quote-service/Dockerfile
+    ports:
+      - "3002:3002"
+    environment:
+      - JWT_PUBLIC_KEY=your_public_key
+      - DB_CONNECTION=mongodb://quote-db:27017/quotes
+    depends_on:
+      - shared
+
+  user-service:
+    build:
+      context: .
+      dockerfile: services/user-service/Dockerfile
+    ports:
+      - "3003:3003"
+    environment:
+      - DB_CONNECTION=mongodb://user-db:27017/users
+    depends_on:
+      - shared
+
+  auth-db:
+    image: mongo:latest
+    volumes:
+      - auth-data:/data/db
+
+  quote-db:
+    image: mongo:latest
+    volumes:
+      - quote-data:/data/db
+
+  user-db:
+    image: mongo:latest
+    volumes:
+      - user-data:/data/db
+
+volumes:
+  auth-data:
+  quote-data:
+  user-data:

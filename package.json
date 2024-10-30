@@ -22,6 +22,7 @@
     "build:quote": "cd services/quote-service && npm run build",
     "build:user": "cd services/user-service && npm run build",
     "build:gateway": "cd services/api-gateway && npm run build",
+    "dev": "docker-compose up",
     "dev:quote": "cd services/quote-service && npm run dev",
     "dev:auth": "cd services/auth-service && npm run dev",
     "dev:user": "cd services/user-service && npm run dev",

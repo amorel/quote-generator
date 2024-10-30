@@ -11,11 +11,13 @@ This project transforms a monolithic architecture into a microservices-based sol
   - [Setup](#setup)
     - [Prerequisites](#prerequisites)
     - [Installation](#installation)
+    - [Launching the Application](#launching-the-application)
   - [Services](#services)
     - [1. Auth Service](#1-auth-service)
     - [2. User Service](#2-user-service)
     - [3. Quote Service](#3-quote-service)
     - [4. API Gateway](#4-api-gateway)
+  - [Testing the Endpoints](#testing-the-endpoints)
   - [Authentication](#authentication)
   - [Microservices Architecture](#microservices-architecture)
   - [Security and Best Practices](#security-and-best-practices)
@@ -59,6 +61,7 @@ The project is organized as follows:
    git clone https://github.com/your-repo/microservices-project.git
    cd microservices-project
    ```
+
 2. Set up environment variables in `.env` files for each service (sample below for `auth-service`):
 
    ```plaintext
@@ -66,13 +69,22 @@ The project is organized as follows:
    JWT_EXPIRES_IN=1h
    DB_CONNECTION=mongodb://auth-db:27017/auth
    ```
-3. Build and start the services with Docker Compose:
+
+### Launching the Application
+
+1. To build and start all services with Docker Compose, run:
 
    ```bash
    docker-compose up --build
    ```
 
-   Each service will be available at its designated port (configured in `docker-compose.yml`).
+   Each service will be available at its designated port as configured in `docker-compose.yml`.
+
+2. To stop the containers, use:
+
+   ```bash
+   docker-compose down
+   ```
 
 ## Services
 
@@ -80,20 +92,46 @@ The project is organized as follows:
 
 - **Endpoints**: `/auth/register`, `/auth/login`, `/auth/refresh`, `/auth/logout`
 - **Functionality**: Manages user authentication and generates JWT tokens.
+- **URL**: `http://localhost:3001`
 
 ### 2. User Service
 
 - **Endpoints**: `/users` (accessible through the API Gateway)
 - **Functionality**: Handles user data and profile management.
+- **URL**: `http://localhost:3003`
 
 ### 3. [Quote Service](./services/quote-service/README.md "Quote Service")
 
 - **Endpoints**: `/quotes` (accessible through the API Gateway)
 - **Functionality**: Manages quotes, requiring JWT token validation for access.
+- **URL**: `http://localhost:3002`
 
 ### 4. API Gateway
 
 - **Functionality**: Provides a unified entry point and routes requests to each microservice. Configured using Fastify and includes middleware for initial token validation.
+- **URL**: `http://localhost:3000`
+
+## Testing the Endpoints
+
+Once the services are running, you can test the endpoints via API Gateway (`http://localhost:3000`). Below are some sample URLs and actions to test the functionalities:
+
+1. **Registration**  
+   - URL: `http://localhost:3000/auth/register`
+   - Method: POST
+
+2. **Login**  
+   - URL: `http://localhost:3000/auth/login`
+   - Method: POST
+
+3. **Retrieve All Users**  
+   - URL: `http://localhost:3000/users`
+   - Method: GET
+
+4. **Retrieve All Quotes**  
+   - URL: `http://localhost:3000/quotes`
+   - Method: GET
+
+Ensure you provide the necessary authentication tokens for protected endpoints.
 
 ## Authentication
 
