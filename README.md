@@ -9,6 +9,7 @@ This project transforms a monolithic architecture into a microservices-based sol
   - [Project Structure](#project-structure)
   - [Technologies](#technologies)
   - [Setup](#setup)
+    - [Environment Variables](#environment-variables)
     - [Prerequisites](#prerequisites)
     - [Installation](#installation)
     - [Launching the Application](#launching-the-application)
@@ -17,6 +18,7 @@ This project transforms a monolithic architecture into a microservices-based sol
     - [2. User Service](#2-user-service)
     - [3. Quote Service](#3-quote-service)
     - [4. API Gateway](#4-api-gateway)
+    - [5. Frontend Service](#5-frontend-service)
   - [Testing the Endpoints](#testing-the-endpoints)
   - [Authentication](#authentication)
   - [Microservices Architecture](#microservices-architecture)
@@ -30,12 +32,21 @@ The project is organized as follows:
 ```plaintext
 ├── services/
 │   ├── auth-service/
+│   │   └── src/
+│   │       └── config/
+│   │           └── database.ts   # MongoDB connection setup
 │   ├── user-service/
 │   ├── quote-service/
-│   └── api-gateway/
-├── shared/                 # Shared modules (events, types, constants)
-├── docker-compose.yml      # Docker Compose for service orchestration
-└── README.md               # Project documentation
+│   │   └── src/
+│   │       └── config/
+│   │           └── database.ts   # MongoDB connection setup
+│   ├── api-gateway/
+│   └── frontend/
+│       └── src/
+│           └── store/           # Redux state management setup
+├── shared/                       # Shared modules (events, types, constants)
+├── docker-compose.yml            # Docker Compose for service orchestration
+└── README.md                     # Project documentation
 ```
 
 ## Technologies
@@ -47,6 +58,22 @@ The project is organized as follows:
 - **JWT & bcrypt** - Secure user authentication
 
 ## Setup
+
+- Include instructions for setting up .env for the frontend, if needed.
+
+```plaintext
+VITE_PORT=3006
+VITE_API_URL=http://localhost:3000   # API Gateway URL
+```
+
+### Environment Variables
+
+Ensure `.env` files are created for each service with the necessary configurations. Below is a sample setup for `auth-service`:
+
+```plaintext
+JWT_SECRET=your_secret_key
+DB_CONNECTION=mongodb://auth-db:27017/auth
+```
 
 ### Prerequisites
 
@@ -88,13 +115,13 @@ The project is organized as follows:
 
 ## Services
 
-### 1. Auth Service
+### 1. [Auth Service](./services/auth-service/README.md "Auth Service")
 
 - **Endpoints**: `/auth/register`, `/auth/login`, `/auth/refresh`, `/auth/logout`
 - **Functionality**: Manages user authentication and generates JWT tokens.
 - **URL**: `http://localhost:3001`
 
-### 2. User Service
+### 2. [User Service](./services/user-service/README.md "User Service")
 
 - **Endpoints**: `/users` (accessible through the API Gateway)
 - **Functionality**: Handles user data and profile management.
@@ -106,28 +133,38 @@ The project is organized as follows:
 - **Functionality**: Manages quotes, requiring JWT token validation for access.
 - **URL**: `http://localhost:3002`
 
-### 4. API Gateway
+### 4. [API Gateway](./services/api-gateway/README.md "API Gateway")
 
 - **Functionality**: Provides a unified entry point and routes requests to each microservice. Configured using Fastify and includes middleware for initial token validation.
 - **URL**: `http://localhost:3000`
+
+### 5. [Frontend Service](./services/frontend/README.md "Frontend Service")
+
+- **URL**: `http://localhost:3006`
+- **Functionality**: A React/TypeScript client application for displaying quotes and interacting with other services through the API Gateway.
+- **Endpoints**: Fetches quotes through the API Gateway and handles authentication (in progress).
+- **Docker Setup**: Configured to run with Docker for seamless integration.
 
 ## Testing the Endpoints
 
 Once the services are running, you can test the endpoints via API Gateway (`http://localhost:3000`). Below are some sample URLs and actions to test the functionalities:
 
-1. **Registration**  
+1. **Registration**
+
    - URL: `http://localhost:3000/auth/register`
    - Method: POST
 
-2. **Login**  
+2. **Login**
+
    - URL: `http://localhost:3000/auth/login`
    - Method: POST
 
-3. **Retrieve All Users**  
+3. **Retrieve All Users**
+
    - URL: `http://localhost:3000/users`
    - Method: GET
 
-4. **Retrieve All Quotes**  
+4. **Retrieve All Quotes**
    - URL: `http://localhost:3000/quotes`
    - Method: GET
 

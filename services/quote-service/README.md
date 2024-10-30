@@ -52,6 +52,12 @@ cd <repository-folder>
 npm install
 ```
 
+2. Create a `.env` file with the MongoDB connection string and other required variables:
+```plaintext
+DB_CONNECTION=mongodb://quote-db:27017/quotes
+JWT_PUBLIC_KEY=your_jwt_public_key
+```
+
 ### Running the Server
 
 To start the server in development mode:
@@ -77,6 +83,8 @@ src
 ├── infrastructure/                    # Implementation of repositories and persistence
 │   ├── repositories/                  # Concrete repository implementations
 │   └── persistence/                   # In-memory storage for quotes, authors, and tags
+│   └── config/                        # Configuration files for MongoDB connection
+│       └── database.ts
 ├── interface/                         # API interface layer
 │   ├── api/                           # Routes, controllers, and presenters
 │   └── errors/                        # Error handling for API responses
@@ -152,13 +160,13 @@ The project adheres to Clean Architecture principles, ensuring a clear separatio
 
 The `/quotes/random` endpoint supports the following filters via query parameters:
 
-| Filter        | Type   | Description                                           |
-| ------------- | ------ | ----------------------------------------------------- |
-| `limit`     | number | Maximum number of quotes to return                    |
-| `maxLength` | number | Maximum length (character count) of quote content     |
-| `minLength` | number | Minimum length (character count) of quote content     |
+| Filter      | Type   | Description                                         |
+| ----------- | ------ | --------------------------------------------------- |
+| `limit`     | number | Maximum number of quotes to return                  |
+| `maxLength` | number | Maximum length (character count) of quote content   |
+| `minLength` | number | Minimum length (character count) of quote content   |
 | `tags`      | string | Comma-separated tags (e.g.,`Success,Inspirational`) |
-| `author`    | string | Author name (exact match, case-insensitive)           |
+| `author`    | string | Author name (exact match, case-insensitive)         |
 
 ## Swagger Documentation
 
@@ -260,9 +268,9 @@ The test suite verifies that all services and endpoints function as expected, en
   ```
   GET http://localhost:3002/quotes/random?maxLength=100
   ```
-- Get quotes tagged as "Success":
+- Get quotes tagged with either "Success" or "Inspirational":
   ```
-  GET http://localhost:3002/quotes/random?tags=Success
+  GET http://localhost:3002/quotes/random?tags=Success|Inspirational
   ```
 - Get all tags:
   ```

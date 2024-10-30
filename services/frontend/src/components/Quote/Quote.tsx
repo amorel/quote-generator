@@ -1,15 +1,24 @@
 import { useEffect } from "react";
-import { useQuotes } from "../../hooks/useQuotes";
+import { fetchRandomQuote } from "../../store/quoteSlice";
 import styles from "./Quote.module.css";
+import { useAppDispatch } from "../../hooks/useAppDispatch";
+import { useAppSelector } from "../../hooks/useAppSelector";
 
 export const Quote = () => {
-  const { quote, fetchNewQuote } = useQuotes();
+  const dispatch = useAppDispatch();
+  const {
+    current: quote,
+    loading,
+    error,
+  } = useAppSelector((state) => state.quote);
 
   useEffect(() => {
-    fetchNewQuote();
-  }, []);
+    dispatch(fetchRandomQuote());
+  }, [dispatch]);
 
-  if (!quote) return <div>Loading...</div>;
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
+  if (!quote) return null;
 
   return (
     <div className={styles.container}>
@@ -17,7 +26,7 @@ export const Quote = () => {
         <p>{quote.content}</p>
         <footer>— {quote.author}</footer>
       </blockquote>
-      <button onClick={fetchNewQuote}>Next Quote</button>
+      <button onClick={() => dispatch(fetchRandomQuote())}>Next Quote</button>
     </div>
   );
 };

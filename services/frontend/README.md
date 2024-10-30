@@ -1,50 +1,59 @@
-# React + TypeScript + Vite
+#### 5. **Frontend Service (`frontend/README.md`)**
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+# Frontend Service
 
-Currently, two official plugins are available:
+A React/TypeScript client application for interacting with the API, displaying quotes, and managing authentication.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Table of Contents
+- [Frontend Service](#frontend-service)
+  - [Table of Contents](#table-of-contents)
+    - [Getting Started](#getting-started)
+      - [Prerequisites](#prerequisites)
+      - [Installation](#installation)
+    - [Environment Variables](#environment-variables)
+    - [State Management](#state-management)
+    - [Testing](#testing)
+    - [Architecture Overview](#architecture-overview)
 
-## Expanding the ESLint configuration
+### Getting Started
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+#### Prerequisites
+- Node.js (>= 14.x)
 
-- Configure the top-level `parserOptions` property like this:
+#### Installation
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+1. Install dependencies:
+```bash
+npm install
+````
+
+2. Start the app in development mode:
+```bash
+npm run dev
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+The app will be available at `http://localhost:3006`.
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
+### Environment Variables
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
+Create a `.env` file with:
+
+```plaintext
+VITE_API_URL=http://localhost:3000
 ```
+
+### State Management
+
+The app uses Redux Toolkit for global state management of quotes and authentication.
+
+### Testing
+
+To run tests:
+
+```bash
+npm test
+```
+
+### Architecture Overview
+
+This frontend application follows modular component design principles, utilizing Redux for state management and TypeScript for type safety.
