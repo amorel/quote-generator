@@ -1,299 +1,124 @@
-# Quotes API
+# Microservices Project with JWT Authentication
 
-This project provides an API to retrieve random quotes with filtering options, along with additional endpoints to manage tags and authors. It is structured with a Clean Architecture approach, strictly separating domain, application, infrastructure and interface layers. This design improves modularity, testability, and flexibility while enforcing domain-driven design principles.
+This project transforms a monolithic architecture into a microservices-based solution, providing modularity, scalability, and security. The project includes services for authentication, user management, and quotes, orchestrated via an API Gateway and Docker Compose.
 
 ## Table of Contents
 
-- [Quotes API](#quotes-api)
+- [Microservices Project with JWT Authentication](#microservices-project-with-jwt-authentication)
   - [Table of Contents](#table-of-contents)
-  - [Getting Started](#getting-started)
+  - [Project Structure](#project-structure)
+  - [Technologies](#technologies)
+  - [Setup](#setup)
     - [Prerequisites](#prerequisites)
     - [Installation](#installation)
-    - [Running the Server](#running-the-server)
-  - [Folder Structure](#folder-structure)
-  - [Architecture Overview](#architecture-overview)
-  - [Endpoints](#endpoints)
-    - [Health Check](#health-check)
-    - [Random Quotes](#random-quotes)
-    - [Quote by ID](#quote-by-id)
-    - [All Tags](#all-tags)
-    - [Tag by ID](#tag-by-id)
-    - [All Authors](#all-authors)
-    - [Author by ID](#author-by-id)
-  - [Quote Filters](#quote-filters)
-  - [Swagger Documentation](#swagger-documentation)
-    - [Swagger Setup](#swagger-setup)
-  - [Error Handling](#error-handling)
-    - [Error Types](#error-types)
-    - [Error Response Format](#error-response-format)
-    - [Example](#example)
-  - [Testing](#testing)
-    - [Test Structure](#test-structure)
-    - [Running Tests](#running-tests)
-  - [Examples](#examples)
-  - [Future Improvements](#future-improvements)
+  - [Services](#services)
+    - [1. Auth Service](#1-auth-service)
+    - [2. User Service](#2-user-service)
+    - [3. Quote Service](#3-quote-service)
+    - [4. API Gateway](#4-api-gateway)
+  - [Authentication](#authentication)
+  - [Microservices Architecture](#microservices-architecture)
+  - [Security and Best Practices](#security-and-best-practices)
   - [License](#license)
-  - [Acknowledgments](#acknowledgments)
 
-## Getting Started
+## Project Structure
+
+The project is organized as follows:
+
+```plaintext
+├── services/
+│   ├── auth-service/
+│   ├── user-service/
+│   ├── quote-service/
+│   └── api-gateway/
+├── shared/                 # Shared modules (events, types, constants)
+├── docker-compose.yml      # Docker Compose for service orchestration
+└── README.md               # Project documentation
+```
+
+## Technologies
+
+- **Node.js & TypeScript** - Service development
+- **Fastify** - Lightweight API Gateway
+- **Docker & Docker Compose** - Containerization and orchestration
+- **MongoDB** - Database for each microservice
+- **JWT & bcrypt** - Secure user authentication
+
+## Setup
 
 ### Prerequisites
 
-- Node.js (>= 14.x)
-- npm
+- Docker and Docker Compose
+- Node.js and npm (for local development)
 
 ### Installation
 
-Clone the repository and install dependencies:
+1. Clone the repository:
 
-```bash
-git clone <repository-url>
-cd <repository-folder>
-npm install
-```
+   ```bash
+   git clone https://github.com/your-repo/microservices-project.git
+   cd microservices-project
+   ```
+2. Set up environment variables in `.env` files for each service (sample below for `auth-service`):
 
-### Running the Server
+   ```plaintext
+   JWT_SECRET=your_secret_key
+   JWT_EXPIRES_IN=1h
+   DB_CONNECTION=mongodb://auth-db:27017/auth
+   ```
+3. Build and start the services with Docker Compose:
 
-To start the server in development mode:
+   ```bash
+   docker-compose up --build
+   ```
 
-```bash
-npm run dev
-```
+   Each service will be available at its designated port (configured in `docker-compose.yml`).
 
-The server will be running at `http://localhost:3000`.
+## Services
 
-## Folder Structure
+### 1. Auth Service
 
-```
-src
-├── application/                       # Use cases and DTOs
-│   ├── dtos/                          # Data transfer objects (DTOs) for quotes, authors, and tags
-│   └── use-cases/                     # Application use cases organized by entity
-├── container.ts                       # Dependency injection container
-├── domain/                            # Core business logic and domain models
-│   ├── entities/                      # Entities representing core business models
-│   ├── repositories/                  # Interfaces for data access (repositories)
-│   └── value-objects/                 # Value objects encapsulating business rules
-├── infrastructure/                    # Implementation of repositories and persistence
-│   ├── repositories/                  # Concrete repository implementations
-│   └── persistence/                   # In-memory storage for quotes, authors, and tags
-├── interface/                         # API interface layer
-│   ├── api/                           # Routes, controllers, and presenters
-│   └── errors/                        # Error handling for API responses
-├── plugins                            # Fastify plugins (e.g., error handlers)
-└── index.ts                           # Main entry point for server setup and Swagger configuration
+- **Endpoints**: `/auth/register`, `/auth/login`, `/auth/refresh`, `/auth/logout`
+- **Functionality**: Manages user authentication and generates JWT tokens.
 
-tests
-├── integration
-│   └── api.test.ts                    # Integration tests for API endpoints
-└── unit
-    ├── application                    # Tests for application layer (use cases and DTOs)
-    ├── domain                         # Tests for entities, value objects, and domain repositories
-    ├── infrastructure                 # Tests for repository implementations
-    ├── interface                      # Tests for controllers and presenters
-    └── plugins                        # Tests for Fastify plugins (e.g., error handler)
-```
+### 2. User Service
 
-## Architecture Overview
+- **Endpoints**: `/users` (accessible through the API Gateway)
+- **Functionality**: Handles user data and profile management.
 
-The project adheres to Clean Architecture principles, ensuring a clear separation of responsibilities:
+### 3. [Quote Service](./services/quote-service/README.md "Quote Service")
 
-1. **Domain Layer**: Contains entities, value objects, and repository interfaces for domain logic.
-2. **Application Layer**: Houses the use cases, serving as an intermediary for business logic in the domain layer, while abstracting away infrastructure dependencies.
-3. **Infrastructure Layer**: Implements repositories and persistence mechanisms.
-4. **Interface Layer**: Provides API routes, controllers, and presenters for transforming domain data for external use.
-5. **Dependency Injection**: Manages dependencies across layers for modularity and testability.
-6. **Error Handling**: Centralized error management with custom error types for consistency.
+- **Endpoints**: `/quotes` (accessible through the API Gateway)
+- **Functionality**: Manages quotes, requiring JWT token validation for access.
 
-## Endpoints
+### 4. API Gateway
 
-### Health Check
+- **Functionality**: Provides a unified entry point and routes requests to each microservice. Configured using Fastify and includes middleware for initial token validation.
 
-- **GET** `/health`
-  - Returns server status.
+## Authentication
 
-### Random Quotes
+This project uses JSON Web Tokens (JWT) for user authentication. Here’s an overview of the authentication flow:
 
-- **GET** `/quotes/random`
-  - Retrieves random quotes with optional filters.
+1. **Registration** (`/auth/register`): New users register with their email, password (hashed), and role.
+2. **Login** (`/auth/login`): Users log in with email and password, receiving a JWT.
+3. **Token Validation**: Each service validates tokens independently through middleware to ensure security.
+4. **Role-Based Access Control**: Middleware checks user roles for authorized access.
 
-### Quote by ID
+## Microservices Architecture
 
-- **GET** `/quotes/:id`
-  - Retrieves a specific quote by its ID.
-  - **Parameters**:
-    - `id` (string): The ID of the quote to retrieve.
+The microservices architecture allows for scalability, fault isolation, and easier maintenance. Key components include:
 
-### All Tags
+1. **API Gateway**: Serves as the entry point and routes requests to each service.
+2. **Service Discovery**: Uses Consul for service registration and load balancing.
+3. **Event Bus**: Facilitates asynchronous communication between services (e.g., user updates).
 
-- **GET** `/tags`
-  - Retrieves all available tags.
+## Security and Best Practices
 
-### Tag by ID
-
-- **GET** `/tags/:id`
-  - Retrieves a specific tag by its ID.
-  - **Parameters**:
-    - `id` (string): The ID of the tag to retrieve.
-
-### All Authors
-
-- **GET** `/authors`
-  - Retrieves all available authors.
-
-### Author by ID
-
-- **GET** `/authors/:id`
-  - Retrieves a specific author by their ID.
-  - **Parameters**:
-    - `id` (string): The ID of the author to retrieve.
-
-## Quote Filters
-
-The `/quotes/random` endpoint supports the following filters via query parameters:
-
-| Filter        | Type   | Description                                           |
-| ------------- | ------ | ----------------------------------------------------- |
-| `limit`     | number | Maximum number of quotes to return                    |
-| `maxLength` | number | Maximum length (character count) of quote content     |
-| `minLength` | number | Minimum length (character count) of quote content     |
-| `tags`      | string | Comma-separated tags (e.g.,`Success,Inspirational`) |
-| `author`    | string | Author name (exact match, case-insensitive)           |
-
-## Swagger Documentation
-
-This project uses Swagger for automatically generated API documentation.
-
-- After starting the server, you can access the Swagger UI at: `http://localhost:3000/documentation`
-- The Swagger UI provides an interactive interface to test API endpoints, view request and response schemas, and explore all available parameters.
-
-### Swagger Setup
-
-Swagger is configured using Fastify plugins (`@fastify/swagger` and `@fastify/swagger-ui`). The documentation includes the following features:
-
-- **Tags and Descriptions**: Organized by tags for clear navigation
-- **Query Parameter Documentation**: Detailed parameter descriptions for each endpoint
-- **Schemas**: Schemas for request validation and response types (e.g., `Quote`, `Author`, `Tag`)
-
-## Error Handling
-
-The API uses structured error handling to provide clear, consistent error responses.
-
-### Error Types
-
-- **ValidationError** (400): Occurs when the input data is invalid (e.g., invalid filter values).
-- **NotFoundError** (404): Returned if a requested resource, such as a quote or author by ID, is not found.
-- **ServiceError** (500): Indicates an internal server error.
-
-### Error Response Format
-
-Error responses follow this structure:
-
-```json
-{
-  "status": "error",
-  "message": "Error message",
-  "code": HTTP status code
-}
-```
-
-### Example
-
-A request for a non-existing tag ID might return:
-
-```json
-{
-  "status": "error",
-  "message": "Tag not found",
-  "code": 404
-}
-```
-
-## Testing
-
-The project uses **Jest** and **Supertest** for comprehensive testing, including unit and integration tests. These tests ensure that all components, including services, error handling, and repositories, function as expected.
-
-### Test Structure
-
-- **Unit Tests**: Located in `tests/unit/`, these tests validate individual components such as services, repositories, error handling, and the dependency injection container.
-- **Integration Tests**: Located in `tests/integration/`, these tests validate the API endpoints, ensuring proper responses for various request scenarios.
-
-### Running Tests
-
-To run all tests:
-
-```bash
-npm test
-```
-
-To run tests in watch mode:
-
-```bash
-npm run test:watch
-```
-
-To check test coverage:
-
-```bash
-npm run test:coverage
-```
-
-The test suite verifies that all services and endpoints function as expected, ensuring error handling and filtering logic work correctly.
-
-![test:coverage](./images/unit-test-coverage.png "Unit tests coverage")
-
-
-## Examples
-
-- Get a random quote:
-  ```
-  GET http://localhost:3000/quotes/random
-  ```
-- Get two random quotes:
-  ```
-  GET http://localhost:3000/quotes/random?limit=2
-  ```
-- Get a quote by ID:
-  ```
-  GET http://localhost:3000/quotes/:id
-  ```
-- Get quotes with a maximum length of 100 characters:
-  ```
-  GET http://localhost:3000/quotes/random?maxLength=100
-  ```
-- Get quotes tagged as "Success":
-  ```
-  GET http://localhost:3000/quotes/random?tags=Success
-  ```
-- Get all tags:
-  ```
-  GET http://localhost:3000/tags
-  ```
-- Get a tag by ID:
-  ```
-  GET http://localhost:3000/tags/:id
-  ```
-- Get all authors:
-  ```
-  GET http://localhost:3000/authors
-  ```
-- Get an author by ID:
-  ```
-  GET http://localhost:3000/authors/:id
-  ```
-
-## Future Improvements
-
-- Consider adding authentication for secured access
-- Containerize the backend project along with a database using a Dockerfile and docker-compose
-- Develop a frontend for the application using React
-- Implement end-to-end tests with Cypress for comprehensive testing across user interactions
-- Plan deployments with Kubernetes to enable scalable, resilient, and containerized application management
+1. **Secure JWT Authentication**: Password hashing with bcrypt, JWT for authentication, and role-based access control.
+2. **Data Isolation**: Each service has a dedicated MongoDB instance, managed in Docker.
+3. **Monitoring**: Health checks and centralized logging can be added to track service health.
+4. **Scalability**: Stateless services allow for easy horizontal scaling.
 
 ## License
 
-This project is licensed under the MIT License. See `LICENSE` for more details.
-
-## Acknowledgments
-
-This project uses quotes, authors, and tags data from a curated list for demonstration purposes.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.

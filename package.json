@@ -1,35 +1,44 @@
 {
   "name": "quote-generator",
   "version": "1.0.0",
-  "main": "index.js",
+  "private": true,
+  "workspaces": [
+    "shared",
+    "services/*"
+  ],
   "scripts": {
-    "dev": "ts-node-dev src/index.ts",
-    "build": "tsc",
-    "start": "node dist/index.js",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
-  "devDependencies": {
-    "@types/jest": "^29.5.14",
-    "@types/node": "^22.8.1",
-    "@types/supertest": "^6.0.2",
-    "jest": "^29.7.0",
-    "supertest": "^7.0.0",
-    "ts-jest": "^29.2.5",
-    "ts-node": "^10.9.2",
-    "ts-node-dev": "^2.0.0",
-    "typescript": "^5.6.3"
+    "install:all": "npm install && npm run install:services",
+    "install:services": "npm run install:shared && npm run install:auth && npm run install:quote && npm run install:user && npm run install:gateway",
+    "install:shared": "cd shared && npm install",
+    "install:auth": "cd services/auth-service && npm install",
+    "install:quote": "cd services/quote-service && npm install",
+    "install:user": "cd services/user-service && npm install",
+    "install:gateway": "cd services/api-gateway && npm install",
+    "build": "npm run build:all",
+    "build:all": "npm run build:shared && npm run build:services",
+    "build:shared": "cd shared && npm run build",
+    "build:services": "npm run build:auth && npm run build:quote && npm run build:user && npm run build:gateway",
+    "build:auth": "cd services/auth-service && npm run build",
+    "build:quote": "cd services/quote-service && npm run build",
+    "build:user": "cd services/user-service && npm run build",
+    "build:gateway": "cd services/api-gateway && npm run build",
+    "dev:quote": "cd services/quote-service && npm run dev",
+    "dev:auth": "cd services/auth-service && npm run dev",
+    "dev:user": "cd services/user-service && npm run dev",
+    "dev:gateway": "cd services/api-gateway && npm run dev",
+    "test": "npm run test:all",
+    "test:all": "npm run test:auth && npm run test:quote && npm run test:user && npm run test:gateway",
+    "test:auth": "cd services/auth-service && npm run test:coverage",
+    "test:quote": "cd services/quote-service && npm run test:coverage",
+    "test:user": "cd services/user-service && npm run test:coverage",
+    "test:gateway": "cd services/api-gateway && npm run test:coverage"
   },
   "dependencies": {
-    "@fastify/cors": "^10.0.1",
-    "@fastify/swagger": "^9.2.0",
-    "@fastify/swagger-ui": "^5.1.0",
-    "fastify": "^5.0.0",
-    "fastify-plugin": "^5.0.1"
+    "bcrypt": "^5.1.1",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "@types/jsonwebtoken": "^9.0.7"
   }
 }

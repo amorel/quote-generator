@@ -1,0 +1,5 @@
+export enum EventTypes {
+  USER_CREATED = "USER_CREATED",
+  USER_UPDATED = "USER_UPDATED",
+  QUOTE_CREATED = "QUOTE_CREATED",
+}
