@@ -1,13 +1,18 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
-export async function connectDB() {
+export const connectDB = async () => {
+  const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/auth';
+  
   try {
-    await mongoose.connect(
-      process.env.DB_CONNECTION || "mongodb://auth-db:27017/auth"
-    );
-    console.log("📦 Connected to MongoDB (Auth Service)");
+    // Vérifie si une connexion existe déjà
+    if (mongoose.connection.readyState === 1) {
+      return;
+    }
+
+    await mongoose.connect(uri);
+    console.log('MongoDB connected successfully');
   } catch (error) {
-    console.error("MongoDB connection error:", error);
+    console.error('MongoDB connection error:', error);
     process.exit(1);
   }
-}
+};
