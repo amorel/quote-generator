@@ -26,7 +26,7 @@
     "build:gateway": "cd services/api-gateway && npm run build",
     "build:frontend": "cd services/frontend && npm run build",
 
-    "dev:all": "concurrently \"npm run dev:auth\" \"npm run dev:quote\" \"npm run dev:user\" \"npm run dev:gateway\" \"npm run dev:frontend\"",
+    "dev:all:win": "start npm run dev:auth && start npm run dev:quote && start npm run dev:user && start npm run dev:gateway && start npm run dev:frontend",
     "dev:quote": "cd services/quote-service && npm run dev",
     "dev:auth": "cd services/auth-service && npm run dev",
     "dev:user": "cd services/user-service && npm run dev",
