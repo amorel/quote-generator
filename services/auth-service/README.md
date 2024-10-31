@@ -1,34 +1,40 @@
 #### 1. **Auth Service (`auth-service/README.md`)**
 
-```markdown
 # Auth Service
 
 This service manages user authentication and authorization, including login, registration, and JWT generation.
 
 ## Table of Contents
-- [Getting Started](#getting-started)
-- [Environment Variables](#environment-variables)
-- [Endpoints](#endpoints)
-- [Testing](#testing)
-- [Architecture Overview](#architecture-overview)
+
+- [Auth Service](#auth-service)
+  - [Table of Contents](#table-of-contents)
+    - [Getting Started](#getting-started)
+      - [Prerequisites](#prerequisites)
+      - [Installation](#installation)
+    - [Environment Variables](#environment-variables)
+    - [Endpoints](#endpoints)
+    - [Testing](#testing)
+    - [Architecture Overview](#architecture-overview)
 
 ### Getting Started
 
 #### Prerequisites
+
 - Node.js (>= 14.x)
 - MongoDB instance
 
 #### Installation
 
 1. Install dependencies:
-   ```bash
-   npm install
-   ```
+```bash
+npm install
+```
+
 
 2. Start the server in development mode:
-   ```bash
-   npm run dev
-   ```
+```bash
+npm run dev
+```
 
 The service will run on `http://localhost:3001`.
 
@@ -38,14 +44,15 @@ Create a `.env` file with the following variables:
 
 ```plaintext
 JWT_SECRET=your_secret_key
+JWT_EXPIRES_IN=24h
 DB_CONNECTION=mongodb://auth-db:27017/auth
 ```
 
 ### Endpoints
 
-- **POST** `/auth/register`: Register a new user
-- **POST** `/auth/login`: Log in and receive a JWT token
-- **POST** `/auth/validate`: Validate a JWT token
+- **POST** `/auth/register`: Registers a new user, hashes the password, and issues a JWT if successful.
+- **POST** `/auth/login`: Logs in a user, validates credentials, and issues a JWT if successful.
+- **POST** `/auth/validate`: Validates a given JWT token for session verification.
 
 ### Testing
 
@@ -57,4 +64,9 @@ npm test
 
 ### Architecture Overview
 
-This service follows a clean architecture design, with separate layers for domain logic, infrastructure, and interface. It uses MongoDB for data persistence and bcrypt for password hashing.
+This service uses a clean architecture approach, with the following key components:
+
+- **AuthService**: Manages core authentication functions, including user registration, login, and token validation.
+- **User Repository**: `IUserRepository` interface abstracts data access, implemented using MongoDB through `UserModel`.
+- **JWT Handling**: Token generation and validation are centralized in `AuthService`, using the `jwt.ts` configuration for consistency.
+- **Security**: Passwords are hashed with bcrypt, and JWTs include user roles for access control.

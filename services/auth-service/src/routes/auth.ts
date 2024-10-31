@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { UserModel } from "../infrastructure/persistence/models/UserModel";
+import { JWT_CONFIG } from "../config/jwt";
 
 interface LoginBody {
   email: string;
@@ -30,32 +31,39 @@ export default async function (fastify: FastifyInstance) {
       },
     },
     async (request, reply) => {
-      const { email, password } = request.body;
+      try {
+        const { email, password } = request.body;
 
-      // Vérifier si l'utilisateur existe
-      const user = await UserModel.findOne({ email });
-      if (!user) {
-        return reply.code(401).send({ error: "Invalid credentials" });
+        // Vérifier si l'utilisateur existe
+        const user = await UserModel.findOne({ email });
+        if (!user) {
+          return reply.code(401).send({ error: "Invalid credentials" });
+        }
+
+        // Vérifier le mot de passe
+        const validPassword = await bcrypt.compare(password, user.password);
+        if (!validPassword) {
+          return reply.code(401).send({ error: "Invalid credentials" });
+        }
+
+        // Générer le token
+        const token = jwt.sign(
+          {
+            id: user._id,
+            email: user.email,
+            role: user.role,
+          },
+          JWT_CONFIG.secret,
+          { expiresIn: JWT_CONFIG.expiresIn }
+        );
+
+        return { token };
+      } catch (error) {
+        request.log.error(error);
+        return reply.code(500).send({
+          error: "An error occurred during login",
+        });
       }
-
-      // Vérifier le mot de passe
-      const validPassword = await bcrypt.compare(password, user.password);
-      if (!validPassword) {
-        return reply.code(401).send({ error: "Invalid credentials" });
-      }
-
-      // Générer le token
-      const token = jwt.sign(
-        {
-          id: user._id,
-          email: user.email,
-          role: user.role,
-        },
-        process.env.JWT_SECRET!,
-        { expiresIn: "1h" }
-      );
-
-      return { token };
     }
   );
 
@@ -83,6 +91,23 @@ export default async function (fastify: FastifyInstance) {
         return reply.code(400).send({ error: "Email already exists" });
       }
 
+      // Validation supplémentaire du mot de passe
+      if (password.length < 8) {
+        return reply
+          .code(400)
+          .send({ error: "Password must be at least 8 characters long" });
+      }
+
+      // Vérification basique de la force du mot de passe
+      const passwordRegex =
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+      if (!passwordRegex.test(password)) {
+        return reply.code(400).send({
+          error:
+            "Password must contain at least one uppercase letter, one lowercase letter, one number and one special character",
+        });
+      }
+
       // Hasher le mot de passe
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(password, salt);
@@ -103,8 +128,8 @@ export default async function (fastify: FastifyInstance) {
           email: user.email,
           role: user.role,
         },
-        process.env.JWT_SECRET!,
-        { expiresIn: "1h" }
+        JWT_CONFIG.secret,
+        { expiresIn: JWT_CONFIG.expiresIn }
       );
 
       return { token };
@@ -120,7 +145,7 @@ export default async function (fastify: FastifyInstance) {
     }
 
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET!);
+      const decoded = jwt.verify(token, JWT_CONFIG.secret);
       return { valid: true, user: decoded };
     } catch (error) {
       return reply.code(401).send({ valid: false });
