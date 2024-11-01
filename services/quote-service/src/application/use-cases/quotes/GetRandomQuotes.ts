@@ -1,7 +1,7 @@
 import { IQuoteRepository } from "../../../domain/repositories/IQuoteRepository";
 import { QuoteFilters } from "../../../domain/value-objects/QuoteFilters";
 import { QuotePresenter } from "../../../interface/api/presenters/QuotePresenter";
-import { QuoteDTO } from "../../dtos/QuoteDTO";
+import type { QuoteDTO } from "@quote-generator/shared";
 
 export class GetRandomQuotesUseCase {
   constructor(

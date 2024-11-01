@@ -6,11 +6,7 @@ import { useAppSelector } from "../../hooks/useAppSelector";
 
 export const Quote = () => {
   const dispatch = useAppDispatch();
-  const {
-    current: quote,
-    loading,
-    error,
-  } = useAppSelector((state) => state.quote);
+  const { current, loading, error } = useAppSelector((state) => state.quote);
 
   useEffect(() => {
     dispatch(fetchRandomQuote());
@@ -18,13 +14,13 @@ export const Quote = () => {
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
-  if (!quote) return null;
+  if (!current) return null;
 
   return (
     <div className={styles.container}>
       <blockquote className={styles.quote}>
-        <p>{quote.content}</p>
-        <footer>— {quote.author}</footer>
+        <p>{current.content}</p>
+        <footer>— {current.author}</footer>
       </blockquote>
       <button onClick={() => dispatch(fetchRandomQuote())}>Next Quote</button>
     </div>

@@ -1,6 +1,1 @@
-export interface QuoteDTO {
-  id: string;
-  content: string;
-  authorName: string;
-  tags: string[];
-}
+export type { QuoteDTO } from "@quote-generator/shared";

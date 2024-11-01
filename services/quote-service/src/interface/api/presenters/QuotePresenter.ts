@@ -1,12 +1,12 @@
+import type { QuoteDTO } from "@quote-generator/shared";
 import { Quote } from "../../../domain/entities/Quote";
-import { QuoteDTO } from "../../../application/dtos/QuoteDTO";
 
 export class QuotePresenter {
   toDTO(quote: Quote): QuoteDTO {
     return {
-      id: quote.getId(),
+      _id: quote.getId(),
       content: quote.getContent().getValue(),
-      authorName: quote.getAuthorId(),
+      author: quote.getAuthorId(),
       tags: [...quote.getTags()],
     };
   }

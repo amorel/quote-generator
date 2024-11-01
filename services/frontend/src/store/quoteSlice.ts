@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { Quote } from "../types/quote";
+import { QuoteDTO } from "@quote-generator/shared";
 import { getRandomQuote } from "../services/quoteService";
 
 export const fetchRandomQuote = createAsyncThunk(
@@ -9,19 +9,29 @@ export const fetchRandomQuote = createAsyncThunk(
   }
 );
 
+interface QuoteState {
+  current: QuoteDTO | null;
+  history: QuoteDTO[];
+  loading: boolean;
+  error: string | null;
+}
+
+const initialState: QuoteState = {
+  current: null,
+  history: [],
+  loading: false,
+  error: null,
+};
+
 const quoteSlice = createSlice({
   name: "quote",
-  initialState: {
-    current: null as Quote | null,
-    history: [] as Quote[],
-    loading: false,
-    error: null as string | null,
-  },
+  initialState,
   reducers: {},
   extraReducers: (builder) => {
     builder
       .addCase(fetchRandomQuote.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(fetchRandomQuote.fulfilled, (state, action) => {
         state.loading = false;

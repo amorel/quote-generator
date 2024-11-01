@@ -1,5 +1,5 @@
 import { IQuoteRepository } from "../../../domain/repositories/IQuoteRepository";
-import { QuoteDTO } from "../../dtos/QuoteDTO";
+import type { QuoteDTO } from "@quote-generator/shared";
 import { NotFoundError } from "../../../interface/errors";
 import { QuotePresenter } from "../../../interface/api/presenters/QuotePresenter";
 
