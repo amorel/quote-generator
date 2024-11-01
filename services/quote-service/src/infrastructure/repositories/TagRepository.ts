@@ -1,18 +1,28 @@
-// src/infrastructure/repositories/TagRepository.ts
 import { Tag } from "../../domain/entities/Tag";
 import { ITagRepository } from "../../domain/repositories/ITagRepository";
-import { tags } from "../persistence/in-memory/tags";
+import { TagModel } from "../persistence/models/TagModel";
 import TagName from "../../domain/value-objects/TagName";
 
 export class TagRepository implements ITagRepository {
   async findAll(): Promise<Tag[]> {
-    return tags.map((tag) => new Tag(tag._id, TagName.create(tag.name)));
+    try {
+      const tags = await TagModel.find();
+      return tags.map((tag) => new Tag(tag._id, TagName.create(tag.name)));
+    } catch (error) {
+      console.error("Error in TagRepository.findAll:", error);
+      throw error;
+    }
   }
 
   async findById(id: string): Promise<Tag | null> {
-    const tag = tags.find((t) => t._id === id);
-    if (!tag) return null;
+    try {
+      const tag = await TagModel.findById(id);
+      if (!tag) return null;
 
-    return new Tag(tag._id, TagName.create(tag.name));
+      return new Tag(tag._id, TagName.create(tag.name));
+    } catch (error) {
+      console.error("Error in TagRepository.findById:", error);
+      throw error;
+    }
   }
 }

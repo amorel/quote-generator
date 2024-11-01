@@ -1,4 +1,6 @@
-export const tags = [
+db = db.getSiblingDB("quotes");
+
+db.tags.insertMany([
   { _id: "OMnUd1CUg", name: "Future" },
   { _id: "krXU-q4FE", name: "Friendship" },
   { _id: "kqzFRe-4V4", name: "Education" },
@@ -66,4 +68,4 @@ export const tags = [
   { _id: "aLWQOIYpeMz", name: "Creativity" },
   { _id: "NLC25zc7-m5", name: "Work" },
   { _id: "L09SJrfjY8s", name: "Genius" },
-];
+]);

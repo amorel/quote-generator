@@ -1,5 +1,6 @@
 import { build } from "./app";
 import { config } from "dotenv";
+import mongoose from "mongoose";
 
 // Charger les variables d'environnement
 config();
@@ -8,6 +9,12 @@ const start = async () => {
   try {
     const port = parseInt(process.env.PORT || "3002", 10);
     const host = process.env.HOST || "0.0.0.0";
+
+    // Connexion à MongoDB
+    const mongoUri =
+      process.env.MONGODB_URI || "mongodb://localhost:27017/quotes";
+    await mongoose.connect(mongoUri);
+    console.log("Connected to MongoDB");
 
     const app = await build();
 

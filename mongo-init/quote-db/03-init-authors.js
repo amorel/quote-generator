@@ -1,4 +1,6 @@
-export const authors = [
+db = db.getSiblingDB("quotes");
+
+db.authors.insertMany([
   {
     _id: "7E6EppQX9_ha",
     name: "Alice Walker",
@@ -5624,4 +5626,4 @@ export const authors = [
     description: "American business magnate and philanthropist",
     link: "https://en.wikipedia.org/wiki/Warren_Buffett",
   },
-];
+]);

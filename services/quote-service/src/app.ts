@@ -15,6 +15,7 @@ import { AuthorController } from "./interface/api/controllers/AuthorController";
 import { QuoteController } from "./interface/api/controllers/QuoteController";
 import { authMiddleware } from "./middleware/authMiddleware";
 import { JWTService } from "./services/JWTService";
+import mongoose from 'mongoose';
 
 // Interfaces pour le typage des requêtes
 interface QuoteQueryRequest {
@@ -52,16 +53,26 @@ export async function build(): Promise<FastifyInstance> {
   const container = Container.getInstance();
   const jwtService = container.get<JWTService>("jwtService");
 
+  // Connexion à MongoDB
+  try {
+    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/quotes';
+    await mongoose.connect(mongoUri);
+    console.log('📦 Connected to MongoDB');
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+    throw error;
+  }
+
   // hook global
   // app.addHook("preHandler", authMiddleware);
 
   // Configuration des gestionnaires d'erreur
   app.setErrorHandler((error: FastifyError, request, reply) => {
-    console.error('Detailed error:', {
+    console.error("Detailed error:", {
       name: error.name,
       message: error.message,
       stack: error.stack,
-      validation: error.validation
+      validation: error.validation,
     });
 
     // Erreurs personnalisées
@@ -353,8 +364,6 @@ export async function build(): Promise<FastifyInstance> {
   );
 
   // Route de debug qui montre l'état actuel du système
-  // Dans src/app.ts, modifions la route /debug :
-
   app.get(
     "/debug",
     {
@@ -472,8 +481,7 @@ export async function build(): Promise<FastifyInstance> {
       return {
         headers: request.headers,
         user: request.user || null,
-        authServiceUrl:
-          process.env.AUTH_SERVICE_URL || "http://localhost:3001",
+        authServiceUrl: process.env.AUTH_SERVICE_URL || "http://localhost:3001",
         environment: process.env.NODE_ENV,
         serverTime: new Date().toISOString(),
       };

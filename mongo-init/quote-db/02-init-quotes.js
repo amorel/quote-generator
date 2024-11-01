@@ -1,11 +1,8 @@
-interface QuoteData {
-  _id: string;
-  content: string;
-  author: string;
-  tags: string[];
-}
+db = db.getSiblingDB("quotes");
 
-export const quotes: QuoteData[] = [
+print("Starting quotes data initialization...");
+
+db.quotes.insertMany([
   {
     _id: "1",
     content: "Test quote 1",
@@ -14196,4 +14193,4 @@ export const quotes: QuoteData[] = [
       "Genius is one per cent inspiration, ninety-nine per cent perspiration.",
     tags: ["Work", "Genius", "Inspirational", "Motivational"],
   },
-];
+]);
