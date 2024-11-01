@@ -1,14 +1,21 @@
 import { User, LoginResponse } from "../types/auth";
 
+const API_URL = "http://localhost:3000"; // URL de l'API Gateway
+
 interface LoginCredentials {
   email: string;
   password: string;
 }
 
-export const login = async (
-  credentials: LoginCredentials
+interface RegisterCredentials {
+  email: string;
+  password: string;
+}
+
+export const register = async (
+  credentials: RegisterCredentials
 ): Promise<LoginResponse> => {
-  const response = await fetch("http://localhost:3000/auth/login", {
+  const response = await fetch(`${API_URL}/auth/register`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -18,7 +25,7 @@ export const login = async (
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.message || "Login failed");
+    throw new Error(error.error || "L'inscription a échoué");
   }
 
   const data = await response.json();
@@ -28,10 +35,10 @@ export const login = async (
   };
 };
 
-export const register = async (
+export const login = async (
   credentials: LoginCredentials
 ): Promise<LoginResponse> => {
-  const response = await fetch("http://localhost:3000/auth/register", {
+  const response = await fetch(`${API_URL}/auth/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -41,7 +48,7 @@ export const register = async (
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.message || "Registration failed");
+    throw new Error(error.error || "La connexion a échoué");
   }
 
   const data = await response.json();

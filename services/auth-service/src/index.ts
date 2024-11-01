@@ -1,5 +1,9 @@
 import { build } from "./app";
 import { connectDB } from './config/database';
+import { config } from "dotenv";
+
+// Charger les variables d'environnement
+config();
 
 const start = async () => {
   try {

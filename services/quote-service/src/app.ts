@@ -473,7 +473,7 @@ export async function build(): Promise<FastifyInstance> {
         headers: request.headers,
         user: request.user || null,
         authServiceUrl:
-          process.env.AUTH_SERVICE_URL || "http://auth-service:3001",
+          process.env.AUTH_SERVICE_URL || "http://localhost:3001",
         environment: process.env.NODE_ENV,
         serverTime: new Date().toISOString(),
       };

@@ -3,7 +3,7 @@ export class AuthService {
 
   constructor() {
     this.authServiceUrl =
-      process.env.AUTH_SERVICE_URL || "http://auth-service:3001";
+      process.env.AUTH_SERVICE_URL || "http://localhost:3001";
     console.log("🔧 AuthService initialized with URL:", this.authServiceUrl);
   }
 
