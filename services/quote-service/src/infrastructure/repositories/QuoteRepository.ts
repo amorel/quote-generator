@@ -59,23 +59,28 @@ export class QuoteRepository implements IQuoteRepository {
             quote._id,
             QuoteContent.create(quote.content),
             quote.author,
-            quote.tags || [] 
+            quote.tags || []
           )
       );
   }
 
   async findById(id: string): Promise<Quote | null> {
-    const quote = await QuoteModel.findById(id).lean(); // .lean() pour avoir un objet JS simple
+    try {
+      const quote = await QuoteModel.findById(id).lean(); // .lean() pour avoir un objet JS simple
 
-    if (!quote || !quote.content || !quote.author) {
+      if (!quote || !quote.content || !quote.author) {
+        return null;
+      }
+
+      return new Quote(
+        quote._id,
+        QuoteContent.create(quote.content),
+        quote.author,
+        quote.tags || []
+      );
+    } catch (error) {
+      console.error("Error in QuoteRepository.findById:", error);
       return null;
     }
-
-    return new Quote(
-      quote._id,
-      QuoteContent.create(quote.content),
-      quote.author,
-      quote.tags || []
-    );
   }
 }

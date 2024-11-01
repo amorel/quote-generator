@@ -1,6 +1,5 @@
 import { Tag } from "../../../../src/domain/entities/Tag";
 import TagName from "../../../../src/domain/value-objects/TagName";
-import { describe, expect, it, jest, beforeEach } from '@jest/globals';
 
 describe("Tag Entity", () => {
   const mockTag = new Tag("test-id", TagName.create("Test Tag"));

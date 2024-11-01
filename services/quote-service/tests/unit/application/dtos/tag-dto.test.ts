@@ -1,5 +1,4 @@
 import { TagDTO } from "../../../../src/application/dtos/TagDTO";
-import { describe, expect, it, jest, beforeEach } from '@jest/globals';
 
 describe("TagDTO", () => {
   it("should have correct structure", () => {

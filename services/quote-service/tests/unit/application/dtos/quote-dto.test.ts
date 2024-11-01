@@ -1,5 +1,4 @@
 import { QuoteDTO } from "../../../../src/application/dtos/QuoteDTO";
-import { describe, expect, it, jest, beforeEach } from '@jest/globals';
 
 describe("QuoteDTO", () => {
   it("should have correct structure", () => {

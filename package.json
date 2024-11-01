@@ -59,16 +59,24 @@
     "docker:down": "docker-compose down",
     "docker:clean": "docker-compose down -v",
     
-    "dev": "env-cmd -f .env.development docker-compose up",
-    "start": "env-cmd -f .env docker-compose -f docker-compose.prod.yml up -d",
-    "start:staging": "env-cmd -f .env.staging docker-compose -f docker-compose.prod.yml up -d",
+    "dev": "docker compose --env-file .env.development up",
+    "dev:build": "docker compose --env-file .env.development up --build",
+    "prod": "docker compose --env-file .env up",
+    "prod:build": "docker compose --env-file .env up --build",
 
     "start:services": "npm run start:auth && npm run start:quote && npm run start:user && npm run start:gateway",
     "start:auth": "cd services/auth-service && npm start",
     "start:quote": "cd services/quote-service && npm start",
     "start:user": "cd services/user-service && npm start",
     "start:gateway": "cd services/api-gateway && npm start",
-    "start:frontend": "cd services/frontend && npm start"
+    "start:frontend": "cd services/frontend && npm start",
+
+    "logs": "docker-compose logs -f",
+    "logs:auth": "docker-compose logs -f auth-service",
+    "logs:quote": "docker-compose logs -f quote-service",
+    "logs:user": "docker-compose logs -f user-service",
+    "logs:gateway": "docker-compose logs -f api-gateway",
+    "logs:frontend": "docker-compose logs -f frontend"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
@@ -77,7 +85,6 @@
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
     "@types/jsonwebtoken": "^9.0.7",
-    "concurrently": "^8.0.0",
     "rimraf": "^5.0.0",
     "typescript": "^5.0.0",
     "env-cmd": "^10.1.0"

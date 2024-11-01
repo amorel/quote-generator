@@ -57,7 +57,12 @@ export async function build(): Promise<FastifyInstance> {
 
   // Configuration des gestionnaires d'erreur
   app.setErrorHandler((error: FastifyError, request, reply) => {
-    app.log.error(error);
+    console.error('Detailed error:', {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+      validation: error.validation
+    });
 
     // Erreurs personnalisées
     if (error instanceof NotFoundError) {

@@ -4,7 +4,6 @@ import { QuotePresenter } from "../../../../src/interface/api/presenters/QuotePr
 import { Quote } from "../../../../src/domain/entities/Quote";
 import QuoteContent from "../../../../src/domain/value-objects/QuoteContent";
 import { NotFoundError } from "../../../../src/interface/errors";
-import { describe, expect, it, jest, beforeEach } from '@jest/globals';
 
 jest.mock("../../../../src/infrastructure/repositories/QuoteRepository");
 jest.mock("../../../../src/interface/api/presenters/QuotePresenter");

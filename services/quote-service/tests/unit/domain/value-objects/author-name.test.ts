@@ -1,5 +1,4 @@
 import AuthorName from "../../../../src/domain/value-objects/AuthorName";
-import { describe, expect, it, jest, beforeEach } from '@jest/globals';
 
 describe("AuthorName", () => {
   it("should create valid author name", () => {

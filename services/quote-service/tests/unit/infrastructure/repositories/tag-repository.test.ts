@@ -1,6 +1,5 @@
 import { TagRepository } from "../../../../src/infrastructure/repositories/TagRepository";
 import { Tag } from "../../../../src/domain/entities/Tag";
-import { describe, expect, it, jest, beforeEach } from '@jest/globals';
 
 describe("TagRepository", () => {
   let repository: TagRepository;

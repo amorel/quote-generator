@@ -1,6 +1,5 @@
 import { Quote } from "../../../../src/domain/entities/Quote";
 import QuoteContent from "../../../../src/domain/value-objects/QuoteContent";
-import { describe, expect, it, jest, beforeEach } from '@jest/globals';
 
 describe("Quote Entity", () => {
   const mockQuote = new Quote(

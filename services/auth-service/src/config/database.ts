@@ -1,18 +1,20 @@
-import mongoose from 'mongoose';
+// services/auth-service/src/config/database.ts
+import mongoose from "mongoose";
 
-export const connectDB = async () => {
-  const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/auth';
-  
+export async function connectDB() {
   try {
-    // Vérifie si une connexion existe déjà
-    if (mongoose.connection.readyState === 1) {
-      return;
-    }
+    const username = process.env.MONGO_INITDB_ROOT_USERNAME || "admin";
+    const password = process.env.MONGO_INITDB_ROOT_PASSWORD || "password";
+    const host = process.env.MONGO_HOST || "auth-db";
+    const port = process.env.MONGO_PORT || "27017";
+    const database = process.env.MONGO_DATABASE || "auth";
+
+    const uri = `mongodb://${username}:${password}@${host}:${port}/${database}?authSource=admin`;
 
     await mongoose.connect(uri);
-    console.log('MongoDB connected successfully');
+    console.log("Connected to MongoDB (auth-service)");
   } catch (error) {
-    console.error('MongoDB connection error:', error);
+    console.error("MongoDB connection error:", error);
     process.exit(1);
   }
-};
+}

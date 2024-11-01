@@ -1,5 +1,4 @@
 import { AuthorDTO } from "../../../../src/application/dtos/AuthorDTO";
-import { describe, expect, it, jest, beforeEach } from '@jest/globals';
 
 describe("AuthorDTO", () => {
   it("should have correct structure", () => {

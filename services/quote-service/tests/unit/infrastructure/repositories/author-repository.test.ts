@@ -1,6 +1,5 @@
 import { AuthorRepository } from "../../../../src/infrastructure/repositories/AuthorRepository";
 import { Author } from "../../../../src/domain/entities/Author";
-import { describe, expect, it, jest, beforeEach } from '@jest/globals';
 
 describe("AuthorRepository", () => {
   let repository: AuthorRepository;

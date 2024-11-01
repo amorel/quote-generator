@@ -5,7 +5,6 @@ import { TagPresenter } from "../../../../src/interface/api/presenters/TagPresen
 import { Tag } from "../../../../src/domain/entities/Tag";
 import TagName from "../../../../src/domain/value-objects/TagName";
 import { NotFoundError } from "../../../../src/interface/errors";
-import { describe, expect, it, jest, beforeEach } from '@jest/globals';
 
 jest.mock("../../../../src/infrastructure/repositories/TagRepository");
 jest.mock("../../../../src/interface/api/presenters/TagPresenter");

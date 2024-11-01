@@ -1,6 +1,5 @@
 import { Author } from "../../../../src/domain/entities/Author";
 import AuthorName from "../../../../src/domain/value-objects/AuthorName";
-import { describe, expect, it, jest, beforeEach } from '@jest/globals';
 
 describe("Author Entity", () => {
   const mockAuthor = new Author(

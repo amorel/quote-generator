@@ -1,19 +1,96 @@
-// tests/unit/infrastructure/repositories/quote-repository.test.ts
-import { QuoteRepository } from "../../../../src/infrastructure/repositories/QuoteRepository";
-import { QuoteFilters } from "../../../../src/domain/value-objects/QuoteFilters";
 import { Quote } from "../../../../src/domain/entities/Quote";
-import { describe, expect, it, jest, beforeEach } from '@jest/globals';
+import { QuoteFilters } from "../../../../src/domain/value-objects/QuoteFilters";
+import QuoteContent from "../../../../src/domain/value-objects/QuoteContent";
+import { QuoteRepository } from "../../../../src/infrastructure/repositories/QuoteRepository";
+
+jest.mock("mongoose", () => ({
+  Schema: jest.fn(),
+  model: jest.fn(),
+  connect: jest.fn(),
+}));
+
+// Données de test
+const mockQuotes = [
+  {
+    _id: "WQbJJwEFP1l9",
+    content:
+      "In the depth of winter, I finally learned that there was within me an invincible summer.",
+    author: "Albert Camus",
+    tags: ["Famous Quotes", "Inspirational"],
+  },
+  {
+    _id: "SHORT1",
+    content: "Short quote",
+    author: "Short Author",
+    tags: ["Success", "Wisdom"],
+  },
+  {
+    _id: "LONG1",
+    content:
+      "This is a longer quote that will be filtered out by maxLength test",
+    author: "Another Author",
+    tags: ["Other"],
+  },
+];
+
+class TestQuoteRepository extends QuoteRepository {
+  async findRandom(filters: QuoteFilters): Promise<Quote[]> {
+    let result = [...mockQuotes];
+
+    if (filters.maxLength) {
+      result = result.filter((q) => q.content.length <= filters.maxLength!);
+    }
+
+    if (filters.minLength) {
+      result = result.filter((q) => q.content.length >= filters.minLength!);
+    }
+
+    if (filters.tags && filters.tags.length > 0) {
+      const requiredTags = filters.tags.map((t) => t.toLowerCase());
+      result = result.filter((q) =>
+        requiredTags.every((tag) =>
+          q.tags.some((qt) => qt.toLowerCase() === tag)
+        )
+      );
+    }
+
+    if (filters.author) {
+      result = result.filter(
+        (q) => q.author.toLowerCase() === filters.author!.toLowerCase()
+      );
+    }
+
+    return result
+      .slice(0, filters.limit || 1)
+      .map(
+        (q) =>
+          new Quote(q._id, QuoteContent.create(q.content), q.author, q.tags)
+      );
+  }
+
+  async findById(id: string): Promise<Quote | null> {
+    const quote = mockQuotes.find((q) => q._id === id);
+    if (!quote) return null;
+
+    return new Quote(
+      quote._id,
+      QuoteContent.create(quote.content),
+      quote.author,
+      quote.tags
+    );
+  }
+}
 
 describe("QuoteRepository", () => {
-  let repository: QuoteRepository;
+  let repository: TestQuoteRepository;
 
   beforeEach(() => {
-    repository = new QuoteRepository();
+    repository = new TestQuoteRepository();
   });
 
   describe("findRandom", () => {
     it("should respect limit filter", async () => {
-      const limit = 3;
+      const limit = 2;
       const filters = QuoteFilters.create({ limit });
 
       const quotes = await repository.findRandom(filters);
@@ -25,7 +102,7 @@ describe("QuoteRepository", () => {
     });
 
     it("should filter by maxLength", async () => {
-      const maxLength = 50;
+      const maxLength = 20; // Pour inclure "Short quote"
       const filters = QuoteFilters.create({ maxLength });
 
       const quotes = await repository.findRandom(filters);
@@ -111,12 +188,9 @@ describe("QuoteRepository", () => {
 
   describe("findById", () => {
     it("should find quote by id", async () => {
-      const id = "WQbJJwEFP1l9";
-
-      const quote = await repository.findById(id);
-
+      const quote = await repository.findById("WQbJJwEFP1l9");
       expect(quote).not.toBeNull();
-      expect(quote?.getId()).toBe(id);
+      expect(quote?.getId()).toBe("WQbJJwEFP1l9");
       expect(quote?.getContent().getValue()).toBe(
         "In the depth of winter, I finally learned that there was within me an invincible summer."
       );

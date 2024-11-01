@@ -1,5 +1,4 @@
 import QuoteContent from "../../../../src/domain/value-objects/QuoteContent";
-import { describe, expect, it, jest, beforeEach } from '@jest/globals';
 
 describe("QuoteContent", () => {
   it("should create valid quote content", () => {

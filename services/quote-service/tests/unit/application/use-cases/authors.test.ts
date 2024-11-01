@@ -5,7 +5,6 @@ import { AuthorPresenter } from "../../../../src/interface/api/presenters/Author
 import { Author } from "../../../../src/domain/entities/Author";
 import AuthorName from "../../../../src/domain/value-objects/AuthorName";
 import { NotFoundError } from "../../../../src/interface/errors";
-import { describe, expect, it, jest, beforeEach } from '@jest/globals';
 
 jest.mock("../../../../src/infrastructure/repositories/AuthorRepository");
 jest.mock("../../../../src/interface/api/presenters/AuthorPresenter");

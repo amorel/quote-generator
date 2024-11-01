@@ -7,6 +7,9 @@
     "strict": true,
     "esModuleInterop": true,
     "moduleResolution": "node",
+    "skipLibCheck": true,
+    "types": ["node", "jest"],
+    "typeRoots": ["./node_modules/@types", "../../node_modules/@types"],
     "baseUrl": "./src"
   },
   "include": ["src/**/*"],
