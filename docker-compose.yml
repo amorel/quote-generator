@@ -28,15 +28,15 @@ services:
       - user-service
 
   frontend:
-      build:
-        context: .
-        dockerfile: services/frontend/Dockerfile
-      ports:
-        - "3006:3006"
-      environment:
-        - VITE_PORT=3006
-      depends_on:
-        - api-gateway
+    build:
+      context: .
+      dockerfile: services/frontend/Dockerfile
+    ports:
+      - "3006:3006"
+    environment:
+      - VITE_PORT=3006
+    depends_on:
+      - api-gateway
 
   quote-service:
     build:
@@ -63,17 +63,35 @@ services:
 
   auth-db:
     image: mongo:latest
+    ports:
+      - "27018:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
     volumes:
+      - ./mongo-init/auth-db:/docker-entrypoint-initdb.d
       - auth-data:/data/db
 
   quote-db:
     image: mongo:latest
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
     volumes:
+      - ./mongo-init/quote-db:/docker-entrypoint-initdb.d
       - quote-data:/data/db
 
   user-db:
     image: mongo:latest
+    ports:
+      - "27019:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
     volumes:
+      - ./mongo-init/user-db:/docker-entrypoint-initdb.d
       - user-data:/data/db
 
 volumes:
