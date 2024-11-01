@@ -1,16 +1,6 @@
-import { User, LoginResponse } from "../types/auth";
+import { LoginCredentials, RegisterCredentials, LoginResponse, User } from "@quote-generator/shared";
 
 const API_URL = "http://localhost:3000"; // URL de l'API Gateway
-
-interface LoginCredentials {
-  email: string;
-  password: string;
-}
-
-interface RegisterCredentials {
-  email: string;
-  password: string;
-}
 
 export const register = async (
   credentials: RegisterCredentials

@@ -1,7 +1,7 @@
 /// <reference path="../types/fastify.d.ts" />
 import { FastifyReply, FastifyRequest } from "fastify";
 import { AuthService } from "../services/AuthService";
-import { JWTPayload } from "../types/auth";
+import { JWTPayload } from "@quote-generator/shared";
 
 const authService = new AuthService();
 

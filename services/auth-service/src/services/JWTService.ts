@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import { User } from "../domain/entities/User";
+import { JWTPayload } from "../types/fastify";
 
 export class JWTService {
   private readonly secretKey: string;
@@ -11,18 +12,20 @@ export class JWTService {
   }
 
   generateToken(user: User): string {
-    return jwt.sign(
-      {
-        id: user.getId(),
-        email: user.getEmail(),
-        role: user.getRole(),
-      },
-      this.secretKey,
-      { expiresIn: this.expiresIn }
-    );
+    const payload: JWTPayload = {
+      id: user.getId(),
+      email: user.getEmail(),
+      role: user.getRole(),
+    };
+
+    return jwt.sign(payload, this.secretKey, { expiresIn: this.expiresIn });
   }
 
-  verifyToken(token: string): any {
-    return jwt.verify(token, this.secretKey);
+  verifyToken(token: string): JWTPayload {
+    try {
+      return jwt.verify(token, this.secretKey) as JWTPayload;
+    } catch (error) {
+      throw new Error("Invalid token");
+    }
   }
 }

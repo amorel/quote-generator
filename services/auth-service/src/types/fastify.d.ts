@@ -1,6 +1,13 @@
 import { FastifyRequest as OriginalFastifyRequest } from "fastify";
-import { JWTPayload } from "@quote-generator/shared";
+export interface JWTPayload {
+  id: string;
+  email: string;
+  role: string;
+  iat?: number;
+  exp?: number;
+}
 
+// Extension du type FastifyRequest
 declare module "fastify" {
   interface FastifyRequest extends OriginalFastifyRequest {
     user?: JWTPayload;

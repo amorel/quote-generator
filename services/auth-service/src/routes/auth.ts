@@ -1,22 +1,12 @@
 import { FastifyInstance } from "fastify";
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import { UserModel } from "../infrastructure/persistence/models/UserModel";
-import { JWT_CONFIG } from "../config/jwt";
-
-interface RegisterBody {
-  email: string;
-  password: string;
-}
-
-interface LoginBody {
-  email: string;
-  password: string;
-}
+import { LoginCredentials, RegisterCredentials } from "@quote-generator/shared";
+import { AuthService } from "../services/AuthService";
 
 export default async function (fastify: FastifyInstance) {
+  const authService = new AuthService();
+
   // Register route
-  fastify.post<{ Body: RegisterBody }>(
+  fastify.post<{ Body: RegisterCredentials }>(
     "/register",
     {
       schema: {
@@ -28,64 +18,39 @@ export default async function (fastify: FastifyInstance) {
             password: { type: "string", minLength: 6 },
           },
         },
+        response: {
+          201: {
+            type: "object",
+            properties: {
+              token: { type: "string" },
+              user: {
+                type: "object",
+                properties: {
+                  id: { type: "string" },
+                  email: { type: "string" },
+                  role: { type: "string" },
+                },
+              },
+            },
+          },
+        },
       },
     },
     async (request, reply) => {
       try {
         const { email, password } = request.body;
+        const { user, token } = await authService.register(email, password);
 
-        // Vérifier si l'utilisateur existe déjà
-        const existingUser = await UserModel.findOne({ email });
-        if (existingUser) {
-          return reply.code(400).send({
-            error: "Cet email est déjà utilisé",
-          });
-        }
-
-        // Hasher le mot de passe
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-
-        // Créer le nouvel utilisateur
-        const user = new UserModel({
-          email,
-          password: hashedPassword,
-          role: "user",
-        });
-
-        await user.save();
-
-        // Générer le token
-        const token = jwt.sign(
-          {
-            id: user._id,
-            email: user.email,
-            role: user.role,
-          },
-          JWT_CONFIG.secret,
-          { expiresIn: JWT_CONFIG.expiresIn }
-        );
-
-        // Retourner le token et les informations de l'utilisateur
-        return reply.code(201).send({
-          token,
-          user: {
-            id: user._id,
-            email: user.email,
-            role: user.role,
-          },
-        });
+        return reply.code(201).send({ token, user });
       } catch (error) {
-        request.log.error(error);
-        return reply.code(500).send({
-          error: "Une erreur est survenue lors de l'inscription",
-        });
+        const err = error as Error;
+        return reply.code(400).send({ error: err.message });
       }
     }
   );
 
   // Login route
-  fastify.post<{ Body: LoginBody }>(
+  fastify.post<{ Body: LoginCredentials }>(
     "/login",
     {
       schema: {
@@ -94,7 +59,23 @@ export default async function (fastify: FastifyInstance) {
           required: ["email", "password"],
           properties: {
             email: { type: "string", format: "email" },
-            password: { type: "string", minLength: 6 },
+            password: { type: "string" },
+          },
+        },
+        response: {
+          200: {
+            type: "object",
+            properties: {
+              token: { type: "string" },
+              user: {
+                type: "object",
+                properties: {
+                  id: { type: "string" },
+                  email: { type: "string" },
+                  role: { type: "string" },
+                },
+              },
+            },
           },
         },
       },
@@ -102,64 +83,58 @@ export default async function (fastify: FastifyInstance) {
     async (request, reply) => {
       try {
         const { email, password } = request.body;
+        const { user, token } = await authService.login(email, password);
 
-        // Vérifier si l'utilisateur existe
-        const user = await UserModel.findOne({ email });
-        if (!user) {
-          return reply.code(401).send({
-            error: "Email ou mot de passe incorrect",
-          });
-        }
-
-        // Vérifier le mot de passe
-        const validPassword = await bcrypt.compare(password, user.password);
-        if (!validPassword) {
-          return reply.code(401).send({
-            error: "Email ou mot de passe incorrect",
-          });
-        }
-
-        // Générer le token
-        const token = jwt.sign(
-          {
-            id: user._id,
-            email: user.email,
-            role: user.role,
-          },
-          JWT_CONFIG.secret,
-          { expiresIn: JWT_CONFIG.expiresIn }
-        );
-
-        return reply.send({
-          token,
-          user: {
-            id: user._id,
-            email: user.email,
-            role: user.role,
-          },
-        });
+        return reply.send({ token, user });
       } catch (error) {
-        request.log.error(error);
-        return reply.code(500).send({
-          error: "Une erreur est survenue lors de la connexion",
-        });
+        const err = error as Error;
+        return reply.code(401).send({ error: err.message });
       }
     }
   );
 
   // Validate token route
-  fastify.post("/validate", async (request, reply) => {
-    const token = request.headers.authorization?.replace("Bearer ", "");
+  fastify.post(
+    "/validate",
+    {
+      schema: {
+        headers: {
+          type: "object",
+          properties: {
+            authorization: { type: "string" },
+          },
+          required: ["authorization"],
+        },
+        response: {
+          200: {
+            type: "object",
+            properties: {
+              valid: { type: "boolean" },
+              user: {
+                type: "object",
+                properties: {
+                  id: { type: "string" },
+                  email: { type: "string" },
+                  role: { type: "string" },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    async (request, reply) => {
+      try {
+        const token = request.headers.authorization?.replace("Bearer ", "");
+        if (!token) {
+          return reply.code(401).send({ valid: false });
+        }
 
-    if (!token) {
-      return reply.code(401).send({ valid: false });
+        const user = await authService.validateToken(token);
+        return reply.send({ valid: true, user });
+      } catch (error) {
+        return reply.code(401).send({ valid: false });
+      }
     }
-
-    try {
-      const decoded = jwt.verify(token, JWT_CONFIG.secret);
-      return reply.send({ valid: true, user: decoded });
-    } catch (error) {
-      return reply.code(401).send({ valid: false });
-    }
-  });
+  );
 }

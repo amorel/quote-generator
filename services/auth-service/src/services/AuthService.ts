@@ -1,61 +1,72 @@
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import { JWT_CONFIG } from "../config/jwt";
+import { JWTService } from "./JWTService";
+import { UserRepository } from "../infrastructure/repositories/UserRepository";
 import { User } from "../domain/entities/User";
-import { IUserRepository } from "../domain/repositories/IUserRepository";
 
 export class AuthService {
-  constructor(private userRepository: IUserRepository) {}
+  private jwtService: JWTService;
+  private userRepository: UserRepository;
 
-  async register(email: string, password: string): Promise<string> {
+  constructor() {
+    this.jwtService = new JWTService();
+    this.userRepository = new UserRepository();
+  }
+
+  async register(email: string, password: string) {
+    // Vérifier si l'utilisateur existe
     const existingUser = await this.userRepository.findByEmail(email);
     if (existingUser) {
       throw new Error("Email already exists");
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = new User(
-      Date.now().toString(), // Temporaire, MongoDB générera le vrai ID
-      email,
-      hashedPassword,
-      "user"
-    );
+    // Hasher le mot de passe
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
-    const createdUser = await this.userRepository.create(user);
-    return this.generateToken(createdUser);
+    // Créer l'utilisateur
+    const user = new User(Date.now().toString(), email, hashedPassword, "user");
+    const savedUser = await this.userRepository.create(user);
+
+    // Générer le token
+    const token = this.jwtService.generateToken(savedUser);
+
+    return {
+      user: {
+        id: savedUser.getId(),
+        email: savedUser.getEmail(),
+        role: savedUser.getRole(),
+      },
+      token,
+    };
   }
 
-  async login(email: string, password: string): Promise<string> {
+  async login(email: string, password: string) {
+    // Vérifier l'utilisateur
     const user = await this.userRepository.findByEmail(email);
     if (!user) {
       throw new Error("Invalid credentials");
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.getPassword());
-    if (!isPasswordValid) {
+    // Vérifier le mot de passe
+    const validPassword = await bcrypt.compare(password, user.getPassword());
+    if (!validPassword) {
       throw new Error("Invalid credentials");
     }
 
-    return this.generateToken(user);
-  }
+    // Générer le token
+    const token = this.jwtService.generateToken(user);
 
-  async validateToken(token: string): Promise<any> {
-    try {
-      return jwt.verify(token, JWT_CONFIG.secret);
-    } catch (error) {
-      throw new Error("Invalid token");
-    }
-  }
-
-  private generateToken(user: User): string {
-    return jwt.sign(
-      {
+    return {
+      user: {
         id: user.getId(),
         email: user.getEmail(),
         role: user.getRole(),
       },
-      JWT_CONFIG.secret,
-      { expiresIn: JWT_CONFIG.expiresIn }
-    );
+      token,
+    };
+  }
+
+  async validateToken(token: string) {
+    return this.jwtService.verifyToken(token);
   }
 }
