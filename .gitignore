@@ -6,6 +6,7 @@ yarn-error.log*
 package-lock.json
 yarn.lock
 \!notes
+quote-db.txt
 
 # Build
 dist/

@@ -1,6 +1,6 @@
 import { build } from "./app";
 import { config } from "dotenv";
-import mongoose from "mongoose";
+import { connectDB } from "./config/database";
 
 // Charger les variables d'environnement
 config();
@@ -11,10 +11,7 @@ const start = async () => {
     const host = process.env.HOST || "0.0.0.0";
 
     // Connexion à MongoDB
-    const mongoUri =
-      process.env.MONGODB_URI || "mongodb://localhost:27017/quotes";
-    await mongoose.connect(mongoUri);
-    console.log("Connected to MongoDB");
+    await connectDB();
 
     const app = await build();
 

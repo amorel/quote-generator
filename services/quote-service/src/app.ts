@@ -15,7 +15,6 @@ import { AuthorController } from "./interface/api/controllers/AuthorController";
 import { QuoteController } from "./interface/api/controllers/QuoteController";
 import { authMiddleware } from "./middleware/authMiddleware";
 import { JWTService } from "./services/JWTService";
-import mongoose from 'mongoose';
 
 // Interfaces pour le typage des requêtes
 interface QuoteQueryRequest {
@@ -52,16 +51,6 @@ export async function build(): Promise<FastifyInstance> {
   });
   const container = Container.getInstance();
   const jwtService = container.get<JWTService>("jwtService");
-
-  // Connexion à MongoDB
-  try {
-    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/quotes';
-    await mongoose.connect(mongoUri);
-    console.log('📦 Connected to MongoDB');
-  } catch (error) {
-    console.error('MongoDB connection error:', error);
-    throw error;
-  }
 
   // hook global
   // app.addHook("preHandler", authMiddleware);
