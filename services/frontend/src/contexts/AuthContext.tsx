@@ -1,3 +1,4 @@
+import { User } from "@quote-generator/shared";
 import {
   createContext,
   useContext,
@@ -5,7 +6,6 @@ import {
   useEffect,
   ReactNode,
 } from "react";
-import { User } from "../types/auth";
 
 interface AuthContextType {
   isAuthenticated: boolean;

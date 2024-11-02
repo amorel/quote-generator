@@ -15,6 +15,8 @@ import { AuthorController } from "./interface/api/controllers/AuthorController";
 import { QuoteController } from "./interface/api/controllers/QuoteController";
 import { authMiddleware } from "./middleware/authMiddleware";
 import { JWTService } from "./services/JWTService";
+import { AuthService } from "./services/AuthService";
+import { Quote } from "@quote-generator/shared";
 
 // Interfaces pour le typage des requêtes
 interface QuoteQueryRequest {
@@ -49,11 +51,45 @@ export async function build(): Promise<FastifyInstance> {
   const app = Fastify({
     logger: true,
   });
+  const authService = new AuthService();
   const container = Container.getInstance();
   const jwtService = container.get<JWTService>("jwtService");
 
+  const publicRoutes: string[] = [
+    "/health",
+    "/auth/login",
+    "/auth/register",
+    "/auth/validate",
+    "/documentation",
+    "/documentation/json",
+    "/documentation/yaml",
+    "/documentation/static",
+  ];
+
   // hook global
   // app.addHook("preHandler", authMiddleware);
+  // Middleware d'authentification
+  app.addHook(
+    "preHandler",
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      if (publicRoutes.some((route) => request.url.startsWith(route))) {
+        return;
+      }
+
+      const token = request.headers.authorization?.replace("Bearer ", "");
+
+      if (!token) {
+        throw new Error("No token provided");
+      }
+
+      try {
+        const userData = await authService.validateToken(token);
+        request.user = userData;
+      } catch (error) {
+        reply.status(401).send({ error: "Unauthorized" });
+      }
+    }
+  );
 
   // Configuration des gestionnaires d'erreur
   app.setErrorHandler((error: FastifyError, request, reply) => {

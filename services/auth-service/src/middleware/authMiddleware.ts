@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { JWTService } from "../services/JWTService";
-import { JWTPayload } from "../types/fastify";
+import { JWTPayload } from "@quote-generator/shared";
 
 const jwtService = new JWTService();
 

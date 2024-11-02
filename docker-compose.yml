@@ -10,11 +10,17 @@ services:
       dockerfile: services/auth-service/Dockerfile
     ports:
       - "3001:3001"
+    env_file:
+      - .env
     environment:
       - JWT_SECRET=your_secret
-      - DB_CONNECTION=mongodb://auth-db:27017/auth
+    networks:
+      - app-network
     depends_on:
-      - shared
+      shared:
+        condition: service_completed_successfully
+      auth-db:
+        condition: service_healthy
 
   api-gateway:
     build:
@@ -23,9 +29,12 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      - auth-service
-      - quote-service
-      - user-service
+      auth-service:
+        condition: service_started
+      quote-service:
+        condition: service_started
+      user-service:
+        condition: service_healthy
 
   frontend:
     build:
@@ -36,7 +45,8 @@ services:
     environment:
       - VITE_PORT=3006
     depends_on:
-      - api-gateway
+      api-gateway:
+        condition: service_started
 
   quote-service:
     build:
@@ -44,11 +54,29 @@ services:
       dockerfile: services/quote-service/Dockerfile
     ports:
       - "3002:3002"
+    env_file:
+      - .env
     environment:
       - JWT_PUBLIC_KEY=your_public_key
-      - DB_CONNECTION=mongodb://quote-db:27017/quotes
     depends_on:
-      - shared
+      shared:
+        condition: service_completed_successfully
+      quote-db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://quote-service:3002/health",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 45s
 
   user-service:
     build:
@@ -56,10 +84,37 @@ services:
       dockerfile: services/user-service/Dockerfile
     ports:
       - "3003:3003"
+    env_file:
+      - .env
     environment:
-      - DB_CONNECTION=mongodb://user-db:27017/users
+      - MESSAGE_BROKER_URL
+      - PORT=3003
+      - NODE_ENV=development
+      - RABBITMQ_HEARTBEAT=60
+      - RABBITMQ_RECONNECT_INTERVAL=5000
+      - RABBITMQ_MAX_RECONNECT_ATTEMPTS=5
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://user-service:3003/health",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 45s
+    restart: unless-stopped
     depends_on:
-      - shared
+      shared:
+        condition: service_completed_successfully
+      rabbitmq:
+        condition: service_healthy
+      user-db:
+        condition: service_healthy
 
   auth-db:
     image: mongo:latest
@@ -71,6 +126,17 @@ services:
     volumes:
       - ./mongo-init/auth-db:/docker-entrypoint-initdb.d
       - auth-data:/data/db
+    networks:
+      - app-network
+    healthcheck:
+      test: >
+        mongosh --eval 'db.runCommand("ping").ok' --quiet
+        --username ${MONGO_INITDB_ROOT_USERNAME}
+        --password ${MONGO_INITDB_ROOT_PASSWORD}
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   quote-db:
     image: mongo:latest
@@ -82,6 +148,15 @@ services:
     volumes:
       - ./mongo-init/quote-db:/docker-entrypoint-initdb.d
       - quote-data:/data/db
+    healthcheck:
+      test: >
+        mongosh --eval 'db.runCommand("ping").ok' --quiet
+        --username ${MONGO_INITDB_ROOT_USERNAME}
+        --password ${MONGO_INITDB_ROOT_PASSWORD}
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   user-db:
     image: mongo:latest
@@ -93,8 +168,41 @@ services:
     volumes:
       - ./mongo-init/user-db:/docker-entrypoint-initdb.d
       - user-data:/data/db
+    healthcheck:
+      test: >
+        mongosh --eval 'db.runCommand("ping").ok' --quiet
+        --username ${MONGO_INITDB_ROOT_USERNAME}
+        --password ${MONGO_INITDB_ROOT_PASSWORD}
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672" # AMQP protocol port
+      - "15672:15672" # Management UI
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER:-admin}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS:-password}
+      - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbit disk_free_limit 2147483648
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
 
 volumes:
   auth-data:
   quote-data:
   user-data:
+  rabbitmq_data:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge

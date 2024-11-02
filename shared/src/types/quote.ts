@@ -16,3 +16,12 @@ export interface UpdateQuoteDTO {
   author?: string;
   tags?: string[];
 }
+
+export interface Quote {
+  id: string;
+  content: string;
+  author: string;
+  tags: string[];
+  createdAt: Date;
+  updatedAt: Date;
+}

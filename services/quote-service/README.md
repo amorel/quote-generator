@@ -54,7 +54,6 @@ npm install
 
 2. Create a `.env` file with the MongoDB connection string and other required variables:
 ```plaintext
-DB_CONNECTION=mongodb://quote-db:27017/quotes
 JWT_PUBLIC_KEY=your_jwt_public_key
 ```
 

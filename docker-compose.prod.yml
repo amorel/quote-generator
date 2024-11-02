@@ -17,7 +17,6 @@ services:
     environment:
       - NODE_ENV=production
       - JWT_SECRET=${JWT_SECRET}
-      - DB_CONNECTION=mongodb://auth-db:27017/auth
     depends_on:
       - shared
       - auth-db
@@ -73,7 +72,6 @@ services:
     environment:
       - NODE_ENV=production
       - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY}
-      - DB_CONNECTION=mongodb://quote-db:27017/quotes
     depends_on:
       - shared
       - quote-db
@@ -94,7 +92,6 @@ services:
       - "3003:3003"
     environment:
       - NODE_ENV=production
-      - DB_CONNECTION=mongodb://user-db:27017/users
     depends_on:
       - shared
       - user-db

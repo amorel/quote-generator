@@ -1,13 +1,15 @@
-import Fastify from "fastify";
+/// <reference path="../src/types/fastify.d.ts" />
 import proxy from "@fastify/http-proxy";
-import { FastifyInstance } from "fastify";
+import Fastify, { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import cors from "@fastify/cors";
+import { AuthService } from "./services/AuthService";
 
 export async function build(): Promise<FastifyInstance> {
   const app = Fastify({ logger: true });
+  const authService = new AuthService();
 
   await app.register(cors, {
-    origin: true, // Autorise toutes les origines. En production, spécifiez l'origine exacte.
+    origin: true,
     credentials: true,
   });
 
@@ -29,22 +31,42 @@ export async function build(): Promise<FastifyInstance> {
   app.register(proxy as any, {
     prefix: "/auth",
     upstream: authServiceUrl,
-    rewritePrefix: "/auth"
+    rewritePrefix: "/auth",
   });
 
   app.register(proxy as any, {
     prefix: "/quotes",
     upstream: quoteServiceUrl,
-    rewritePrefix: "/quotes"
+    rewritePrefix: "/quotes",
   });
 
-  app.register(proxy as any, {
+  app.register(proxy, {
     prefix: "/users",
     upstream: userServiceUrl,
-    rewritePrefix: "/users"
+    async preHandler(request, reply) {
+      try {
+        // Vérifier l'authentification
+        const token = request.headers.authorization;
+        if (!token) {
+          reply.code(401).send({ error: "Non autorisé" });
+          return;
+        }
+
+        // Enrichir la requête avec les données utilisateur
+        const user = await authService.validateToken(token);
+        if (!user) {
+          reply.code(401).send({ error: "Token invalide" });
+          return;
+        }
+        request.user = user;
+      } catch (error) {
+        console.error("Erreur d'authentification:", error);
+        reply.code(401).send({ error: "Erreur d'authentification" });
+      }
+    },
   });
 
-  app.addHook("onRequest", async (request) => {
+  app.addHook("onRequest", async (request: FastifyRequest, reply: FastifyReply) => {
     console.log(`Incoming request: ${request.method} ${request.url}`);
   });
 

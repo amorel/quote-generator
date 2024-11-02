@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import { User } from "../domain/entities/User";
-import { JWTPayload } from "../types/fastify";
+import { JWTPayload } from "@quote-generator/shared";
 
 export class JWTService {
   private readonly secretKey: string;

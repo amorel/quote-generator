@@ -1,10 +1,13 @@
-# Microservices Project with JWT Authentication
+Here’s the updated README for the microservices solution, incorporating RabbitMQ and event-driven architecture.
 
-This project transforms a monolithic architecture into a microservices-based solution, providing modularity, scalability, and security. The project includes services for authentication, user management, and quotes, orchestrated via an API Gateway and Docker Compose.
+````markdown
+# Microservices Project with JWT Authentication and Event-Driven Architecture
+
+This project transforms a monolithic architecture into a microservices-based solution, providing modularity, scalability, and security. The project includes services for authentication, user management, and quotes, orchestrated via an API Gateway, with Docker Compose for containerization. RabbitMQ enables asynchronous event-driven communication between services, adding resilience and decoupling for a robust microservices setup.
 
 ## Table of Contents
 
-- [Microservices Project with JWT Authentication](#microservices-project-with-jwt-authentication)
+- [Microservices Project with JWT Authentication and Event-Driven Architecture](#microservices-project-with-jwt-authentication-and-event-driven-architecture)
   - [Table of Contents](#table-of-contents)
   - [Project Structure](#project-structure)
   - [Technologies](#technologies)
@@ -19,6 +22,7 @@ This project transforms a monolithic architecture into a microservices-based sol
     - [3. Quote Service](#3-quote-service)
     - [4. API Gateway](#4-api-gateway)
     - [5. Frontend Service](#5-frontend-service)
+  - [Event-Driven Communication with RabbitMQ](#event-driven-communication-with-rabbitmq)
   - [Testing the Endpoints](#testing-the-endpoints)
   - [Authentication](#authentication)
   - [Microservices Architecture](#microservices-architecture)
@@ -36,6 +40,8 @@ The project is organized as follows:
 │   │       └── config/
 │   │           └── database.ts   # MongoDB connection setup
 │   ├── user-service/
+│   │   └── src/
+│   │       └── messaging/        # RabbitMQ consumer setup
 │   ├── quote-service/
 │   │   └── src/
 │   │       └── config/
@@ -43,11 +49,12 @@ The project is organized as follows:
 │   ├── api-gateway/
 │   └── frontend/
 │       └── src/
-│           └── store/           # Redux state management setup
+│           └── store/            # Redux state management setup
 ├── shared/                       # Shared modules (events, types, constants)
 ├── docker-compose.yml            # Docker Compose for service orchestration
 └── README.md                     # Project documentation
 ```
+````
 
 ## Technologies
 
@@ -55,6 +62,7 @@ The project is organized as follows:
 - **Fastify** - Lightweight API Gateway
 - **Docker & Docker Compose** - Containerization and orchestration
 - **MongoDB** - Database for each microservice
+- **RabbitMQ** - Message broker for event-driven communication
 - **JWT & bcrypt** - Secure user authentication
 
 ## Setup
@@ -72,7 +80,7 @@ Ensure `.env` files are created for each service with the necessary configuratio
 
 ```plaintext
 JWT_SECRET=your_secret_key
-DB_CONNECTION=mongodb://auth-db:27017/auth
+MESSAGE_BROKER_URL=amqp://admin:password@rabbitmq:5672
 ```
 
 ### Prerequisites
@@ -94,12 +102,11 @@ DB_CONNECTION=mongodb://auth-db:27017/auth
    ```plaintext
    JWT_SECRET=your_secret_key
    JWT_EXPIRES_IN=1h
-   DB_CONNECTION=mongodb://auth-db:27017/auth
    ```
 
 ### Launching the Application
 
-1. To build and start all services with Docker Compose, run:
+1. To build and start all services with Docker Compose, including RabbitMQ, run:
 
    ```bash
    docker-compose up --build
@@ -125,12 +132,14 @@ DB_CONNECTION=mongodb://auth-db:27017/auth
 
 - **Endpoints**: `/users` (accessible through the API Gateway)
 - **Functionality**: Handles user data and profile management.
+- **Event Subscriptions**: Listens for user-related events (e.g., `USER_CREATED`, `USER_UPDATED`) via RabbitMQ for updating user profiles and preferences.
 - **URL**: `http://localhost:3003`
 
 ### 3. [Quote Service](./services/quote-service/README.md "Quote Service")
 
 - **Endpoints**: `/quotes` (accessible through the API Gateway)
 - **Functionality**: Manages quotes, requiring JWT token validation for access.
+- **Event Publication**: Publishes events related to quote interactions (e.g., `QUOTE_FAVORITED`) via RabbitMQ.
 - **URL**: `http://localhost:3002`
 
 ### 4. [API Gateway](./services/api-gateway/README.md "API Gateway")
@@ -144,6 +153,36 @@ DB_CONNECTION=mongodb://auth-db:27017/auth
 - **Functionality**: A React/TypeScript client application for displaying quotes and interacting with other services through the API Gateway.
 - **Endpoints**: Fetches quotes through the API Gateway and handles authentication (in progress).
 - **Docker Setup**: Configured to run with Docker for seamless integration.
+
+## Event-Driven Communication with RabbitMQ
+
+The solution utilizes RabbitMQ as a message broker for event-driven communication between services, enabling decoupled and asynchronous interactions. Key events include:
+
+- **User Events**: Generated by the Auth Service, consumed by the User Service for profile management.
+- **Quote Events**: Generated by the Quote Service, consumed by the User Service to update user preferences and favorite quotes.
+
+### Event Example
+
+- **Event**: `USER_CREATED`
+
+  - **Publisher**: Auth Service
+  - **Subscriber**: User Service
+  - **Description**: Triggers the creation of a new user profile in the User Service upon successful registration.
+
+- **Event**: `QUOTE_FAVORITED`
+  - **Publisher**: Quote Service
+  - **Subscriber**: User Service
+  - **Description**: Updates the user’s list of favorite quotes and preferences.
+
+### Configuration
+
+Ensure RabbitMQ configuration is set in each service’s `.env` file:
+
+```plaintext
+MESSAGE_BROKER_URL=amqp://admin:password@rabbitmq:5672
+```
+
+RabbitMQ UI is accessible at `http://localhost:15672` for monitoring and managing message queues.
 
 ## Testing the Endpoints
 
@@ -185,7 +224,7 @@ The microservices architecture allows for scalability, fault isolation, and easi
 
 1. **API Gateway**: Serves as the entry point and routes requests to each service.
 2. **Service Discovery**: Uses Consul for service registration and load balancing.
-3. **Event Bus**: Facilitates asynchronous communication between services (e.g., user updates).
+3. **Event Bus**: Facilitates asynchronous communication between services via RabbitMQ.
 
 ## Security and Best Practices
 

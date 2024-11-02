@@ -2,15 +2,14 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "commonjs",
-    "outDir": "./dist",
-    "rootDir": "./src",
     "strict": true,
     "esModuleInterop": true,
-    "moduleResolution": "node",
-    "types": ["node", "jest"],
-    "typeRoots": ["./node_modules/@types", "../../node_modules/@types"],
-    "baseUrl": "./src"
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "paths": {
+      "@quote-generator/shared": ["../../shared/src"]
+    }
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "src/types/*.d.ts"],
   "exclude": ["node_modules", "dist"]
 }

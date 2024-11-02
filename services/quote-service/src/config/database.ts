@@ -13,7 +13,7 @@ const config = {
   production: {
     username: "admin",
     password: "password",
-    host: "auth-db",
+    host: "quote-db",
     port: "27017",
     database: "quotes",
     options: "?authSource=admin",
@@ -44,9 +44,9 @@ export async function connectDB() {
       process.env.MONGO_INITDB_ROOT_USERNAME || envConfig.username;
     const password =
       process.env.MONGO_INITDB_ROOT_PASSWORD || envConfig.password;
-    const host = process.env.MONGO_HOST || envConfig.host;
-    const port = process.env.MONGO_PORT || envConfig.port;
-    const database = process.env.MONGO_DATABASE || envConfig.database;
+    const host = process.env.MONGO_HOST_QUOTE || envConfig.host;
+    const port = process.env.MONGO_PORT_INTERNAL_EXTERNAL || envConfig.port;
+    const database = process.env.MONGO_DATABASE_QUOTE || envConfig.database;
     const options = process.env.MONGO_OPTIONS || envConfig.options;
 
     // Construit l'URI de connexion
@@ -61,6 +61,8 @@ export async function connectDB() {
       socketTimeoutMS: 45000,
       family: 4,
     };
+
+    // console.log(uri);
 
     // Tentative de connexion
     await mongoose.connect(uri, mongooseOptions);

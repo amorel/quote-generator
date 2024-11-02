@@ -6,12 +6,19 @@
     "rootDir": "./src",
     "strict": true,
     "esModuleInterop": true,
-    "moduleResolution": "node",
     "skipLibCheck": true,
     "types": ["node", "jest"],
-    "typeRoots": ["./node_modules/@types", "../../node_modules/@types"],
-    "baseUrl": "./src"
+    "typeRoots": [
+      "./node_modules/@types",
+      "../../node_modules/@types",
+      "./src/types"
+    ],
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["src/*"],
+      "@quote-generator/shared": ["../../shared/src"]
+    }
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "src/types/*.d.ts"],
   "exclude": ["node_modules", "dist"]
 }

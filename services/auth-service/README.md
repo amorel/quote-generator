@@ -45,7 +45,6 @@ Create a `.env` file with the following variables:
 ```plaintext
 JWT_SECRET=your_secret_key
 JWT_EXPIRES_IN=24h
-DB_CONNECTION=mongodb://auth-db:27017/auth
 ```
 
 ### Endpoints
