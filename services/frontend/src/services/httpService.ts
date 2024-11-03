@@ -1,22 +1,19 @@
 import { tokenService } from "./tokenService";
 
-const API_URL = process.env.VITE_API_URL || "http://localhost:3000";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-// Interface pour les données de requête
-interface RequestData {
+export interface RequestData {
   [key: string]: unknown;
 }
 
-// Extension de l'interface RequestInit de fetch
 interface RequestConfig extends RequestInit {
   data?: RequestData;
 }
 
-// Interface pour les headers personnalisés
-type CustomHeaders = Record<string, string> & {
-    "Content-Type"?: string;
-    Authorization?: string;
-  };
+type CustomHeadersInit = HeadersInit & {
+  Authorization?: string;
+  "Content-Type"?: string;
+};
 
 class HttpService {
   private async request<T>(
@@ -24,14 +21,20 @@ class HttpService {
     config: RequestConfig = {}
   ): Promise<T> {
     const token = tokenService.getToken();
-    const headers: CustomHeaders = {
-      "Content-Type": "application/json",
-      ...(config.headers as CustomHeaders),
+
+    // Créer les headers de base à partir des headers existants
+    const headers: CustomHeadersInit = {
+      ...(config.headers as CustomHeadersInit),
     };
 
-    // Ajouter le token d'authentification si disponible
+    // Ajouter Content-Type seulement s'il n'est pas déjà défini
+    if (!headers["Content-Type"]) {
+      headers["Content-Type"] = "application/json";
+    }
+
+    // Ajouter le token d'autorisation s'il existe
     if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
+      headers.Authorization = `Bearer ${token}`;
     }
 
     const requestConfig: RequestInit = {
@@ -39,7 +42,6 @@ class HttpService {
       headers,
     };
 
-    // Si des données sont fournies, les convertir en JSON
     if (config.data) {
       requestConfig.body = JSON.stringify(config.data);
     }
@@ -47,29 +49,24 @@ class HttpService {
     try {
       const response = await fetch(`${API_URL}${endpoint}`, requestConfig);
 
-      // Gérer les réponses non-OK (status >= 400)
       if (!response.ok) {
-        // Si non autorisé, déclencher la déconnexion
         if (response.status === 401) {
           window.dispatchEvent(new CustomEvent("auth:required"));
           throw new Error("Session expirée. Veuillez vous reconnecter.");
         }
 
-        // Tenter de récupérer le message d'erreur du serveur
         const errorData = await response.json().catch(() => null);
         throw new Error(
           errorData?.message || response.statusText || "Une erreur est survenue"
         );
       }
 
-      // Pour les endpoints qui ne renvoient pas de JSON
       if (response.headers.get("content-type")?.includes("application/json")) {
         return await response.json();
       }
 
       return response as unknown as T;
     } catch (error) {
-      // Rethrow avec un message plus descriptif si nécessaire
       if (error instanceof Error) {
         throw error;
       }

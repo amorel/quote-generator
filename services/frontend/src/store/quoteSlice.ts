@@ -1,11 +1,11 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { QuoteDTO } from "@quote-generator/shared";
-import { getRandomQuote } from "../services/quoteService";
+import { quoteService } from "../services/quoteService";
 
 export const fetchRandomQuote = createAsyncThunk(
   "quote/fetchRandom",
   async () => {
-    return await getRandomQuote();
+    return await quoteService.getRandomQuote();
   }
 );
 
