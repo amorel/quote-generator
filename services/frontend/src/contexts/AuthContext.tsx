@@ -41,6 +41,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (tokenService.hasToken()) {
         try {
           const response = await fetch("http://localhost:3000/auth/validate", {
+            method: 'POST',
             headers: {
               Authorization: `Bearer ${tokenService.getToken()}`,
             },

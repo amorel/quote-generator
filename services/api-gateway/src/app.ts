@@ -1,6 +1,10 @@
 /// <reference path="../src/types/fastify.d.ts" />
 import proxy from "@fastify/http-proxy";
-import Fastify, { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
+import Fastify, {
+  FastifyInstance,
+  FastifyRequest,
+  FastifyReply,
+} from "fastify";
 import cors from "@fastify/cors";
 import { AuthService } from "./services/AuthService";
 
@@ -32,6 +36,17 @@ export async function build(): Promise<FastifyInstance> {
     prefix: "/auth",
     upstream: authServiceUrl,
     rewritePrefix: "/auth",
+    preHandler: async (request: FastifyRequest, reply: FastifyReply) => {
+      reply.header("Access-Control-Allow-Origin", "*");
+      reply.header(
+        "Access-Control-Allow-Methods",
+        "GET,POST,PUT,DELETE,OPTIONS"
+      );
+      reply.header(
+        "Access-Control-Allow-Headers",
+        "Content-Type, Authorization"
+      );
+    },
   });
 
   app.register(proxy as any, {
@@ -66,9 +81,12 @@ export async function build(): Promise<FastifyInstance> {
     },
   });
 
-  app.addHook("onRequest", async (request: FastifyRequest, reply: FastifyReply) => {
-    console.log(`Incoming request: ${request.method} ${request.url}`);
-  });
+  app.addHook(
+    "onRequest",
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      console.log(`Incoming request: ${request.method} ${request.url}`);
+    }
+  );
 
   return app;
 }
