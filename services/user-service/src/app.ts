@@ -7,6 +7,11 @@ export async function build(): Promise<FastifyInstance> {
   const app = Fastify({
     logger: true,
   });
+
+  // Route de healthcheck
+  app.get("/health", async () => {
+    return { status: "ok" };
+  });
   return app;
 }
 
@@ -19,7 +24,7 @@ export async function startApp() {
 
   // Configurer le consumer d'événements
   const consumer = new UserEventConsumer(
-    process.env.MESSAGE_BROKER_URL || "amqp://admin:password@rabbitmq:5672",
+    process.env.MESSAGE_BROKER_URL || "amqp://admin:password@localhost:5672",
     "user-service",
     userService
   );

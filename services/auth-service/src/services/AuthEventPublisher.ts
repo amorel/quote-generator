@@ -6,7 +6,7 @@ export class AuthEventPublisher {
 
   constructor() {
     this.messageBrokerUrl =
-      process.env.MESSAGE_BROKER_URL || "amqp://localhost";
+      process.env.MESSAGE_BROKER_URL || "amqp://admin:password@localhost:5672";
   }
 
   async publishUserCreated(user: User) {

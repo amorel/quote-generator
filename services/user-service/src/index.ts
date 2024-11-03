@@ -19,7 +19,7 @@ const start = async () => {
 
     // Connexion à RabbitMQ
     const messageBroker = new RabbitMQClient(
-      process.env.MESSAGE_BROKER_URL || "amqp://localhost",
+      process.env.MESSAGE_BROKER_URL || "amqp://admin:password@localhost:5672",
       userService
     );
 

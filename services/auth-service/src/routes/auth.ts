@@ -81,14 +81,24 @@ export default async function (fastify: FastifyInstance) {
       },
     },
     async (request, reply) => {
+      console.log("📝 Login request received:", {
+        email: request.body.email,
+        hasPassword: !!request.body.password,
+      });
+
       try {
         const { email, password } = request.body;
         const { user, token } = await authService.login(email, password);
-
+        console.log("✅ Login successful for:", email);
         return reply.send({ token, user });
       } catch (error) {
+        console.error("❌ Login error:", error);
         const err = error as Error;
-        return reply.code(401).send({ error: err.message });
+        return reply.code(401).send({
+          error: err.message,
+          details:
+            process.env.NODE_ENV === "development" ? err.stack : undefined,
+        });
       }
     }
   );

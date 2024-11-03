@@ -1,5 +1,6 @@
 import amqp, { Connection, Channel, ConsumeMessage } from "amqplib";
 import { EventMessage, RabbitMQMessage } from "./types";
+import { EXCHANGES, QUEUES } from "./constants";
 
 export abstract class RabbitMQBase {
   protected connection: Connection | null = null;
@@ -17,7 +18,8 @@ export abstract class RabbitMQBase {
       this.connection = await amqp.connect(this.url);
       this.channel = await this.connection.createChannel();
 
-      this.reconnectAttempts = 0;
+      // Créer les exchanges nécessaires
+      await this.setupExchanges();
 
       console.log(`[${this.serviceName}] Connected to RabbitMQ`);
 
@@ -128,5 +130,72 @@ export abstract class RabbitMQBase {
   async close(): Promise<void> {
     if (this.channel) await this.channel.close();
     if (this.connection) await this.connection.close();
+  }
+
+  protected async setupExchanges(): Promise<void> {
+    if (!this.channel) throw new Error("Channel not initialized");
+
+    // Créer l'exchange DLX
+    await this.channel.assertExchange('dlx', 'topic', {
+      durable: true
+    });
+
+    // Créer les autres exchanges principaux
+    await this.channel.assertExchange(EXCHANGES.USER_EVENTS, 'topic', {
+      durable: true
+    });
+    await this.channel.assertExchange(EXCHANGES.QUOTE_EVENTS, 'topic', {
+      durable: true
+    });
+    await this.channel.assertExchange(EXCHANGES.NOTIFICATION_EVENTS, 'topic', {
+      durable: true
+    });
+
+    // Créer les queues avec leurs configurations DLX
+    await this.channel.assertQueue(QUEUES.USER_EVENTS, {
+      durable: true,
+      deadLetterExchange: 'dlx',
+      deadLetterRoutingKey: 'user.events.dead'
+    });
+
+    await this.channel.assertQueue(QUEUES.QUOTE_EVENTS, {
+      durable: true,
+      deadLetterExchange: 'dlx',
+      deadLetterRoutingKey: 'quote.events.dead'
+    });
+
+    await this.channel.assertQueue(QUEUES.NOTIFICATION_EVENTS, {
+      durable: true,
+      deadLetterExchange: 'dlx',
+      deadLetterRoutingKey: 'notification.events.dead'
+    });
+
+    // Créer les queues DLQ
+    await this.channel.assertQueue(QUEUES.USER_EVENTS_DLQ, {
+      durable: true
+    });
+    await this.channel.assertQueue(QUEUES.QUOTE_EVENTS_DLQ, {
+      durable: true
+    });
+    await this.channel.assertQueue(QUEUES.NOTIFICATION_EVENTS_DLQ, {
+      durable: true
+    });
+
+    // Bind les queues DLQ à l'exchange DLX
+    await this.channel.bindQueue(
+      QUEUES.USER_EVENTS_DLQ,
+      'dlx',
+      'user.events.dead'
+    );
+    await this.channel.bindQueue(
+      QUEUES.QUOTE_EVENTS_DLQ,
+      'dlx',
+      'quote.events.dead'
+    );
+    await this.channel.bindQueue(
+      QUEUES.NOTIFICATION_EVENTS_DLQ,
+      'dlx',
+      'notification.events.dead'
+    );
   }
 }

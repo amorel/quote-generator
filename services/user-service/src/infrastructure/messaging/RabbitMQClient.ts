@@ -1,4 +1,3 @@
-// services/user-service/src/infrastructure/messaging/RabbitMQClient.ts
 import { EventTypes, UserEventData } from "@quote-generator/shared";
 import amqp, { Channel, Connection, ConsumeMessage } from "amqplib";
 import { UserService } from "../../services/UserService";
@@ -17,6 +16,7 @@ export class RabbitMQClient {
 
   async connect() {
     try {
+      console.log("Connecting to RabbitMQ:", this.url);
       this.connection = await amqp.connect(this.url);
       this.channel = await this.connection.createChannel();
 
@@ -29,37 +29,38 @@ export class RabbitMQClient {
       // Configuration des bindings
       await this.setupBindings();
 
-      // Reset le compteur de tentatives de reconnexion
-      this.reconnectAttempts = 0;
-
-      console.log("Connected to RabbitMQ");
-
-      // Gestion de la fermeture de la connexion
-      this.connection.on("close", async () => {
-        console.log(
-          "Connection to RabbitMQ closed. Attempting to reconnect..."
-        );
-        await this.reconnect();
-      });
+      console.log("✅ Connected to RabbitMQ");
     } catch (error) {
-      console.error("RabbitMQ connection error:", error);
-      await this.reconnect();
+      console.error("Failed to connect to RabbitMQ:", error);
+      throw error;
     }
   }
 
   private async setupExchanges() {
     if (!this.channel) throw new Error("Channel not initialized");
 
+    console.log("Setting up exchanges...");
+
+    // Créer d'abord l'exchange DLX
+    await this.channel.assertExchange("dlx", "topic", {
+      durable: true,
+    });
+
+    // Puis les autres exchanges
     await this.channel.assertExchange("user.events", "topic", {
       durable: true,
     });
     await this.channel.assertExchange("quote.events", "topic", {
       durable: true,
     });
+
+    console.log("✅ Exchanges setup complete");
   }
 
   private async setupQueues() {
     if (!this.channel) throw new Error("Channel not initialized");
+
+    console.log("Setting up queues...");
 
     // Queue principale avec DLX
     await this.channel.assertQueue("user_events", {
@@ -72,17 +73,22 @@ export class RabbitMQClient {
     await this.channel.assertQueue("user_events_dlq", {
       durable: true,
     });
+
+    console.log("✅ Queues setup complete");
   }
 
   private async setupBindings() {
     if (!this.channel) throw new Error("Channel not initialized");
 
-    // Bind la queue principale aux routing keys appropriés
-    await this.channel.bindQueue("user_events", "user.events", "user.created");
-    await this.channel.bindQueue("user_events", "user.events", "user.updated");
+    console.log("Setting up bindings...");
+
+    // Bind la queue principale
+    await this.channel.bindQueue("user_events", "user.events", "user.#");
 
     // Bind la DLQ
     await this.channel.bindQueue("user_events_dlq", "dlx", "user.events.dead");
+
+    console.log("✅ Bindings setup complete");
   }
 
   private async reconnect() {

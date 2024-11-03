@@ -1,4 +1,9 @@
-import { LoginCredentials, RegisterCredentials, LoginResponse, User } from "@quote-generator/shared";
+import {
+  LoginCredentials,
+  RegisterCredentials,
+  LoginResponse,
+  User,
+} from "@quote-generator/shared";
 
 const API_URL = "http://localhost:3000"; // URL de l'API Gateway
 
