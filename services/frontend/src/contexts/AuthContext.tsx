@@ -6,6 +6,8 @@ import {
   useEffect,
   ReactNode,
 } from "react";
+import { authService } from "../services/authService";
+import { tokenService } from "../services/tokenService";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -17,62 +19,71 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(
+    authService.isAuthenticated()
+  );
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      validateToken(token);
-    }
+    const handleAuthRequired = () => {
+      logout();
+    };
+
+    window.addEventListener("auth:required", handleAuthRequired);
+
+    return () => {
+      window.removeEventListener("auth:required", handleAuthRequired);
+    };
   }, []);
 
-  const validateToken = async (token: string) => {
-    try {
-      const response = await fetch("http://localhost:3000/auth/validate", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+  useEffect(() => {
+    const validateAuth = async () => {
+      if (tokenService.hasToken()) {
+        try {
+          const response = await fetch("http://localhost:3000/auth/validate", {
+            headers: {
+              Authorization: `Bearer ${tokenService.getToken()}`,
+            },
+          });
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.valid && data.user) {
-          setIsAuthenticated(true);
-          setUser(data.user as User);
-        } else {
+          if (response.ok) {
+            const data = await response.json();
+            if (data.valid && data.user) {
+              setUser(data.user);
+              setIsAuthenticated(true);
+            } else {
+              logout();
+            }
+          } else {
+            logout();
+          }
+        } catch (error) {
+          console.error("Token validation error:", error);
           logout();
         }
-      } else {
-        logout();
       }
-    } catch (error) {
-      console.error("Token validation error:", error);
-      logout();
-    }
-  };
+    };
+
+    validateAuth();
+  }, []);
 
   const login = (token: string, userData: User) => {
-    localStorage.setItem("token", token);
+    tokenService.setToken(token);
     setIsAuthenticated(true);
     setUser(userData);
   };
 
   const logout = () => {
-    localStorage.removeItem("token");
+    authService.logout();
     setIsAuthenticated(false);
     setUser(null);
   };
 
-  const value: AuthContextType = {
-    isAuthenticated,
-    user,
-    login,
-    logout,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => {

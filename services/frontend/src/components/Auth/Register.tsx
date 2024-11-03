@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
-import { register } from "../../services/authService";
+import { authService } from "../../services/authService";
 import styles from "./Login.module.css";
 
 export const Register = () => {
@@ -25,7 +25,7 @@ export const Register = () => {
     setLoading(true);
 
     try {
-      const { token, user } = await register({ email, password });
+      const { token, user } = await authService.register({ email, password });
       authLogin(token, user);
       navigate("/");
     } catch (err) {

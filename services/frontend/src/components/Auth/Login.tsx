@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
-import { login } from "../../services/authService";
+import { authService } from "../../services/authService";
 import styles from "./Login.module.css";
 
 export const Login = () => {
@@ -18,7 +18,7 @@ export const Login = () => {
     setLoading(true);
 
     try {
-      const { token, user } = await login({ email, password });
+      const { token, user } = await authService.login({ email, password });
       authLogin(token, user);
       navigate("/");
     } catch (err) {

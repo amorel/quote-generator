@@ -4,51 +4,51 @@ import {
   LoginResponse,
   User,
 } from "@quote-generator/shared";
+import { tokenService } from "./tokenService";
+import { httpService } from "./httpService";
 
-const API_URL = "http://localhost:3000"; // URL de l'API Gateway
+export const authService = {
+  async register(credentials: RegisterCredentials): Promise<LoginResponse> {
+    try {
+      const data = await httpService.post<LoginResponse>(
+        "/auth/register",
+        credentials
+      );
+      tokenService.setToken(data.token);
+      return data;
+    } catch (error) {
+      throw error instanceof Error
+        ? error
+        : new Error("L'inscription a échoué");
+    }
+  },
 
-export const register = async (
-  credentials: RegisterCredentials
-): Promise<LoginResponse> => {
-  const response = await fetch(`${API_URL}/auth/register`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(credentials),
-  });
+  async login(credentials: LoginCredentials): Promise<LoginResponse> {
+    try {
+      const data = await httpService.post<LoginResponse>(
+        "/auth/login",
+        credentials
+      );
+      tokenService.setToken(data.token);
+      return data;
+    } catch (error) {
+      throw error instanceof Error ? error : new Error("La connexion a échoué");
+    }
+  },
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || "L'inscription a échoué");
-  }
+  async validateToken(): Promise<{ valid: boolean; user: User | null }> {
+    try {
+      return await httpService.post("/auth/validate");
+    } catch {
+      return { valid: false, user: null };
+    }
+  },
 
-  const data = await response.json();
-  return {
-    token: data.token,
-    user: data.user as User,
-  };
-};
+  logout() {
+    tokenService.removeToken();
+  },
 
-export const login = async (
-  credentials: LoginCredentials
-): Promise<LoginResponse> => {
-  const response = await fetch(`${API_URL}/auth/login`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(credentials),
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || "La connexion a échoué");
-  }
-
-  const data = await response.json();
-  return {
-    token: data.token,
-    user: data.user as User,
-  };
+  isAuthenticated(): boolean {
+    return tokenService.hasToken();
+  },
 };
