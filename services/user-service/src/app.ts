@@ -9,9 +9,8 @@ export async function build(): Promise<FastifyInstance> {
   });
 
   // Route de healthcheck
-  app.get("/health", async () => {
-    return { status: "ok" };
-  });
+  app.get("/health", async () => ({ status: "ok" }));
+
   return app;
 }
 

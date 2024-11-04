@@ -21,7 +21,6 @@ import { GetTagByIdUseCase } from "./application/use-cases/tags/GetTagById";
 import { TagPresenter } from "./interface/api/presenters/TagPresenter";
 import { TagController } from "./interface/api/controllers/TagController";
 import { GetQuoteByIdUseCase } from "./application/use-cases/quotes/GetQuoteById";
-import { JWTService } from "./services/JWTService";
 
 export class Container {
   private static instance: Container;
@@ -34,12 +33,6 @@ export class Container {
     this.initializeQuoteServices();
     this.initializeAuthorServices();
     this.initializeTagServices();
-    this.initializeServices();
-  }
-
-  private initializeServices() {
-    const jwtService = new JWTService();
-    this.services.set('jwtService', jwtService);
   }
 
   private initializeQuoteServices() {

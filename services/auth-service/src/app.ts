@@ -1,20 +1,26 @@
-import Fastify from "fastify";
-import cors from "@fastify/cors";
+/// <reference path="./types/fastify.d.ts" />
+import Fastify, { FastifyReply, FastifyRequest } from "fastify";
 import authRoutes from "./routes/auth";
 
 export async function build() {
   const app = Fastify({ logger: true });
 
-  // Configurer CORS pour accepter les requêtes du frontend
-  await app.register(cors, {
-    origin: true, // En production, spécifiez l'URL exacte du frontend
-    credentials: true
-  });
-
   // Enregistrer les routes d'authentification
   await app.register(authRoutes, { prefix: "/auth" });
 
   app.get("/health", async () => ({ status: "ok" }));
+
+  app.get("/debug/auth-info", {
+    handler: async (request: FastifyRequest, reply: FastifyReply) => {
+      return {
+        headers: request.headers,
+        user: request.user || null,
+        authServiceUrl: process.env.AUTH_SERVICE_URL || "http://localhost:3001",
+        environment: process.env.NODE_ENV,
+        serverTime: new Date().toISOString(),
+      };
+    },
+  });
 
   app.ready(() => {
     console.log(app.printRoutes());

@@ -8,14 +8,17 @@ export class AuthService {
 
   async validateToken(token: string): Promise<any> {
     try {
+      console.log("🔄 Validating token with auth service...");
+      console.log(`${this.authServiceUrl}/auth/validate`);
       const response = await fetch(`${this.authServiceUrl}/auth/validate`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: token,
+          Authorization: `Bearer ${token}`,
         },
+        body: JSON.stringify({}),
       });
-
+      console.log("📡 Auth service response status:", response.status);
       if (!response.ok) {
         throw new Error("Invalid token");
       }

@@ -54,7 +54,7 @@ npm install
 
 2. Create a `.env` file with the MongoDB connection string and other required variables:
 ```plaintext
-JWT_PUBLIC_KEY=your_jwt_public_key
+JWT_SECRET=your_jwt_public_key
 ```
 
 ### Running the Server

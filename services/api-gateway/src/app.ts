@@ -17,9 +17,49 @@ export async function build(): Promise<FastifyInstance> {
     credentials: true,
   });
 
+  // Routes publiques qui ne nécessitent pas d'authentification
+  const publicRoutes = [
+    "/health",
+    "/auth/login",
+    "/auth/register",
+    "/auth/validate",
+  ];
+
+  // Hook global pour l'authentification
+  app.addHook(
+    "preHandler",
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      // Logger la requête entrante
+      console.log(`Incoming request: ${request.method} ${request.url}`);
+      console.log("Authorization header:", request.headers.authorization);
+
+      // Ignorer l'authentification pour les routes publiques
+      if (publicRoutes.some((route) => request.url.startsWith(route))) {
+        return;
+      }
+
+      const token = request.headers.authorization?.replace("Bearer ", "");
+      if (!token) {
+        return reply.code(401).send({ error: "Non autorisé" });
+      }
+
+      try {
+        const userData = await authService.validateToken(token);
+        // Enrichir la requête avec les données utilisateur pour les services en aval
+        request.headers["x-user-id"] = userData.id;
+        request.headers["x-user-role"] = userData.role;
+        request.headers["x-user-email"] = userData.email;
+        request.user = userData;
+      } catch (error) {
+        console.error("Erreur d'authentification:", error);
+        return reply.code(401).send({ error: "Erreur d'authentification" });
+      }
+    }
+  );
+
   app.get("/health", async () => ({ status: "ok" }));
 
-  // Récupérer les URLs des services depuis les variables d'environnement
+  // Configuration des services
   const authServiceUrl =
     process.env.AUTH_SERVICE_URL || "http://localhost:3001";
   const quoteServiceUrl =
@@ -27,66 +67,30 @@ export async function build(): Promise<FastifyInstance> {
   const userServiceUrl =
     process.env.USER_SERVICE_URL || "http://localhost:3003";
 
-  // Logs pour vérifier les URLs utilisées
-  console.log("Auth Service URL:", authServiceUrl);
-  console.log("Quote Service URL:", quoteServiceUrl);
-  console.log("User Service URL:", userServiceUrl);
-
+  // Proxy vers les services
   app.register(proxy as any, {
     prefix: "/auth",
     upstream: authServiceUrl,
     rewritePrefix: "/auth",
-    preHandler: async (request: FastifyRequest, reply: FastifyReply) => {
-      reply.header("Access-Control-Allow-Origin", "*");
-      reply.header(
-        "Access-Control-Allow-Methods",
-        "GET,POST,PUT,DELETE,OPTIONS"
-      );
-      reply.header(
-        "Access-Control-Allow-Headers",
-        "Content-Type, Authorization"
-      );
-    },
   });
 
   app.register(proxy as any, {
     prefix: "/quotes",
     upstream: quoteServiceUrl,
     rewritePrefix: "/quotes",
+    logLevel: "debug",
+    http: {
+      timeout: 5000,
+    },
   });
+
+  console.log('Quote service URL:', quoteServiceUrl);
 
   app.register(proxy, {
     prefix: "/users",
     upstream: userServiceUrl,
-    async preHandler(request, reply) {
-      try {
-        // Vérifier l'authentification
-        const token = request.headers.authorization;
-        if (!token) {
-          reply.code(401).send({ error: "Non autorisé" });
-          return;
-        }
-
-        // Enrichir la requête avec les données utilisateur
-        const user = await authService.validateToken(token);
-        if (!user) {
-          reply.code(401).send({ error: "Token invalide" });
-          return;
-        }
-        request.user = user;
-      } catch (error) {
-        console.error("Erreur d'authentification:", error);
-        reply.code(401).send({ error: "Erreur d'authentification" });
-      }
-    },
+    rewritePrefix: "/users",
   });
-
-  app.addHook(
-    "onRequest",
-    async (request: FastifyRequest, reply: FastifyReply) => {
-      console.log(`Incoming request: ${request.method} ${request.url}`);
-    }
-  );
 
   return app;
 }

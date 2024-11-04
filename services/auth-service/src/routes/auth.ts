@@ -135,6 +135,9 @@ export default async function (fastify: FastifyInstance) {
     },
     async (request, reply) => {
       try {
+        console.log("🔍 Validating token...");
+        console.log(request.headers.authorization);
+
         const token = request.headers.authorization?.replace("Bearer ", "");
         if (!token) {
           return reply.code(401).send({ valid: false });
@@ -143,6 +146,7 @@ export default async function (fastify: FastifyInstance) {
         const user = await authService.validateToken(token);
         return reply.send({ valid: true, user });
       } catch (error) {
+        console.error("💥 Error validating token:", error);
         return reply.code(401).send({ valid: false });
       }
     }

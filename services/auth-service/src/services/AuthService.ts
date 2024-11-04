@@ -41,32 +41,42 @@ export class AuthService {
   }
 
   async login(email: string, password: string) {
-    // Vérifier l'utilisateur
-    const user = await this.userRepository.findByEmail(email);
-    if (!user) {
-      throw new Error("Invalid credentials");
+    try {
+      console.log("Login attempt for:", email);
+
+      const user = await this.userRepository.findByEmail(email);
+      if (!user) {
+        console.log("User not found:", email);
+        throw new Error("Invalid credentials");
+      }
+
+      const validPassword = await bcrypt.compare(password, user.getPassword());
+      if (!validPassword) {
+        console.log("Invalid password for:", email);
+        throw new Error("Invalid credentials");
+      }
+
+      const token = this.jwtService.generateToken(user);
+      console.log("Login successful for:", email);
+
+      return {
+        user: {
+          id: user.getId(),
+          email: user.getEmail(),
+          role: user.getRole(),
+        },
+        token,
+      };
+    } catch (error) {
+      console.error("Login error:", error);
+      throw error;
     }
-
-    // Vérifier le mot de passe
-    const validPassword = await bcrypt.compare(password, user.getPassword());
-    if (!validPassword) {
-      throw new Error("Invalid credentials");
-    }
-
-    // Générer le token
-    const token = this.jwtService.generateToken(user);
-
-    return {
-      user: {
-        id: user.getId(),
-        email: user.getEmail(),
-        role: user.getRole(),
-      },
-      token,
-    };
   }
 
   async validateToken(token: string) {
-    return this.jwtService.verifyToken(token);
+    const cleanToken = token.replace("Bearer ", "");
+    console.log("Token reçu:", token);
+    console.log("Token nettoyé:", cleanToken);
+    return this.jwtService.verifyToken(cleanToken);
   }
 }

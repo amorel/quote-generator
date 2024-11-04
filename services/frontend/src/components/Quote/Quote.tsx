@@ -3,14 +3,22 @@ import { fetchRandomQuote } from "../../store/quoteSlice";
 import styles from "./Quote.module.css";
 import { useAppDispatch } from "../../hooks/useAppDispatch";
 import { useAppSelector } from "../../hooks/useAppSelector";
+import { useAuth } from "../../contexts/AuthContext";
 
 export const Quote = () => {
+  const { isAuthenticated } = useAuth();
   const dispatch = useAppDispatch();
   const { current, loading, error } = useAppSelector((state) => state.quote);
 
   useEffect(() => {
-    dispatch(fetchRandomQuote());
-  }, [dispatch]);
+    if (isAuthenticated) {
+      dispatch(fetchRandomQuote());
+    }
+  }, [dispatch, isAuthenticated]);
+
+  if (!isAuthenticated) {
+    return <div>Veuillez vous connecter pour voir les citations</div>;
+  }
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;

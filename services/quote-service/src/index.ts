@@ -10,15 +10,15 @@ const start = async () => {
     const port = parseInt(process.env.PORT || "3002", 10);
     const host = process.env.HOST || "0.0.0.0";
 
-    // Connexion à MongoDB
-    await connectDB();
-
     const app = await build();
 
     await app.listen({
       port,
       host,
     });
+
+    // Connexion à MongoDB
+    await connectDB();
 
     // Logs plus détaillés
     console.log(`🚀 Server running on http://${host}:${port}`);

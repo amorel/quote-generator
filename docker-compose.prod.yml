@@ -71,7 +71,6 @@ services:
       - "3002:3002"
     environment:
       - NODE_ENV=production
-      - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY}
     depends_on:
       - shared
       - quote-db

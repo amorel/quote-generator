@@ -3,6 +3,9 @@ services:
     build:
       context: .
       dockerfile: shared/Dockerfile
+    restart: "no"
+    networks:
+      - back-network
 
   auth-service:
     build:
@@ -13,7 +16,24 @@ services:
     env_file:
       - .env
     environment:
-      - JWT_SECRET=your_secret
+      - JWT_SECRET=${JWT_SECRET}
+    networks:
+      - back-network
+    restart: unless-stopped
+    # healthcheck:
+    #   test:
+    #     [
+    #       "CMD",
+    #       "wget",
+    #       "--no-verbose",
+    #       "--tries=1",
+    #       "--spider",
+    #       "http://localhost:3000/health",
+    #     ]
+    #   interval: 10s
+    #   timeout: 5s
+    #   retries: 5
+    #   start_period: 30s
     depends_on:
       shared:
         condition: service_completed_successfully
@@ -28,20 +48,30 @@ services:
       - "3000:3000"
     env_file:
       - .env
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "wget",
-          "--no-verbose",
-          "--tries=1",
-          "--spider",
-          "http://localhost:3000/health",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 45s
+    environment:
+      - AUTH_SERVICE_URL=http://auth-service:3001
+      - QUOTE_SERVICE_URL=http://quote-service:3002
+    networks:
+      - back-network
+      - front-network
+    # healthcheck:
+    #   test:
+    #     [
+    #       "CMD",
+    #       "wget",
+    #       "--no-verbose",
+    #       "--tries=1",
+    #       "--spider",
+    #       "http://localhost:3000/health",
+    #     ]
+    #   interval: 10s
+    #   timeout: 5s
+    #   retries: 5
+    #   start_period: 30s
+    restart: unless-stopped
+    # depends_on:
+    #   auth-service:
+    #     condition: service_healthy
 
   frontend:
     build:
@@ -53,6 +83,9 @@ services:
       - VITE_PORT=3006
     env_file:
       - .env
+    networks:
+      - front-network
+    restart: unless-stopped
     healthcheck:
       test:
         [
@@ -61,12 +94,15 @@ services:
           "--no-verbose",
           "--tries=1",
           "--spider",
-          "http://localhost:3006",
+          "http://frontend:3006",
         ]
-      interval: 30s
-      timeout: 10s
+      interval: 10s
+      timeout: 5s
       retries: 5
-      start_period: 45s
+      start_period: 30s
+    # depends_on:
+    #   api-gateway:
+    #     condition: service_healthy
 
   quote-service:
     build:
@@ -77,26 +113,29 @@ services:
     env_file:
       - .env
     environment:
-      - JWT_PUBLIC_KEY=your_public_key
+      - PORT=3002
+    networks:
+      - back-network
+    # healthcheck:
+    #   test:
+    #     [
+    #       "CMD",
+    #       "wget",
+    #       "--no-verbose",
+    #       "--tries=1",
+    #       "--spider",
+    #       "http://localhost:3002/health",
+    #     ]
+    #   interval: 10s
+    #   timeout: 5s
+    #   retries: 5
+    #   start_period: 30s
+    restart: unless-stopped
     depends_on:
       shared:
         condition: service_completed_successfully
       quote-db:
         condition: service_healthy
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "wget",
-          "--no-verbose",
-          "--tries=1",
-          "--spider",
-          "http://quote-service:3002/health",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 45s
 
   user-service:
     build:
@@ -107,12 +146,14 @@ services:
     env_file:
       - .env
     environment:
-      - MESSAGE_BROKER_URL
+      - MESSAGE_BROKER_URL=${MESSAGE_BROKER_URL}
       - PORT=3003
       - NODE_ENV=development
       - RABBITMQ_HEARTBEAT=30
       - RABBITMQ_RECONNECT_INTERVAL=3000
       - RABBITMQ_MAX_RECONNECT_ATTEMPTS=3
+    networks:
+      - back-network
     healthcheck:
       test:
         [
@@ -121,11 +162,11 @@ services:
           "--no-verbose",
           "--tries=1",
           "--spider",
-          "http://user-service:3003/health",
+          "http://localhost:3003/health",
         ]
       interval: 10s
       timeout: 5s
-      retries: 3
+      retries: 5
       start_period: 30s
     restart: unless-stopped
     depends_on:
@@ -146,6 +187,9 @@ services:
     volumes:
       - ./mongo-init/auth-db:/docker-entrypoint-initdb.d
       - auth-data:/data/db
+    networks:
+      - back-network
+    restart: unless-stopped
     healthcheck:
       test: >
         mongosh --eval 'db.runCommand("ping").ok' --quiet
@@ -166,6 +210,9 @@ services:
     volumes:
       - ./mongo-init/quote-db:/docker-entrypoint-initdb.d
       - quote-data:/data/db
+    networks:
+      - back-network
+    restart: unless-stopped
     healthcheck:
       test: >
         mongosh --eval 'db.runCommand("ping").ok' --quiet
@@ -186,6 +233,9 @@ services:
     volumes:
       - ./mongo-init/user-db:/docker-entrypoint-initdb.d
       - user-data:/data/db
+    networks:
+      - back-network
+    restart: unless-stopped
     healthcheck:
       test: >
         mongosh --eval 'db.runCommand("ping").ok' --quiet
@@ -207,11 +257,13 @@ services:
       - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbit disk_free_limit 2147483648
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - back-network
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
       interval: 10s
       timeout: 5s
-      retries: 3
+      retries: 5
       start_period: 20s
     restart: unless-stopped
 
@@ -222,3 +274,6 @@ volumes:
   rabbitmq_data:
     driver: local
 
+networks:
+  front-network:
+  back-network:

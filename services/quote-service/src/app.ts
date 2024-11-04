@@ -4,19 +4,13 @@ import Fastify, {
   FastifyError,
   FastifyRequest,
 } from "fastify";
-import cors from "@fastify/cors";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import { Container } from "./container";
 import { NotFoundError } from "./interface/errors";
-import { QuoteFilters } from "./domain/value-objects/QuoteFilters";
 import { TagController } from "./interface/api/controllers/TagController";
 import { AuthorController } from "./interface/api/controllers/AuthorController";
 import { QuoteController } from "./interface/api/controllers/QuoteController";
-import { authMiddleware } from "./middleware/authMiddleware";
-import { JWTService } from "./services/JWTService";
-import { AuthService } from "./services/AuthService";
-import { Quote } from "@quote-generator/shared";
 
 // Interfaces pour le typage des requêtes
 interface QuoteQueryRequest {
@@ -51,45 +45,7 @@ export async function build(): Promise<FastifyInstance> {
   const app = Fastify({
     logger: true,
   });
-  const authService = new AuthService();
   const container = Container.getInstance();
-  const jwtService = container.get<JWTService>("jwtService");
-
-  const publicRoutes: string[] = [
-    "/health",
-    "/auth/login",
-    "/auth/register",
-    "/auth/validate",
-    "/documentation",
-    "/documentation/json",
-    "/documentation/yaml",
-    "/documentation/static",
-  ];
-
-  // hook global
-  // app.addHook("preHandler", authMiddleware);
-  // Middleware d'authentification
-  app.addHook(
-    "preHandler",
-    async (request: FastifyRequest, reply: FastifyReply) => {
-      if (publicRoutes.some((route) => request.url.startsWith(route))) {
-        return;
-      }
-
-      const token = request.headers.authorization?.replace("Bearer ", "");
-
-      if (!token) {
-        throw new Error("No token provided");
-      }
-
-      try {
-        const userData = await authService.validateToken(token);
-        request.user = userData;
-      } catch (error) {
-        reply.status(401).send({ error: "Unauthorized" });
-      }
-    }
-  );
 
   // Configuration des gestionnaires d'erreur
   app.setErrorHandler((error: FastifyError, request, reply) => {
@@ -125,7 +81,6 @@ export async function build(): Promise<FastifyInstance> {
   });
 
   // Plugins
-  await app.register(cors);
   await app.register(swagger, {
     swagger: {
       info: {
@@ -133,18 +88,6 @@ export async function build(): Promise<FastifyInstance> {
         description: "API pour générer des citations aléatoires",
         version: "1.0.0",
       },
-      securityDefinitions: {
-        bearerAuth: {
-          type: "apiKey",
-          name: "Authorization",
-          in: "header",
-        },
-      },
-      security: [
-        {
-          bearerAuth: [],
-        },
-      ],
       tags: [
         {
           name: "quotes",
@@ -165,42 +108,11 @@ export async function build(): Promise<FastifyInstance> {
   });
 
   // Routes
-  app.get(
-    "/health",
-    {
-      schema: {
-        tags: ["system"],
-        description: "Vérifier l'état du système",
-        response: {
-          200: {
-            type: "object",
-            properties: {
-              status: { type: "string" },
-            },
-          },
-        },
-      },
-    },
-    async () => ({ status: "ok" })
-  );
-
-  app.post("/auth/validate", async (request, reply) => {
-    const token = request.headers.authorization?.replace("Bearer ", "");
-    try {
-      if (!token) {
-        throw new Error("No token provided");
-      }
-      const decoded = jwtService.verifyToken(token);
-      return reply.send({ valid: true, user: decoded });
-    } catch (error) {
-      return reply.status(401).send({ valid: false });
-    }
-  });
+  app.get("/health", async () => ({ status: "ok" }));
 
   app.get<QuoteQueryRequest>(
     "/quotes/random",
     {
-      // preHandler: authMiddleware, // authentication required
       schema: {
         tags: ["quotes"],
         description: "Obtenir des citations aléatoires avec filtres",
@@ -500,18 +412,6 @@ export async function build(): Promise<FastifyInstance> {
       }
     }
   );
-
-  app.get("/debug/auth-info", {
-    handler: async (request: FastifyRequest, reply: FastifyReply) => {
-      return {
-        headers: request.headers,
-        user: request.user || null,
-        authServiceUrl: process.env.AUTH_SERVICE_URL || "http://localhost:3001",
-        environment: process.env.NODE_ENV,
-        serverTime: new Date().toISOString(),
-      };
-    },
-  });
 
   return app;
 }
