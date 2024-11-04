@@ -1,306 +1,343 @@
-# Quotes API
+# Quote Service - Quote Generator
 
-This project provides an API to retrieve random quotes with filtering options, along with additional endpoints to manage tags and authors. It is structured with a Clean Architecture approach, strictly separating domain, application, infrastructure and interface layers. This design improves modularity, testability, and flexibility while enforcing domain-driven design principles.
+Service responsible for managing quotes, providing random quote generation, filtering, and categorization capabilities.
 
 ## Table of Contents
 
-- [Quotes API](#quotes-api)
+- [Quote Service - Quote Generator](#quote-service---quote-generator)
   - [Table of Contents](#table-of-contents)
+  - [Features](#features)
+  - [Architecture](#architecture)
+    - [Clean Architecture Implementation](#clean-architecture-implementation)
   - [Getting Started](#getting-started)
     - [Prerequisites](#prerequisites)
+    - [Environment Variables](#environment-variables)
     - [Installation](#installation)
-    - [Running the Server](#running-the-server)
-  - [Folder Structure](#folder-structure)
-  - [Architecture Overview](#architecture-overview)
-  - [Endpoints](#endpoints)
-    - [Health Check](#health-check)
-    - [Random Quotes](#random-quotes)
-    - [Quote by ID](#quote-by-id)
-    - [All Tags](#all-tags)
-    - [Tag by ID](#tag-by-id)
-    - [All Authors](#all-authors)
-    - [Author by ID](#author-by-id)
-  - [Quote Filters](#quote-filters)
-  - [Swagger Documentation](#swagger-documentation)
-    - [Swagger Setup](#swagger-setup)
-  - [Error Handling](#error-handling)
-    - [Error Types](#error-types)
-    - [Error Response Format](#error-response-format)
-    - [Example](#example)
+  - [API Reference](#api-reference)
+    - [Get Random Quotes](#get-random-quotes)
+    - [Get Quote by ID](#get-quote-by-id)
+    - [Get All Tags](#get-all-tags)
+    - [Get All Authors](#get-all-authors)
+  - [Data Models](#data-models)
+    - [Quote Entity](#quote-entity)
+    - [Author Entity](#author-entity)
+    - [Tag Entity](#tag-entity)
+  - [Filtering System](#filtering-system)
+    - [Tag Filtering](#tag-filtering)
+    - [Length Filtering](#length-filtering)
+    - [Author Filtering](#author-filtering)
   - [Testing](#testing)
     - [Test Structure](#test-structure)
-    - [Running Tests](#running-tests)
-  - [Examples](#examples)
-  - [Future Improvements](#future-improvements)
-  - [License](#license)
-  - [Acknowledgments](#acknowledgments)
+  - [Error Handling](#error-handling)
+    - [Error Types](#error-types)
+    - [Error Responses](#error-responses)
+  - [Performance](#performance)
+    - [Caching Strategy](#caching-strategy)
+    - [Query Optimization](#query-optimization)
+    - [Rate Limiting](#rate-limiting)
+  - [Documentation](#documentation)
+    - [Swagger Documentation](#swagger-documentation)
+    - [API Examples](#api-examples)
+      - [Get Random Motivational Quote](#get-random-motivational-quote)
+      - [Get Multiple Success Quotes](#get-multiple-success-quotes)
+    - [Monitoring](#monitoring)
+    - [Debug Mode](#debug-mode)
+    - [Performance Metrics](#performance-metrics)
+
+## Features
+
+- 🎲 Random quote generation
+- 🔍 Advanced filtering capabilities
+- 🏷️ Tag and category management
+- 📚 Author management
+- 🔄 Quote caching
+- 📊 Quote statistics
+- 🎯 Smart quote selection
+- 🚀 High performance design
+
+## Architecture
+
+### Clean Architecture Implementation
+
+```plaintext
+src/
+├── application/           # Application business rules
+│   ├── use-cases/        # Use case implementations
+│   └── dtos/             # Data Transfer Objects
+├── domain/               # Enterprise business rules
+│   ├── entities/         # Domain entities
+│   ├── repositories/     # Repository interfaces
+│   └── value-objects/    # Value objects
+├── infrastructure/       # External interfaces
+│   ├── persistence/      # Database implementations
+│   └── repositories/     # Repository implementations
+└── interface/           # Interface adapters
+    ├── api/             # REST API controllers
+    └── presenters/      # Data presenters
+```
 
 ## Getting Started
 
 ### Prerequisites
+- Node.js >= 20.x
+- MongoDB
+- RabbitMQ (for events)
 
-- Node.js (>= 14.x)
-- npm
+### Environment Variables
+```env
+NODE_ENV=development
+PORT=3002
+MONGODB_URI=mongodb://localhost:27017/quotes
+MESSAGE_BROKER_URL=amqp://guest:guest@localhost:5672
+```
 
 ### Installation
 
-Clone the repository and install dependencies:
-
+1. Install dependencies:
 ```bash
-git clone <repository-url>
-cd <repository-folder>
 npm install
 ```
 
-2. Create a `.env` file with the MongoDB connection string and other required variables:
-```plaintext
-JWT_SECRET=your_jwt_public_key
-```
-
-### Running the Server
-
-To start the server in development mode:
-
+2. Build:
 ```bash
+npm run build
+```
+
+3. Start service:
+```bash
+# Development
 npm run dev
+
+# Production
+npm start
 ```
 
-The server will be running at `http://localhost:3002`.
+## API Reference
 
-## Folder Structure
-
-```
-src
-├── application/                       # Use cases and DTOs
-│   ├── dtos/                          # Data transfer objects (DTOs) for quotes, authors, and tags
-│   └── use-cases/                     # Application use cases organized by entity
-├── container.ts                       # Dependency injection container
-├── domain/                            # Core business logic and domain models
-│   ├── entities/                      # Entities representing core business models
-│   ├── repositories/                  # Interfaces for data access (repositories)
-│   └── value-objects/                 # Value objects encapsulating business rules
-├── infrastructure/                    # Implementation of repositories and persistence
-│   ├── repositories/                  # Concrete repository implementations
-│   └── persistence/                   # In-memory storage for quotes, authors, and tags
-│   └── config/                        # Configuration files for MongoDB connection
-│       └── database.ts
-├── interface/                         # API interface layer
-│   ├── api/                           # Routes, controllers, and presenters
-│   └── errors/                        # Error handling for API responses
-├── plugins                            # Fastify plugins (e.g., error handlers)
-└── index.ts                           # Main entry point for server setup and Swagger configuration
-
-tests
-├── integration
-│   └── api.test.ts                    # Integration tests for API endpoints
-└── unit
-    ├── application                    # Tests for application layer (use cases and DTOs)
-    ├── domain                         # Tests for entities, value objects, and domain repositories
-    ├── infrastructure                 # Tests for repository implementations
-    ├── interface                      # Tests for controllers and presenters
-    └── plugins                        # Tests for Fastify plugins (e.g., error handler)
+### Get Random Quotes
+```http
+GET /quotes/random
 ```
 
-## Architecture Overview
-
-The project adheres to Clean Architecture principles, ensuring a clear separation of responsibilities:
-
-1. **Domain Layer**: Contains entities, value objects, and repository interfaces for domain logic.
-2. **Application Layer**: Houses the use cases, serving as an intermediary for business logic in the domain layer, while abstracting away infrastructure dependencies.
-3. **Infrastructure Layer**: Implements repositories and persistence mechanisms.
-4. **Interface Layer**: Provides API routes, controllers, and presenters for transforming domain data for external use.
-5. **Dependency Injection**: Manages dependencies across layers for modularity and testability.
-6. **Error Handling**: Centralized error management with custom error types for consistency.
-
-## Endpoints
-
-### Health Check
-
-- **GET** `/health`
-  - Returns server status.
-
-### Random Quotes
-
-- **GET** `/quotes/random`
-  - Retrieves random quotes with optional filters.
-
-### Quote by ID
-
-- **GET** `/quotes/:id`
-  - Retrieves a specific quote by its ID.
-  - **Parameters**:
-    - `id` (string): The ID of the quote to retrieve.
-
-### All Tags
-
-- **GET** `/tags`
-  - Retrieves all available tags.
-
-### Tag by ID
-
-- **GET** `/tags/:id`
-  - Retrieves a specific tag by its ID.
-  - **Parameters**:
-    - `id` (string): The ID of the tag to retrieve.
-
-### All Authors
-
-- **GET** `/authors`
-  - Retrieves all available authors.
-
-### Author by ID
-
-- **GET** `/authors/:id`
-  - Retrieves a specific author by their ID.
-  - **Parameters**:
-    - `id` (string): The ID of the author to retrieve.
-
-## Quote Filters
-
-The `/quotes/random` endpoint supports the following filters via query parameters:
-
-| Filter      | Type   | Description                                         |
-| ----------- | ------ | --------------------------------------------------- |
-| `limit`     | number | Maximum number of quotes to return                  |
-| `maxLength` | number | Maximum length (character count) of quote content   |
-| `minLength` | number | Minimum length (character count) of quote content   |
-| `tags`      | string | Comma-separated tags (e.g.,`Success,Inspirational`) |
-| `author`    | string | Author name (exact match, case-insensitive)         |
-
-## Swagger Documentation
-
-This project uses Swagger for automatically generated API documentation.
-
-- After starting the server, you can access the Swagger UI at: `http://localhost:3002/documentation`
-- The Swagger UI provides an interactive interface to test API endpoints, view request and response schemas, and explore all available parameters.
-
-### Swagger Setup
-
-Swagger is configured using Fastify plugins (`@fastify/swagger` and `@fastify/swagger-ui`). The documentation includes the following features:
-
-- **Tags and Descriptions**: Organized by tags for clear navigation
-- **Query Parameter Documentation**: Detailed parameter descriptions for each endpoint
-- **Schemas**: Schemas for request validation and response types (e.g., `Quote`, `Author`, `Tag`)
-
-## Error Handling
-
-The API uses structured error handling to provide clear, consistent error responses.
-
-### Error Types
-
-- **ValidationError** (400): Occurs when the input data is invalid (e.g., invalid filter values).
-- **NotFoundError** (404): Returned if a requested resource, such as a quote or author by ID, is not found.
-- **ServiceError** (500): Indicates an internal server error.
-
-### Error Response Format
-
-Error responses follow this structure:
-
-```json
-{
-  "status": "error",
-  "message": "Error message",
-  "code": HTTP status code
+Query Parameters:
+```typescript
+interface QueryParams {
+  limit?: number;      // default: 1, max: 50
+  maxLength?: number;  // maximum quote length
+  minLength?: number;  // minimum quote length
+  tags?: string;       // comma-separated tags
+  author?: string;     // author name/slug
 }
 ```
 
-### Example
-
-A request for a non-existing tag ID might return:
-
+Response:
 ```json
-{
-  "status": "error",
-  "message": "Tag not found",
-  "code": 404
+[
+  {
+    "_id": "quote_id",
+    "content": "Quote content",
+    "author": "Author name",
+    "tags": ["tag1", "tag2"]
+  }
+]
+```
+
+### Get Quote by ID
+```http
+GET /quotes/:id
+```
+
+### Get All Tags
+```http
+GET /tags
+```
+
+### Get All Authors
+```http
+GET /authors
+```
+
+## Data Models
+
+### Quote Entity
+```typescript
+interface Quote {
+  id: string;
+  content: QuoteContent;  // Value Object
+  authorId: string;
+  tags: string[];
 }
 ```
+
+### Author Entity
+```typescript
+interface Author {
+  id: string;
+  name: AuthorName;    // Value Object
+  link?: string;
+  bio: string;
+  description: string;
+}
+```
+
+### Tag Entity
+```typescript
+interface Tag {
+  id: string;
+  name: TagName;       // Value Object
+}
+```
+
+## Filtering System
+
+### Tag Filtering
+- AND operation: `tags=motivation,success`
+- OR operation: `tags=motivation|success`
+
+### Length Filtering
+```typescript
+interface LengthFilter {
+  minLength?: number;
+  maxLength?: number;
+}
+```
+
+### Author Filtering
+- Exact match: `author=Albert Einstein`
+- Slug match: `author=albert-einstein`
 
 ## Testing
 
-The project uses **Jest** and **Supertest** for comprehensive testing, including unit and integration tests. These tests ensure that all components, including services, error handling, and repositories, function as expected.
+```bash
+# Run all tests
+npm test
+
+# Run with coverage
+npm run test:coverage
+
+# Run specific tests
+npm test -- quote.test.ts
+```
 
 ### Test Structure
-
-- **Unit Tests**: Located in `tests/unit/`, these tests validate individual components such as services, repositories, error handling, and the dependency injection container.
-- **Integration Tests**: Located in `tests/integration/`, these tests validate the API endpoints, ensuring proper responses for various request scenarios.
-
-### Running Tests
-
-To run all tests:
-
-```bash
-npm test
+```
+tests/
+├── unit/
+│   ├── application/
+│   ├── domain/
+│   └── infrastructure/
+├── integration/
+│   └── api.test.ts
+└── mocks/
 ```
 
-To run tests in watch mode:
+## Error Handling
 
-```bash
-npm run test:watch
+### Error Types
+```typescript
+class NotFoundError extends AppError {
+  constructor(message = "Resource not found") {
+    super(message, 404);
+  }
+}
+
+class ValidationError extends AppError {
+  constructor(message: string) {
+    super(message, 400);
+  }
+}
 ```
 
-To check test coverage:
-
-```bash
-npm run test:coverage
+### Error Responses
+```json
+{
+  "status": "error",
+  "message": "Error description",
+  "code": 404,
+  "details": {}
+}
 ```
 
-The test suite verifies that all services and endpoints function as expected, ensuring error handling and filtering logic work correctly.
+## Performance
 
-![test:coverage](./images/unit-test-coverage.png "Unit tests coverage")
+### Caching Strategy
+- In-memory cache for frequent quotes
+- MongoDB indexing for efficient queries
+- Optimized random selection
 
-## Examples
+### Query Optimization
+```typescript
+// Efficient random quote selection
+db.quotes.aggregate([
+  { $match: filters },
+  { $sample: { size: limit } }
+]);
+```
 
-- Get a random quote:
-  ```
-  GET http://localhost:3002/quotes/random
-  ```
-- Get two random quotes:
-  ```
-  GET http://localhost:3002/quotes/random?limit=2
-  ```
-- Get a quote by ID:
-  ```
-  GET http://localhost:3002/quotes/:id
-  ```
-- Get quotes with a maximum length of 100 characters:
-  ```
-  GET http://localhost:3002/quotes/random?maxLength=100
-  ```
-- Get quotes tagged with either "Success" or "Inspirational":
-  ```
-  GET http://localhost:3002/quotes/random?tags=Success|Inspirational
-  ```
-- Get all tags:
-  ```
-  GET http://localhost:3002/tags
-  ```
-- Get a tag by ID:
-  ```
-  GET http://localhost:3002/tags/:id
-  ```
-- Get all authors:
-  ```
-  GET http://localhost:3002/authors
-  ```
-- Get an author by ID:
-  ```
-  GET http://localhost:3002/authors/:id
-  ```
+### Rate Limiting
+```typescript
+{
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100 // limit each IP to 100 requests per windowMs
+}
+```
 
-## Future Improvements
+## Documentation
 
-- Consider adding authentication for secured access
-- Containerize the backend project along with a database using a Dockerfile and docker-compose
-- Implement data persistence in a database to replace in-memory storage and ensure long-term data retention
-- Develop a frontend for the application using React
-- Implement end-to-end tests with Cypress for comprehensive testing across user interactions
-- Plan deployments with Kubernetes to enable scalable, resilient, and containerized application management
+### Swagger Documentation
+Available at: `http://localhost:3002/documentation`
 
-## License
+### API Examples
 
-This project is licensed under the MIT License. See `LICENSE` for more details.
+#### Get Random Motivational Quote
+```bash
+curl "http://localhost:3002/quotes/random?tags=motivation&maxLength=200"
+```
 
-## Acknowledgments
+#### Get Multiple Success Quotes
+```bash
+curl "http://localhost:3002/quotes/random?tags=success&limit=5"
+```
 
-This project uses quotes, authors, and tags data from a curated list for demonstration purposes.
+### Monitoring
+
+Health Check Endpoint:
+```http
+GET /health
+
+Response:
+{
+  "status": "ok",
+  "timestamp": "2024-02-21T10:00:00.000Z",
+  "version": "1.0.0",
+  "database": "connected"
+}
+```
+
+### Debug Mode
+```bash
+DEBUG=quote-service:* npm run dev
+```
+
+### Performance Metrics
+```http
+GET /metrics
+
+Response:
+{
+  "quotes": {
+    "total": 1000,
+    "cached": 100
+  },
+  "requests": {
+    "total": 5000,
+    "success": 4950,
+    "error": 50
+  },
+  "response_time": {
+    "avg": 45,
+    "p95": 100,
+    "p99": 200
+  }
+}
+```

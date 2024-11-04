@@ -1,238 +1,253 @@
-Here’s the updated README for the microservices solution, incorporating RabbitMQ and event-driven architecture.
+# Quote Generator - Microservices Architecture
 
-````markdown
-# Microservices Project with JWT Authentication and Event-Driven Architecture
+A random quote generator based on a modern microservices architecture using Node.js, TypeScript and RabbitMQ.
 
-This project transforms a monolithic architecture into a microservices-based solution, providing modularity, scalability, and security. The project includes services for authentication, user management, and quotes, orchestrated via an API Gateway, with Docker Compose for containerization. RabbitMQ enables asynchronous event-driven communication between services, adding resilience and decoupling for a robust microservices setup.
+## Overview
 
-## Table of Contents
+Built with a focus on scalability, reliability and performance, this application demonstrates modern backend development best practices including:
 
-- [Microservices Project with JWT Authentication and Event-Driven Architecture](#microservices-project-with-jwt-authentication-and-event-driven-architecture)
-  - [Table of Contents](#table-of-contents)
-  - [Project Structure](#project-structure)
-  - [Technologies](#technologies)
-  - [Setup](#setup)
-    - [Environment Variables](#environment-variables)
-    - [Prerequisites](#prerequisites)
-    - [Installation](#installation)
-    - [Launching the Application](#launching-the-application)
-  - [Services](#services)
-    - [1. Auth Service](#1-auth-service)
-    - [2. User Service](#2-user-service)
-    - [3. Quote Service](#3-quote-service)
-    - [4. API Gateway](#4-api-gateway)
-    - [5. Frontend Service](#5-frontend-service)
-  - [Event-Driven Communication with RabbitMQ](#event-driven-communication-with-rabbitmq)
-  - [Testing the Endpoints](#testing-the-endpoints)
-  - [Authentication](#authentication)
-  - [Microservices Architecture](#microservices-architecture)
-  - [Security and Best Practices](#security-and-best-practices)
-  - [License](#license)
+- Clean Architecture principles
+- Domain-Driven Design
+- Event-Driven Architecture
+- SOLID principles
+- Comprehensive testing
+- Docker containerization
 
-## Project Structure
+## Architecture
 
-The project is organized as follows:
+The application consists of several independent microservices:
+
+- **API Gateway**: Single entry point for clients
+- **Auth Service**: Authentication and JWT management
+- **Quote Service**: Quote management and retrieval
+- **User Service**: User profiles and preferences management
+- **Frontend**: React user interface
+
+### Service Communication
+
+- Synchronous communication via HTTP/REST between services
+- Asynchronous communication via RabbitMQ for events
+- JWT for inter-service security
 
 ```plaintext
-├── services/
-│   ├── auth-service/
-│   │   └── src/
-│   │       └── config/
-│   │           └── database.ts   # MongoDB connection setup
-│   ├── user-service/
-│   │   └── src/
-│   │       └── messaging/        # RabbitMQ consumer setup
-│   ├── quote-service/
-│   │   └── src/
-│   │       └── config/
-│   │           └── database.ts   # MongoDB connection setup
-│   ├── api-gateway/
-│   └── frontend/
-│       └── src/
-│           └── store/            # Redux state management setup
-├── shared/                       # Shared modules (events, types, constants)
-├── docker-compose.yml            # Docker Compose for service orchestration
-└── README.md                     # Project documentation
-```
-````
-
-## Technologies
-
-- **Node.js & TypeScript** - Service development
-- **Fastify** - Lightweight API Gateway
-- **Docker & Docker Compose** - Containerization and orchestration
-- **MongoDB** - Database for each microservice
-- **RabbitMQ** - Message broker for event-driven communication
-- **JWT & bcrypt** - Secure user authentication
-
-## Setup
-
-- Include instructions for setting up .env for the frontend, if needed.
-
-```plaintext
-VITE_PORT=3006
-VITE_API_URL=http://localhost:3000   # API Gateway URL
+┌──────────┐     ┌──────────────┐
+│          │     │              │
+│ Frontend │─────▶ API Gateway │
+│          │     │              │
+└──────────┘     └──────┬───────┘
+                        │
+         ┌──────────────┼───────────────┐
+         │              │               │
+    ┌────▼────┐   ┌────▼─────┐     ┌────▼────┐
+    │         │   │          │     │         │
+    │  Auth   │   │  Quote   │     │  User   │
+    │ Service │   │ Service  │     │ Service │
+    │         │   │          │     │         │
+    └────┬────┘   └────┬─────┘     └────┬────┘
+         │             │                │
+    ┌────▼─────────────▼────────────────▼───┐
+    │                                       │
+    │            Message Broker             │
+    │             (RabbitMQ)                │
+    │                                       │
+    └───────────────────────────────────────┘
 ```
 
-### Environment Variables
+## Technology Stack
 
-Ensure `.env` files are created for each service with the necessary configurations. Below is a sample setup for `auth-service`:
+### Backend
 
-```plaintext
-JWT_SECRET=your_secret_key
-MESSAGE_BROKER_URL=amqp://admin:password@rabbitmq:5672
-```
+- Node.js/TypeScript
+- Fastify for REST APIs
+- MongoDB for persistence
+- RabbitMQ for event-driven architecture
+- JWT for authentication
+
+### Frontend
+
+- React/TypeScript
+- Redux Toolkit for state management
+- React Router for navigation
+
+### Infrastructure
+
+- Docker & Docker Compose
+- Jest & Supertest for testing
+- Swagger for API documentation
+
+## Getting Started
 
 ### Prerequisites
 
-- Docker and Docker Compose
-- Node.js and npm (for local development)
+- Node.js >= 20.x
+- Docker & Docker Compose
+- MongoDB
+- RabbitMQ
 
 ### Installation
 
 1. Clone the repository:
 
-   ```bash
-   git clone https://github.com/your-repo/microservices-project.git
-   cd microservices-project
-   ```
-
-2. Set up environment variables in `.env` files for each service (sample below for `auth-service`):
-
-   ```plaintext
-   JWT_SECRET=your_secret_key
-   JWT_EXPIRES_IN=1h
-   ```
-
-### Launching the Application
-
-1. To build and start all services with Docker Compose, including RabbitMQ, run:
-
-   ```bash
-   docker-compose up --build
-   ```
-
-   Each service will be available at its designated port as configured in `docker-compose.yml`.
-
-2. To stop the containers, use:
-
-   ```bash
-   docker-compose down
-   ```
-
-## Services
-
-### 1. [Auth Service](./services/auth-service/README.md "Auth Service")
-
-- **Endpoints**: `/auth/register`, `/auth/login`, `/auth/refresh`, `/auth/logout`
-- **Functionality**: Manages user authentication and generates JWT tokens.
-- **URL**: `http://localhost:3001`
-
-### 2. [User Service](./services/user-service/README.md "User Service")
-
-- **Endpoints**: `/users` (accessible through the API Gateway)
-- **Functionality**: Handles user data and profile management.
-- **Event Subscriptions**: Listens for user-related events (e.g., `USER_CREATED`, `USER_UPDATED`) via RabbitMQ for updating user profiles and preferences.
-- **URL**: `http://localhost:3003`
-
-### 3. [Quote Service](./services/quote-service/README.md "Quote Service")
-
-- **Endpoints**: `/quotes` (accessible through the API Gateway)
-- **Functionality**: Manages quotes, requiring JWT token validation for access.
-- **Event Publication**: Publishes events related to quote interactions (e.g., `QUOTE_FAVORITED`) via RabbitMQ.
-- **URL**: `http://localhost:3002`
-
-### 4. [API Gateway](./services/api-gateway/README.md "API Gateway")
-
-- **Functionality**: Provides a unified entry point and routes requests to each microservice. Configured using Fastify and includes middleware for initial token validation.
-- **URL**: `http://localhost:3000`
-
-### 5. [Frontend Service](./services/frontend/README.md "Frontend Service")
-
-- **URL**: `http://localhost:3006`
-- **Functionality**: A React/TypeScript client application for displaying quotes and interacting with other services through the API Gateway.
-- **Endpoints**: Fetches quotes through the API Gateway and handles authentication (in progress).
-- **Docker Setup**: Configured to run with Docker for seamless integration.
-
-## Event-Driven Communication with RabbitMQ
-
-The solution utilizes RabbitMQ as a message broker for event-driven communication between services, enabling decoupled and asynchronous interactions. Key events include:
-
-- **User Events**: Generated by the Auth Service, consumed by the User Service for profile management.
-- **Quote Events**: Generated by the Quote Service, consumed by the User Service to update user preferences and favorite quotes.
-
-### Event Example
-
-- **Event**: `USER_CREATED`
-
-  - **Publisher**: Auth Service
-  - **Subscriber**: User Service
-  - **Description**: Triggers the creation of a new user profile in the User Service upon successful registration.
-
-- **Event**: `QUOTE_FAVORITED`
-  - **Publisher**: Quote Service
-  - **Subscriber**: User Service
-  - **Description**: Updates the user’s list of favorite quotes and preferences.
-
-### Configuration
-
-Ensure RabbitMQ configuration is set in each service’s `.env` file:
-
-```plaintext
-MESSAGE_BROKER_URL=amqp://admin:password@rabbitmq:5672
+```bash
+git clone https://github.com/your-username/quote-generator.git
+cd quote-generator
 ```
 
-RabbitMQ UI is accessible at `http://localhost:15672` for monitoring and managing message queues.
+2. Install dependencies:
 
-## Testing the Endpoints
+```bash
+npm install
+```
 
-Once the services are running, you can test the endpoints via API Gateway (`http://localhost:3000`). Below are some sample URLs and actions to test the functionalities:
+3. Configuration:
 
-1. **Registration**
+- Copy `.env.example` to `.env`
+- Adjust environment variables
 
-   - URL: `http://localhost:3000/auth/register`
-   - Method: POST
+4. Start services:
 
-2. **Login**
+```bash
+# Development mode
+npm run dev
 
-   - URL: `http://localhost:3000/auth/login`
-   - Method: POST
+# Production mode
+npm run prod
+```
 
-3. **Retrieve All Users**
+## Service Architecture
 
-   - URL: `http://localhost:3000/users`
-   - Method: GET
+### 1. [API Gateway (Port 3000)](./services/api-gateway/README.md "API Gateway (Port 3000)")
 
-4. **Retrieve All Quotes**
-   - URL: `http://localhost:3000/quotes`
-   - Method: GET
+- Single entry point
+- Request routing
+- JWT validation
+- CORS configuration
 
-Ensure you provide the necessary authentication tokens for protected endpoints.
+### 2. [Auth Service (Port 3001)](./services/auth-service/README.md "Auth Service (Port 3001)")
 
-## Authentication
+- User registration/login
+- JWT generation/validation
+- User event publishing
 
-This project uses JSON Web Tokens (JWT) for user authentication. Here’s an overview of the authentication flow:
+### 3. [Quote Service (Port 3002)](./services/quote-service/README.md "Quote Service (Port 3002)")
 
-1. **Registration** (`/auth/register`): New users register with their email, password (hashed), and role.
-2. **Login** (`/auth/login`): Users log in with email and password, receiving a JWT.
-3. **Token Validation**: Each service validates tokens independently through middleware to ensure security.
-4. **Role-Based Access Control**: Middleware checks user roles for authorized access.
+- Quote CRUD operations
+- Search and filtering
+- Random quote generation
+- Tags and categories
 
-## Microservices Architecture
+### 4. [User Service (Port 3003)](./services/user-service/README.md "User Service (Port 3003)")
 
-The microservices architecture allows for scalability, fault isolation, and easier maintenance. Key components include:
+- User profiles
+- Reading preferences
+- Favorite quotes
+- Usage statistics
 
-1. **API Gateway**: Serves as the entry point and routes requests to each service.
-2. **Service Discovery**: Uses Consul for service registration and load balancing.
-3. **Event Bus**: Facilitates asynchronous communication between services via RabbitMQ.
+### 5. [Frontend (Port 3006)](./services/frontend/README.md "Frontend (Port 3006)")
 
-## Security and Best Practices
+- Modern React interface
+- Redux state management
+- Offline support
+- Responsive design
 
-1. **Secure JWT Authentication**: Password hashing with bcrypt, JWT for authentication, and role-based access control.
-2. **Data Isolation**: Each service has a dedicated MongoDB instance, managed in Docker.
-3. **Monitoring**: Health checks and centralized logging can be added to track service health.
-4. **Scalability**: Stateless services allow for easy horizontal scaling.
+## Event-Driven Architecture
+
+The application leverages RabbitMQ for asynchronous service communication:
+
+### User Events
+
+- USER_CREATED
+- USER_UPDATED
+- USER_DELETED
+
+### Quote Events
+
+- QUOTE_VIEWED
+- QUOTE_FAVORITED
+- QUOTE_UNFAVORITED
+
+## Testing
+
+```bash
+# Unit tests
+npm run test
+
+# Coverage report
+npm run test:coverage 
+```
+
+## API Documentation
+
+Swagger documentation is available at:
+
+- Gateway: `/documentation`
+- Auth: `/documentation`
+- Quote: `/documentation`
+- User: `/documentation`
+
+## Environment Variables
+
+Key environment variables needed:
+
+```env
+# JWT Configuration
+JWT_SECRET=your_jwt_secret
+JWT_EXPIRES_IN=1h
+
+# Services URLs
+AUTH_SERVICE_URL=http://localhost:3001
+QUOTE_SERVICE_URL=http://localhost:3002
+USER_SERVICE_URL=http://localhost:3003
+
+# MongoDB Configuration
+MONGO_URL=mongodb://localhost:27017/quote_generator
+
+# RabbitMQ
+MESSAGE_BROKER_URL=amqp://guest:guest@localhost:5672
+```
+
+## Docker Support
+
+Build and run with Docker Compose:
+
+```bash
+# Build services
+docker-compose build
+
+# Start services
+docker-compose up
+
+# Start services with build
+docker-compose up --build
+
+# Stop services
+docker-compose down
+```
+
+## Accessing the Application
+
+Once all services are running, you can access the application through your web browser:
+
+[http://localhost:3006](http://localhost:3006 "Quote Generator")
+
+[![Quote Generator Screenshot](./image/README/quote.png "Quote Generator Screenshot")](http://localhost:3006 "Quote Generator")
+
+## Development
+
+### Code Style
+
+- ESLint for linting
+- Prettier for code formatting
+- Husky for pre-commit hooks
+
+## Security
+
+- JWT authentication
+- Rate limiting
+- CORS protection
+- Input validation
+- Security headers
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+Distributed under the MIT License. See `LICENSE` for more information.

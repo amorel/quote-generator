@@ -1,98 +1,364 @@
-#### 2. **User Service (`user-service/README.md`)**
-# User Service
+# User Service - Quote Generator
 
-The User Service is responsible for managing user profiles, storing user-related data, and handling events associated with user actions. It uses an event-driven architecture with RabbitMQ to enable asynchronous updates and communication with other microservices.
+Service responsible for managing user profiles, preferences, and reading history for the Quote Generator application.
 
 ## Table of Contents
 
-- [User Service](#user-service)
+- [User Service - Quote Generator](#user-service---quote-generator)
   - [Table of Contents](#table-of-contents)
-    - [Getting Started](#getting-started)
-      - [Prerequisites](#prerequisites)
-      - [Installation](#installation)
+  - [Features](#features)
+  - [Architecture](#architecture)
+    - [Event-Driven Architecture](#event-driven-architecture)
+  - [Getting Started](#getting-started)
+    - [Prerequisites](#prerequisites)
     - [Environment Variables](#environment-variables)
-    - [Endpoints](#endpoints)
-    - [Event Subscriptions](#event-subscriptions)
-    - [Testing](#testing)
-    - [Architecture Overview](#architecture-overview)
-      - [Event-Driven Architecture](#event-driven-architecture)
-      - [Resilience and Scalability](#resilience-and-scalability)
+    - [Installation](#installation)
+  - [Event System](#event-system)
+    - [Consumed Events](#consumed-events)
+      - [User Events](#user-events)
+      - [Quote Events](#quote-events)
+  - [API Reference](#api-reference)
+    - [User Profile Management](#user-profile-management)
+      - [Get User Profile](#get-user-profile)
+      - [Update User Preferences](#update-user-preferences)
+      - [Manage Favorite Quotes](#manage-favorite-quotes)
+  - [Data Models](#data-models)
+    - [User Profile](#user-profile)
+  - [Testing](#testing)
+    - [Test Structure](#test-structure)
+  - [Monitoring](#monitoring)
+    - [Health Check](#health-check)
+    - [Performance Metrics](#performance-metrics)
+    - [RabbitMQ Monitoring](#rabbitmq-monitoring)
+  - [Development](#development)
+    - [Debug Mode](#debug-mode)
+    - [Event Testing](#event-testing)
+    - [Code Quality](#code-quality)
+    - [Best Practices](#best-practices)
+    - [Error Handling](#error-handling)
 
-### Getting Started
+## Features
 
-#### Prerequisites
+- 👤 User profile management
+- ⭐ Favorite quotes handling
+- 📊 Reading history tracking
+- 🎯 Personalized recommendations
+- 🔔 Notification preferences
+- 📱 Theme preferences
+- 📈 Usage statistics
+- 🔄 Event-driven updates
 
-- Node.js (>= 14.x)
-- MongoDB instance
-- RabbitMQ instance
+## Architecture
 
-#### Installation
-
-1. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-2. Start the server in development mode:
-   ```bash
-   npm run dev
-   ```
-
-The service will be available at `http://localhost:3003`.
-
-### Environment Variables
-
-Create a `.env` file with the following variables:
+### Event-Driven Architecture
 
 ```plaintext
-MESSAGE_BROKER_URL=amqp://admin:password@rabbitmq:5672
-PORT=3003
-NODE_ENV=development
+┌──────────────┐         ┌──────────────┐
+│              │         │              │
+│ Auth Service │         │ Quote Service│
+│              │         │              │
+└───────┬──────┘         └──────┬───────┘
+        │                       │
+        │                       │
+┌───────▼───────────────────────▼───────┐
+│                                       │
+│             Message Broker            │
+│              (RabbitMQ)               │
+│                                       │
+└───────────────────┬───────────────────┘
+                    │
+            ┌───────▼───────┐
+            │               │
+            │ User Service  │
+            │               │
+            └───────┬───────┘
+                    │
+            ┌───────▼───────┐
+            │               │
+            │   MongoDB     │
+            │               │
+            └───────────────┘
 ```
 
-### Endpoints
+## Getting Started
 
-- **GET** `/users`: Retrieve all users
-- **GET** `/users/:id`: Get user profile by ID
-- **PUT** `/users/:id`: Update user profile
-- **GET** `/users/:id/favorites`: Get a user's favorite quotes
-- **POST** `/users/:id/favorites/:quoteId`: Add a quote to a user's favorites
-- **DELETE** `/users/:id/favorites/:quoteId`: Remove a quote from a user's favorites
-- **GET** `/users/:id/preferences`: Get user preferences
-- **PUT** `/users/:id/preferences`: Update user preferences
+### Prerequisites
+- Node.js >= 20.x
+- MongoDB
+- RabbitMQ
 
-### Event Subscriptions
+### Environment Variables
+```env
+NODE_ENV=development
+PORT=3003
+MONGODB_URI=mongodb://localhost:27017/users
+MESSAGE_BROKER_URL=amqp://guest:guest@localhost:5672
+RABBITMQ_HEARTBEAT=30
+RABBITMQ_RECONNECT_INTERVAL=3000
+```
 
-The User Service listens to various events via RabbitMQ, which allows for asynchronous processing of user actions. Below are the key events handled:
+### Installation
 
-- **USER_CREATED**: Creates an initial user profile when a new user is registered.
-- **USER_UPDATED**: Updates a user profile with new data from other services.
-- **QUOTE_FAVORITED**: Adds a quote to a user’s list of favorites.
+1. Install dependencies:
+```bash
+npm install
+```
 
-### Testing
+2. Build:
+```bash
+npm run build
+```
 
-To run tests:
+3. Start service:
+```bash
+# Development
+npm run dev
+
+# Production
+npm start
+```
+
+## Event System
+
+### Consumed Events
+
+#### User Events
+```typescript
+interface UserCreatedEvent {
+  type: "user.created";
+  data: {
+    userId: string;
+    email: string;
+    role: string;
+    timestamp: number;
+  }
+}
+
+interface UserUpdatedEvent {
+  type: "user.updated";
+  data: {
+    userId: string;
+    email: string;
+    role: string;
+    timestamp: number;
+  }
+}
+```
+
+#### Quote Events
+```typescript
+interface QuoteFavoritedEvent {
+  type: "quote.favorited";
+  data: {
+    userId: string;
+    quoteId: string;
+    timestamp: number;
+  }
+}
+```
+
+## API Reference
+
+### User Profile Management
+
+#### Get User Profile
+```http
+GET /users/:id
+```
+
+Response:
+```json
+{
+  "id": "user_id",
+  "email": "user@example.com",
+  "profile": {
+    "name": "John Doe",
+    "avatar": "avatar_url",
+    "preferences": {
+      "theme": "light",
+      "notifications": {
+        "dailyQuote": true,
+        "weeklyDigest": true
+      },
+      "preferredTags": ["motivation", "success"],
+      "favoriteAuthors": ["author_id"]
+    },
+    "stats": {
+      "quotesViewed": 100,
+      "favoriteCount": 25,
+      "createdAt": "2024-02-21T10:00:00.000Z"
+    }
+  },
+  "favoriteQuotes": ["quote_id1", "quote_id2"]
+}
+```
+
+#### Update User Preferences
+```http
+PUT /users/:id/preferences
+Content-Type: application/json
+
+{
+  "theme": "dark",
+  "notifications": {
+    "dailyQuote": true,
+    "weeklyDigest": false
+  }
+}
+```
+
+#### Manage Favorite Quotes
+```http
+POST /users/:id/favorites/:quoteId
+DELETE /users/:id/favorites/:quoteId
+```
+
+## Data Models
+
+### User Profile
+```typescript
+interface UserProfile {
+  id: string;
+  email: string;
+  role: string;
+  profile: {
+    name?: string;
+    avatar?: string;
+    preferences: UserPreferences;
+    stats: UserStats;
+  };
+  favoriteQuotes: string[];
+}
+
+interface UserPreferences {
+  theme: "light" | "dark";
+  notifications: {
+    dailyQuote: boolean;
+    weeklyDigest: boolean;
+  };
+  preferredTags: string[];
+  favoriteAuthors: string[];
+}
+
+interface UserStats {
+  quotesViewed: number;
+  favoriteCount: number;
+  createdAt: Date;
+}
+```
+
+## Testing
 
 ```bash
+# Run tests
 npm test
+
+# Coverage report
+npm run test:coverage
 ```
 
-### Architecture Overview
+### Test Structure
+```
+tests/
+├── unit/
+│   ├── services/
+│   ├── repositories/
+│   └── event-handlers/
+├── integration/
+│   └── user-profile.test.ts
+└── mocks/
+```
 
-The User Service employs a modular design following domain-driven principles. It consists of:
+## Monitoring
 
-- **Domain Layer**: Contains core business logic related to user management.
-- **Application Layer**: Manages use cases and event handling.
-- **Infrastructure Layer**: Handles database interaction with MongoDB and event handling via RabbitMQ.
+### Health Check
+```http
+GET /health
 
-#### Event-Driven Architecture
+Response:
+{
+  "status": "ok",
+  "services": {
+    "database": "connected",
+    "messageQueue": "connected"
+  },
+  "timestamp": "2024-02-21T10:00:00.000Z"
+}
+```
 
-RabbitMQ is used for asynchronous communication between services. This enables the User Service to react to events from other services (e.g., authentication service, quote service) without direct coupling. The service listens to events related to user actions and performs updates based on the data received, ensuring data consistency and eventual synchronization across the system.
+### Performance Metrics
+```http
+GET /metrics
 
-#### Resilience and Scalability
+Response:
+{
+  "users": {
+    "total": 1000,
+    "active": 750
+  },
+  "events": {
+    "processed": 5000,
+    "failed": 10
+  },
+  "response_time": {
+    "avg": 50,
+    "p95": 150
+  }
+}
+```
 
-- **RabbitMQ with Retry Logic**: Ensures message delivery even in case of temporary network issues.
-- **Dockerized Setup**: Allows for scalable deployments using Docker and Docker Compose.
-- **Graceful Shutdown**: Ensures that RabbitMQ connections are properly closed on exit.
+### RabbitMQ Monitoring
+- Connection health
+- Message processing rates
+- Error rates
+- Reconnection attempts
 
-This setup enables the User Service to handle large volumes of user interactions efficiently and reliably.
+## Development
+
+### Debug Mode
+```bash
+DEBUG=user-service:* npm run dev
+```
+
+### Event Testing
+```bash
+# Publish test event
+npm run publish-event -- user.created
+
+# Monitor event processing
+npm run monitor-events
+```
+
+### Code Quality
+- ESLint configuration
+- Prettier formatting
+- Jest tests
+- TypeScript strict mode
+
+### Best Practices
+1. Event handling validation
+2. Error retry policies
+3. Graceful shutdowns
+4. Transaction management
+5. Event idempotency
+
+### Error Handling
+```typescript
+class UserServiceError extends Error {
+  constructor(
+    message: string,
+    public code: number,
+    public details?: any
+  ) {
+    super(message);
+  }
+}
+
+// Error response format
+{
+  status: "error",
+  message: string,
+  code: number,
+  details?: any
+}
+```
