@@ -76,9 +76,11 @@
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
+    "@types/jest": "^29.5.14",
     "@types/jsonwebtoken": "^9.0.7",
     "env-cmd": "^10.1.0",
     "rimraf": "^5.0.0",
+    "ts-jest": "^29.2.5",
     "typescript": "^5.0.0"
   }
 }

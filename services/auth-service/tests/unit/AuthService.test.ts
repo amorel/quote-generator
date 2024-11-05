@@ -1,16 +1,18 @@
-import { AuthService } from "@/services/AuthService";
-import { UserRepositoryMock } from "@tests/mocks/UserRepositoryMock";
+import { AuthService } from "../../src/services/AuthService";
+import { UserRepositoryMock } from "../mocks/UserRepositoryMock";
+import { JWTService } from "../../src/services/JWTService";
+import { User } from "../../src/domain/entities/User";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import { JWT_CONFIG } from "@/config/jwt";
 
 describe("AuthService", () => {
   let authService: AuthService;
   let userRepository: UserRepositoryMock;
+  let jwtService: JWTService;
 
   beforeEach(() => {
     userRepository = new UserRepositoryMock();
-    authService = new AuthService();
+    jwtService = new JWTService();
+    authService = new AuthService(userRepository, jwtService);
   });
 
   describe("register", () => {
@@ -18,37 +20,49 @@ describe("AuthService", () => {
       const email = "test@example.com";
       const password = "password123";
 
+      // Crée d'abord un utilisateur
       await authService.register(email, password);
 
+      // Tente de créer un autre utilisateur avec le même email
       await expect(authService.register(email, password)).rejects.toThrow(
         "Email already exists"
       );
     });
+
+    it("should register a new user successfully", async () => {
+      const email = "test@example.com";
+      const password = "password123";
+
+      const result = await authService.register(email, password);
+
+      expect(result).toHaveProperty("token");
+      expect(result).toHaveProperty("user");
+      expect(result.user).toHaveProperty("email", email);
+      expect(result.user).toHaveProperty("role", "user");
+    });
   });
 
   describe("login", () => {
-    it("should login successfully", async () => {
-      const expectedResponse = {
-        user: {
-          id: "123",
-          email: "test@test.com",
-          role: "user",
-        },
-        token: "mock-token",
-      };
-
-      const result = await authService.login("test@test.com", "password");
-      expect(result).toEqual(expectedResponse);
-    });
-
-    it("should throw an error with incorrect password", async () => {
+    beforeEach(async () => {
+      // Créer un utilisateur de test
       const email = "test@example.com";
       const password = "password123";
       await authService.register(email, password);
+    });
 
-      await expect(authService.login(email, "wrongpassword")).rejects.toThrow(
-        "Invalid credentials"
-      );
+    it("should login successfully with correct credentials", async () => {
+      const result = await authService.login("test@example.com", "password123");
+
+      expect(result).toHaveProperty("token");
+      expect(result).toHaveProperty("user");
+      expect(result.user).toHaveProperty("email", "test@example.com");
+      expect(result.user).toHaveProperty("role", "user");
+    });
+
+    it("should throw an error with incorrect password", async () => {
+      await expect(
+        authService.login("test@example.com", "wrongpassword")
+      ).rejects.toThrow("Invalid credentials");
     });
 
     it("should throw an error with non-existent email", async () => {
@@ -59,16 +73,28 @@ describe("AuthService", () => {
   });
 
   describe("validateToken", () => {
-    it("should validate token successfully", async () => {
-      const validToken = "valid-token";
-      const expectedUser = {
-        id: "123",
-        email: "test@test.com",
-        role: "user",
-      };
+    let validToken: string;
 
+    beforeEach(async () => {
+      // Créer un utilisateur et obtenir un token valide
+      const result = await authService.register(
+        "test@example.com",
+        "password123"
+      );
+      validToken = result.token;
+    });
+
+    it("should validate token successfully", async () => {
       const result = await authService.validateToken(validToken);
-      expect(result).toEqual(expectedUser);
+
+      expect(result).toHaveProperty("email", "test@example.com");
+      expect(result).toHaveProperty("role", "user");
+    });
+
+    it("should reject invalid token", async () => {
+      await expect(authService.validateToken("invalid-token")).rejects.toThrow(
+        "Invalid token"
+      );
     });
   });
 });

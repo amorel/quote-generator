@@ -9,7 +9,7 @@ describe("QuoteDTO", () => {
       tags: ["tag1", "tag2"],
     };
 
-    expect(quoteDTO).toHaveProperty("id");
+    expect(quoteDTO).toHaveProperty("_id");
     expect(quoteDTO).toHaveProperty("content");
     expect(quoteDTO).toHaveProperty("author");
     expect(quoteDTO).toHaveProperty("tags");

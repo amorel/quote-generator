@@ -1,12 +1,18 @@
 /// <reference path="./types/fastify.d.ts" />
 import Fastify, { FastifyReply, FastifyRequest } from "fastify";
 import authRoutes from "./routes/auth";
+import { AuthService } from "./services/AuthService";
 
-export async function build() {
+export async function build(authService?: AuthService) {
   const app = Fastify({ logger: true });
 
+  const service = authService || new AuthService();
+
   // Enregistrer les routes d'authentification
-  await app.register(authRoutes, { prefix: "/auth" });
+  await app.register(authRoutes, { 
+    prefix: "/auth",
+    authService: service
+  });
 
   app.get("/health", async () => ({ status: "ok" }));
 

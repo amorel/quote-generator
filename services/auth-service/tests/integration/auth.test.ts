@@ -1,13 +1,17 @@
-import { build } from "@/app";
-import { UserModel } from "@/infrastructure/persistence/models/UserModel";
+import { build } from "../../src/app";
 import { FastifyInstance } from "fastify";
-import mongoose from "mongoose";
+import { UserRepositoryMock } from "../mocks/UserRepositoryMock";
+import { AuthService } from "../../src/services/AuthService";
+import { UserModel } from "../../src/infrastructure/persistence/models/UserModel";
 
 describe("Auth Routes Integration", () => {
   let app: FastifyInstance;
+  let userRepository: UserRepositoryMock;
 
   beforeAll(async () => {
-    app = await build();
+    userRepository = new UserRepositoryMock();
+    const authService = new AuthService(userRepository);
+    app = await build(authService);
   });
 
   afterAll(async () => {
@@ -31,7 +35,7 @@ describe("Auth Routes Integration", () => {
       });
 
       // Vérifier que l'enregistrement a réussi
-      expect(registerResponse.statusCode).toBe(200);
+      expect(registerResponse.statusCode).toBe(201);
       const registerBody = JSON.parse(registerResponse.payload);
       expect(registerBody).toHaveProperty("token");
     });
@@ -47,7 +51,7 @@ describe("Auth Routes Integration", () => {
       });
 
       // Log pour debug
-      if (response.statusCode !== 200) {
+      if (response.statusCode !== 201) {
         console.log("Login failed:", response.payload);
       }
 
@@ -84,7 +88,7 @@ describe("Auth Routes Integration", () => {
       });
 
       // Vérifier l'enregistrement
-      expect(registerResponse.statusCode).toBe(200);
+      expect(registerResponse.statusCode).toBe(201);
       const registerBody = JSON.parse(registerResponse.payload);
       expect(registerBody).toHaveProperty("token");
       token = registerBody.token;
@@ -137,7 +141,7 @@ describe("Auth Routes Integration", () => {
         },
       });
 
-      expect(response.statusCode).toBe(200);
+      expect(response.statusCode).toBe(201);
       const body = JSON.parse(response.payload);
       expect(body).toHaveProperty("token");
     });

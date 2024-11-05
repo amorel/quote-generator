@@ -30,8 +30,8 @@ describe("GetRandomQuotesUseCase", () => {
 
     // Mock des DTOs retournés par le presenter
     const mockDTOs = [
-      { id: "1", content: "Quote 1", authorName: "Author 1", tags: ["tag1"] },
-      { id: "2", content: "Quote 2", authorName: "Author 2", tags: ["tag2"] },
+      { _id: "1", content: "Quote 1", author: "Author 1", tags: ["tag1"] },
+      { _id: "2", content: "Quote 2", author: "Author 2", tags: ["tag2"] },
     ];
 
     mockRepository.findRandom.mockResolvedValue(mockQuotes);

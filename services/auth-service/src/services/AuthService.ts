@@ -2,14 +2,15 @@ import bcrypt from "bcrypt";
 import { JWTService } from "./JWTService";
 import { UserRepository } from "../infrastructure/repositories/UserRepository";
 import { User } from "../domain/entities/User";
+import { IUserRepository } from "@/domain/repositories/IUserRepository";
 
 export class AuthService {
   private jwtService: JWTService;
-  private userRepository: UserRepository;
+  private userRepository: IUserRepository;
 
-  constructor() {
-    this.jwtService = new JWTService();
-    this.userRepository = new UserRepository();
+  constructor(userRepository?: IUserRepository, jwtService?: JWTService) {
+    this.jwtService = jwtService || new JWTService();
+    this.userRepository = userRepository || new UserRepository();
   }
 
   async register(email: string, password: string) {

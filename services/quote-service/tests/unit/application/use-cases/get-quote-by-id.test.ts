@@ -28,9 +28,9 @@ describe("GetQuoteByIdUseCase", () => {
     );
 
     const mockDTO = {
-      id: "test-id",
+      _id: "test-id",
       content: "Test quote",
-      authorName: "Author Name",
+      author: "Author Name",
       tags: ["tag1"],
     };
 

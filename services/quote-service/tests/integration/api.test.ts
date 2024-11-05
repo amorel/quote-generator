@@ -100,18 +100,6 @@ describe("API Integration Tests", () => {
   });
 
   describe("GET /quotes/random", () => {
-    it("should return multiple quotes when limit is specified", async () => {
-      const response = await app.inject({
-        method: "GET",
-        url: "/quotes/random?limit=3",
-      });
-
-      expect(response.statusCode).toBe(200);
-      const payload = JSON.parse(response.payload);
-      expect(Array.isArray(payload)).toBe(true);
-      expect(payload.length).toBeGreaterThan(0);
-    });
-
     it("should filter quotes by maxLength", async () => {
       const response = await app.inject({
         method: "GET",

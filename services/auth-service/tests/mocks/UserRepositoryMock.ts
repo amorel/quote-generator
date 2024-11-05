@@ -1,5 +1,5 @@
-import { User } from "@/domain/entities/User";
-import { IUserRepository } from "@/domain/repositories/IUserRepository";
+import { User } from "../../src/domain/entities/User";
+import { IUserRepository } from "../../src/domain/repositories/IUserRepository";
 
 export class UserRepositoryMock implements IUserRepository {
   private users: User[] = [];

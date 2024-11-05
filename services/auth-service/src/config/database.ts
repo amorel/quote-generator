@@ -1,4 +1,5 @@
 import mongoose, { Connection, ConnectOptions } from "mongoose";
+import { MongoMemoryServer } from "mongodb-memory-server";
 
 // Configuration par défaut pour les différents environnements
 const config = {
@@ -35,6 +36,23 @@ let lastError: Error | null = null;
 
 export async function connectDB() {
   try {
+    // Si on est en environnement de test et qu'on veut utiliser une BD en mémoire
+    if (
+      process.env.NODE_ENV === "test" &&
+      process.env.USE_MEMORY_DB === "true"
+    ) {
+      const mongoServer = await MongoMemoryServer.create();
+      const uri = mongoServer.getUri();
+
+      await mongoose.connect(uri, {
+        serverSelectionTimeoutMS: 5000,
+        socketTimeoutMS: 45000,
+      });
+
+      mongoConnection = mongoose.connection;
+      console.log("✅ Connected to MongoDB Memory Server");
+      return;
+    }
     // Détermine l'environnement
     const env = (process.env.NODE_ENV || "development") as EnvironmentKey;
     const envConfig = config[env];
@@ -169,4 +187,12 @@ export function getConnectionState(): ConnectionState {
 // Fonction pour obtenir la connexion actuelle
 export function getCurrentConnection(): Connection | null {
   return mongoConnection;
+}
+
+// Ajouter cette fonction pour la fermeture propre de Memory Server
+export async function closeMemoryServer() {
+  if (process.env.NODE_ENV === "test" && process.env.USE_MEMORY_DB === "true") {
+    const mongod = await MongoMemoryServer.create();
+    await mongod.stop();
+  }
 }

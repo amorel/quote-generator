@@ -1,5 +1,4 @@
 import Fastify, {
-  FastifyReply,
   FastifyInstance,
   FastifyError,
   FastifyRequest,
@@ -12,7 +11,6 @@ import { TagController } from "./interface/api/controllers/TagController";
 import { AuthorController } from "./interface/api/controllers/AuthorController";
 import { QuoteController } from "./interface/api/controllers/QuoteController";
 
-// Interfaces pour le typage des requêtes
 interface QuoteQueryRequest {
   Querystring: {
     limit?: number;
