@@ -85,3 +85,6 @@ temp/
 
 # DynamoDB Local files
 .dynamodb/
+
+# Services
+services/user-service2/
