@@ -10,4 +10,9 @@ export default {
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
   },
+  globals: {
+    "process.env": {
+      VITE_API_URL: "http://localhost:3000",
+    },
+  },
 };
