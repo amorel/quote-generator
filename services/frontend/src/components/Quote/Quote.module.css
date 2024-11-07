@@ -3,6 +3,7 @@
     margin: 2rem auto;
     padding: 2rem;
     text-align: center;
+    position: relative;
 }
 
 .quote {
@@ -14,4 +15,35 @@
     font-size: 1rem;
     margin-top: 1rem;
     font-style: italic;
+}
+
+/* Ajout des nouveaux styles */
+.statsCorner {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    color: #666;
+    background: rgba(255, 255, 255, 0.9); /* Fond légèrement transparent */
+    padding: 8px 12px;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Ombre légère */
+}
+
+.resetButton {
+    background: none;
+    border: none;
+    color: #999;
+    font-size: 0.8rem;
+    padding: 2px 4px;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
+.resetButton:hover {
+    opacity: 1;
 }

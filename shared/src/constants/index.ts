@@ -1,2 +1,1 @@
-export * from './messaging';
-export * from './app';
+export { EXCHANGES, QUEUES, ROUTING_KEYS } from './messaging';

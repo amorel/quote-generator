@@ -1,9 +1,8 @@
-// jest.setup.ts
 import {
   connectDB,
   getCurrentConnection,
   closeMemoryServer,
-} from "../src/config/database";
+} from "./config/database";
 
 // Variables d'environnement pour les tests
 process.env.NODE_ENV = "test";
