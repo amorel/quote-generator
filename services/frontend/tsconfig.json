@@ -19,7 +19,10 @@
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "paths": {
+      "@quote-generator/shared": ["../../shared/src"]
+    }
   },
   // Include spécifie quels fichiers sont à vérifier pour le typage
   "include": ["src"],

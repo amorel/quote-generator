@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { fetchRandomQuote } from "../../store/quoteSlice";
+import { fetchRandomQuote, clearHistory } from "../../store/quoteSlice";
 import styles from "./Quote.module.css";
 import { useAppDispatch } from "../../hooks/useAppDispatch";
 import { useAppSelector } from "../../hooks/useAppSelector";
@@ -8,13 +8,15 @@ import { useAuth } from "../../contexts/AuthContext";
 export const Quote = () => {
   const { isAuthenticated } = useAuth();
   const dispatch = useAppDispatch();
-  const { current, loading, error } = useAppSelector((state) => state.quote);
+  const { current, loading, error, history } = useAppSelector(
+    (state) => state.quote
+  );
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && !current) {
       dispatch(fetchRandomQuote());
     }
-  }, [dispatch, isAuthenticated]);
+  }, [dispatch, isAuthenticated, current]);
 
   if (!isAuthenticated) {
     return <div>Veuillez vous connecter pour voir les citations</div>;
@@ -30,7 +32,20 @@ export const Quote = () => {
         <p>{current.content}</p>
         <footer>— {current.author}</footer>
       </blockquote>
-      <button onClick={() => dispatch(fetchRandomQuote())}>Next Quote</button>
+      <div className={styles.stats}>
+        <p>Citations vues: {history.length}</p>
+      </div>
+      <button onClick={() => dispatch(fetchRandomQuote())}>
+        Citation suivante
+      </button>
+      {history.length > 0 && (
+        <button
+          onClick={() => dispatch(clearHistory())}
+          className={styles.clearButton}
+        >
+          Réinitialiser l'historique
+        </button>
+      )}
     </div>
   );
 };
