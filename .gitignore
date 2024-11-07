@@ -88,4 +88,4 @@ temp/
 .dynamodb/
 
 # Services
-services/user-service2/
+services/user-service-old/
