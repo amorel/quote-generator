@@ -1,10 +1,7 @@
 export const QUEUES = {
-  // Queues principales
   USER_EVENTS: "user.events.queue",
   QUOTE_EVENTS: "quote.events.queue",
   NOTIFICATION_EVENTS: "notification.events.queue",
-
-  // Dead Letter Queues (DLQ)
   USER_EVENTS_DLQ: "user.events.dlq",
   QUOTE_EVENTS_DLQ: "quote.events.dlq",
   NOTIFICATION_EVENTS_DLQ: "notification.events.dlq",
@@ -27,7 +24,7 @@ export const ROUTING_KEYS = {
   },
   QUOTE: {
     ALL: "quote.#",
-    CREATED: "quote.created",
+    CREATED: "quote.created", 
     UPDATED: "quote.updated",
     DELETED: "quote.deleted",
     VIEWED: "quote.viewed",

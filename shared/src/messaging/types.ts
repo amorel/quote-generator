@@ -1,16 +1,11 @@
-import { EventTypes } from "../events";
+import { EventTypes } from "../types/events";
 
-export interface EventMessage<T = unknown> {
-  id: string;
-  type: EventTypes;
-  data: T;
-  metadata: {
-    timestamp: number;
-    version: string;
-    service: string;
-    correlationId?: string;
-    userId?: string;
-  };
+export interface RabbitMQConfig {
+  url: string;
+  serviceName: string;
+  reconnectAttempts?: number;
+  reconnectInterval?: number;
+  prefetch?: number; // Ajout de cette propriété
 }
 
 export interface RabbitMQMessage {
@@ -23,18 +18,23 @@ export interface RabbitMQMessage {
   };
   properties: {
     contentType?: string;
-    contentEncoding?: string;
     headers?: Record<string, any>;
-    deliveryMode?: number;
-    priority?: number;
-    correlationId?: string;
-    replyTo?: string;
-    expiration?: string;
     messageId?: string;
     timestamp?: number;
     type?: string;
     userId?: string;
-    appId?: string;
-    clusterId?: string;
   };
+}
+
+export interface PublishOptions {
+  persistent?: boolean;
+  messageId?: string;
+  timestamp?: number;
+  headers?: Record<string, any>;
+}
+
+export interface SubscribeOptions {
+  prefetch?: number;
+  durable?: boolean;
+  noAck?: boolean;
 }

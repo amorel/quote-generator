@@ -1,5 +1,6 @@
 import {
   RabbitMQBase,
+  RabbitMQConfig,
   EXCHANGES,
   ROUTING_KEYS,
   EventMessage,
@@ -8,6 +9,10 @@ import {
 } from "@quote-generator/shared";
 
 export class UserEventPublisher extends RabbitMQBase {
+  constructor(config: RabbitMQConfig) {
+    super(config);
+  }
+
   async publishUserCreated(userData: UserEventData): Promise<void> {
     const message: EventMessage<UserEventData> = {
       id: crypto.randomUUID(),
@@ -16,7 +21,7 @@ export class UserEventPublisher extends RabbitMQBase {
       metadata: {
         timestamp: Date.now(),
         version: "1.0",
-        service: this.serviceName,
+        service: this.config.serviceName,
       },
     };
 

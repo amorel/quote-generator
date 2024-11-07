@@ -4,12 +4,14 @@ import { ProtectedRoute } from "./components/Auth/ProtectedRoute";
 import { Login } from "./components/Auth/Login";
 import { Register } from "./components/Auth/Register";
 import { Quote } from "./components/Quote/Quote";
+import { ViewCounter } from "./components/ViewCounter/ViewCounter";
 import "./App.css";
 
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <ViewCounter /> {/* Ajoutez cette ligne */}
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />

@@ -21,10 +21,9 @@ export async function startApp() {
   const userRepository = new UserRepository();
   const userService = new UserService(userRepository);
 
-  // Configurer le consumer d'événements
+  // Configurer le consumer d'événements avec seulement 2 arguments
   const consumer = new UserEventConsumer(
     process.env.MESSAGE_BROKER_URL || "amqp://admin:password@localhost:5672",
-    "user-service",
     userService
   );
 
@@ -57,8 +56,4 @@ export async function startApp() {
     console.error("Failed to start the application:", error);
     process.exit(1);
   }
-}
-
-if (require.main === module) {
-  startApp();
 }

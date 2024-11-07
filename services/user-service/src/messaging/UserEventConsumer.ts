@@ -1,5 +1,6 @@
 import {
   RabbitMQBase,
+  RabbitMQConfig,
   QUEUES,
   EXCHANGES,
   ROUTING_KEYS,
@@ -10,11 +11,18 @@ import { UserService } from "../services/UserService";
 
 export class UserEventConsumer extends RabbitMQBase {
   constructor(
-    url: string,
-    serviceName: string,
-    private readonly userService: UserService
+    url: string,        
+    private readonly userService: UserService 
   ) {
-    super(url, serviceName);
+    const config: RabbitMQConfig = {
+      url: url,
+      serviceName: "user-service",
+      reconnectAttempts: 5,
+      reconnectInterval: 5000,
+      prefetch: 1
+    };
+    
+    super(config);
   }
 
   async setupSubscriptions(): Promise<void> {

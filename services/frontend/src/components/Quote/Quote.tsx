@@ -28,24 +28,26 @@ export const Quote = () => {
 
   return (
     <div className={styles.container}>
+      {/* Compteur en haut à droite */}
+      <div className={styles.statsCorner}>
+        Citations vues: {history.length}
+        <button 
+          onClick={() => dispatch(clearHistory())}
+          className={styles.resetButton}
+          title="Réinitialiser le compteur"
+        >
+          ↺
+        </button>
+      </div>
+
       <blockquote className={styles.quote}>
         <p>{current.content}</p>
         <footer>— {current.author}</footer>
       </blockquote>
-      <div className={styles.stats}>
-        <p>Citations vues: {history.length}</p>
-      </div>
+
       <button onClick={() => dispatch(fetchRandomQuote())}>
         Citation suivante
       </button>
-      {history.length > 0 && (
-        <button
-          onClick={() => dispatch(clearHistory())}
-          className={styles.clearButton}
-        >
-          Réinitialiser l'historique
-        </button>
-      )}
     </div>
   );
 };
