@@ -11,6 +11,6 @@ module.exports = {
     "^.+\\.ts$": "ts-jest",
   },
   moduleDirectories: ["node_modules", "src"],
-  setupFilesAfterEnv: ["./tests/jest.setup.ts"],
+  setupFilesAfterEnv: ["./src/jest.setup.ts"],
   testTimeout: 30000,
 };
