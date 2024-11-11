@@ -26,3 +26,8 @@ WORKDIR /app
 COPY --from=publish /app/publish .
 ENV ASPNETCORE_URLS=http://+:3003
 ENTRYPOINT ["dotnet", "UserService.API.dll"]
+
+# Dockerfile pour user-service (c'est pour débugger avec VSCode, voir dans le fichier .vscode/launch.json)
+# RUN apt-get update \
+#     && apt-get install -y --no-install-recommends unzip \
+#     && curl -sSL https://aka.ms/getvsdbgsh | bash /dev/stdin -v latest -l /vsdbg

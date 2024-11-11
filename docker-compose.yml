@@ -114,6 +114,7 @@ services:
     env_file:
       - .env
     environment:
+      - RABBITMQ_URL=amqp://admin:password@rabbitmq:5672
       - PORT=3002
     networks:
       - back-network
@@ -136,6 +137,8 @@ services:
       shared:
         condition: service_completed_successfully
       quote-db:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
 
   user-service:

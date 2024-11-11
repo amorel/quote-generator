@@ -2,7 +2,8 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import { GetRandomQuotesUseCase } from "../../../application/use-cases/quotes/GetRandomQuotes";
 import { GetQuoteByIdUseCase } from "../../../application/use-cases/quotes/GetQuoteById";
 import { QuoteFilters } from "../../../domain/value-objects/QuoteFilters";
-import { ValidationError, NotFoundError } from "../../errors";
+import { NotFoundError } from "../../errors";
+import { ToggleQuoteFavoriteUseCase } from "@/application/use-cases/quotes/ToggleQuoteFavorite";
 
 // Interface pour typer la query
 interface QuoteQuerystring {
@@ -21,10 +22,11 @@ type QuoteRequest = FastifyRequest<{
 export class QuoteController {
   constructor(
     private readonly getRandomQuotesUseCase: GetRandomQuotesUseCase,
-    private readonly getQuoteByIdUseCase: GetQuoteByIdUseCase
+    private readonly getQuoteByIdUseCase: GetQuoteByIdUseCase,
+    private readonly toggleQuoteFavoriteUseCase: ToggleQuoteFavoriteUseCase
   ) {}
 
-  async getRandomQuotes(request: QuoteRequest, reply: FastifyReply) {
+  async getRandomQuotes(request: QuoteRequest, _reply: FastifyReply) {
     try {
       const filters = QuoteFilters.create({
         limit: request.query.limit,
@@ -33,8 +35,11 @@ export class QuoteController {
         tags: request.query.tags,
         author: request.query.author,
       });
-  
-      console.log("QuoteController: Getting random quotes with filters:", filters);
+
+      console.log(
+        "QuoteController: Getting random quotes with filters:",
+        filters
+      );
       const quotes = await this.getRandomQuotesUseCase.execute(filters);
       console.log("QuoteController: Quotes retrieved:", quotes);
       return quotes;
@@ -64,6 +69,56 @@ export class QuoteController {
       return reply.status(500).send({
         status: "error",
         message: "Internal server error",
+      });
+    }
+  }
+
+  async toggleFavorite(
+    request: FastifyRequest<{
+      Params: { id: string };
+    }>,
+    reply: FastifyReply
+  ) {
+    try {
+      const userId = request.headers["x-user-id"] as string;
+      const quoteId = request.params.id;
+      const isFavorite = request.method === "POST";
+
+      console.log("⭐ Toggle favorite debug:", {
+        userId,
+        quoteId,
+        isFavorite,
+        headers: request.headers,
+        method: request.method,
+      });
+
+      if (!userId || !quoteId) {
+        console.log("❌ Missing required data:", { userId, quoteId });
+        return reply.status(400).send({
+          status: "error",
+          message: "Missing required data",
+        });
+      }
+
+      await this.toggleQuoteFavoriteUseCase.execute(
+        quoteId,
+        userId,
+        isFavorite
+      );
+
+      return reply.status(200).send({
+        status: "success",
+        message: isFavorite
+          ? "Quote added to favorites"
+          : "Quote removed from favorites",
+      });
+    } catch (error) {
+      console.error("❌ Error in toggleFavorite:", error);
+      return reply.status(500).send({
+        status: "error",
+        message:
+          error instanceof Error ? error.message : "Internal server error",
+        details: process.env.NODE_ENV === "development" ? error : undefined,
       });
     }
   }

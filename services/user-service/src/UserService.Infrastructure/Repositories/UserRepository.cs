@@ -46,5 +46,35 @@ namespace UserService.Infrastructure.Repositories
                 await _context.SaveChangesAsync();
             }
         }
+
+        public async Task AddFavoriteQuoteAsync(Guid userId, string quoteId)
+        {
+            var user = await GetByIdAsync(userId);
+            if (user == null)
+                throw new KeyNotFoundException($"User with id {userId} not found");
+
+            // Supposons que nous avons une table FavoriteQuotes ou une collection
+            var favoriteQuote = new FavoriteQuote
+            {
+                UserId = userId,
+                QuoteId = quoteId,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.FavoriteQuotes.Add(favoriteQuote);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task RemoveFavoriteQuoteAsync(Guid userId, string quoteId)
+        {
+            var favoriteQuote = await _context.FavoriteQuotes
+                .FirstOrDefaultAsync(f => f.UserId == userId && f.QuoteId == quoteId);
+
+            if (favoriteQuote != null)
+            {
+                _context.FavoriteQuotes.Remove(favoriteQuote);
+                await _context.SaveChangesAsync();
+            }
+        }
     }
 }

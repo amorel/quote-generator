@@ -4,12 +4,16 @@
     "module": "commonjs",
     "outDir": "./dist",
     "composite": true,
-    "rootDir": "./src",
+    "rootDir": ".",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "types": ["node", "jest"],
-    "typeRoots": ["./node_modules/@types", "../../node_modules/@types"],
+    "typeRoots": [
+      "./node_modules/@types",
+      "../../node_modules/@types",
+      "./src/types"
+    ],
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
@@ -17,6 +21,6 @@
     }
   },
   "references": [{ "path": "../../shared" }],
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "src/types/*.d.ts", "tests/**/*.ts"],
   "exclude": ["node_modules"]
 }

@@ -1,0 +1,35 @@
+.favoriteButton {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    transition:
+        transform 0.2s,
+        color 0.2s;
+    color: #ccc;
+}
+
+.favoriteButton:hover {
+    transform: scale(1.1);
+}
+
+.favoriteButton.active {
+    color: gold;
+}
+
+.favoriteButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(0.95); }
+    100% { transform: scale(1); }
+}
+
+.favoriteButton.disabled {
+    animation: pulse 1s infinite;
+}

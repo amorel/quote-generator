@@ -51,4 +51,31 @@ export const authService = {
   isAuthenticated(): boolean {
     return tokenService.hasToken();
   },
+
+  isTokenValid(): boolean {
+    const token = tokenService.getToken();
+    if (!token) return false;
+
+    try {
+      // Décode le token (qui est au format JWT)
+      const base64Url = token.split(".")[1];
+      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split("")
+          .map(function (c) {
+            return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+          })
+          .join("")
+      );
+
+      const { exp } = JSON.parse(jsonPayload);
+
+      // Vérifie si le token est expiré
+      return exp * 1000 > Date.now();
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      return false;
+    }
+  },
 };

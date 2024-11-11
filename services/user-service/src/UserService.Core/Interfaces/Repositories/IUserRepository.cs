@@ -9,5 +9,7 @@ namespace UserService.Core.Interfaces.Repositories
         Task<User> CreateAsync(User user);
         Task UpdateAsync(User user);
         Task DeleteAsync(Guid id);
+        Task AddFavoriteQuoteAsync(Guid userId, string quoteId);
+        Task RemoveFavoriteQuoteAsync(Guid userId, string quoteId);
     }
 }

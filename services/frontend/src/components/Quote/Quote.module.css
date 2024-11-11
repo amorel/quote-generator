@@ -1,3 +1,12 @@
+.quoteWrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
 .container {
     max-width: 600px;
     margin: 2rem auto;

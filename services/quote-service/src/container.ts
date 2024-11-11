@@ -1,13 +1,10 @@
-// src/container.ts
 import { QuoteRepository } from "./infrastructure/repositories/QuoteRepository";
 import { GetRandomQuotesUseCase } from "./application/use-cases/quotes/GetRandomQuotes";
 import { QuotePresenter } from "./interface/api/presenters/QuotePresenter";
 import { QuoteController } from "./interface/api/controllers/QuoteController";
-import { IQuoteRepository } from "./domain/repositories/IQuoteRepository";
 
 // Import des composants Author
 import { AuthorRepository } from "./infrastructure/repositories/AuthorRepository";
-import { IAuthorRepository } from "./domain/repositories/IAuthorRepository";
 import { GetAllAuthorsUseCase } from "./application/use-cases/authors/GetAllAuthors";
 import { GetAuthorByIdUseCase } from "./application/use-cases/authors/GetAuthorById";
 import { AuthorPresenter } from "./interface/api/presenters/AuthorPresenter";
@@ -15,12 +12,13 @@ import { AuthorController } from "./interface/api/controllers/AuthorController";
 
 // Import des composants Tag
 import { TagRepository } from "./infrastructure/repositories/TagRepository";
-import { ITagRepository } from "./domain/repositories/ITagRepository";
 import { GetAllTagsUseCase } from "./application/use-cases/tags/GetAllTags";
 import { GetTagByIdUseCase } from "./application/use-cases/tags/GetTagById";
 import { TagPresenter } from "./interface/api/presenters/TagPresenter";
 import { TagController } from "./interface/api/controllers/TagController";
 import { GetQuoteByIdUseCase } from "./application/use-cases/quotes/GetQuoteById";
+import { RabbitMQBase, RabbitMQConfig } from "@quote-generator/shared";
+import { ToggleQuoteFavoriteUseCase } from "./application/use-cases/quotes/ToggleQuoteFavorite";
 
 export class Container {
   private static instance: Container;
@@ -30,14 +28,43 @@ export class Container {
   private controllers: Map<string, any> = new Map();
 
   private constructor() {
+    this.initializeMessaging();
     this.initializeQuoteServices();
     this.initializeAuthorServices();
     this.initializeTagServices();
   }
 
+  private async initializeMessaging() {
+    const rabbitMQConfig: RabbitMQConfig = {
+      url: process.env.RABBITMQ_URL || "amqp://admin:password@localhost:5672",
+      serviceName: "quote-service",
+      reconnectAttempts: 5,
+      reconnectInterval: 5000,
+      prefetch: 1,
+    };
+
+    const rabbitMQClient = new RabbitMQBase(rabbitMQConfig);
+
+    // Attendre la connexion
+    try {
+      await rabbitMQClient.connect();
+      console.log("✅ RabbitMQ connected successfully");
+      this.services.set("rabbitMQClient", rabbitMQClient);
+    } catch (error) {
+      console.error("❌ Failed to connect to RabbitMQ:", error);
+      // En développement, on peut continuer sans RabbitMQ
+      if (process.env.NODE_ENV === "development") {
+        console.warn("⚠️ Running without RabbitMQ in development mode");
+      } else {
+        throw error;
+      }
+    }
+  }
+
   private initializeQuoteServices() {
     const quoteRepository = new QuoteRepository();
     const quotePresenter = new QuotePresenter();
+    const rabbitMQClient = this.services.get("rabbitMQClient");
 
     this.services.set("quoteRepository", quoteRepository);
     this.presenters.set("quotePresenter", quotePresenter);
@@ -51,12 +78,18 @@ export class Container {
       quotePresenter
     );
 
+    const toggleQuoteFavoriteUseCase = new ToggleQuoteFavoriteUseCase(
+      rabbitMQClient
+    );
+
     this.useCases.set("getRandomQuotesUseCase", getRandomQuotesUseCase);
     this.useCases.set("getQuoteByIdUseCase", getQuoteByIdUseCase);
+    this.useCases.set("toggleQuoteFavoriteUseCase", toggleQuoteFavoriteUseCase);
 
     const quoteController = new QuoteController(
       getRandomQuotesUseCase,
-      getQuoteByIdUseCase
+      getQuoteByIdUseCase,
+      toggleQuoteFavoriteUseCase
     );
     this.controllers.set("quoteController", quoteController);
   }
@@ -113,11 +146,19 @@ export class Container {
     this.controllers.set("tagController", tagController);
   }
 
-  static getInstance(): Container {
+  static async getInstance(): Promise<Container> {
     if (!Container.instance) {
       Container.instance = new Container();
+      await Container.instance.initializeServices();
     }
     return Container.instance;
+  }
+
+  private async initializeServices() {
+    await this.initializeMessaging();
+    this.initializeQuoteServices();
+    this.initializeAuthorServices();
+    this.initializeTagServices();
   }
 
   get<T>(serviceName: string): T {

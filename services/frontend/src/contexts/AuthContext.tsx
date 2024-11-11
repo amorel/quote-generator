@@ -1,4 +1,3 @@
-import { User } from "@quote-generator/shared";
 import {
   createContext,
   useContext,
@@ -6,6 +5,7 @@ import {
   useEffect,
   ReactNode,
 } from "react";
+import { User } from "@quote-generator/shared";
 import { authService } from "../services/authService";
 import { tokenService } from "../services/tokenService";
 
@@ -18,7 +18,17 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
+// Définition du hook comme une constante
+const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
+};
+
+// Définition du provider comme une constante
+const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(
     authService.isAuthenticated()
   );
@@ -30,7 +40,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     window.addEventListener("auth:required", handleAuthRequired);
-
     return () => {
       window.removeEventListener("auth:required", handleAuthRequired);
     };
@@ -41,7 +50,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (tokenService.hasToken()) {
         try {
           const response = await fetch("http://localhost:3000/auth/validate", {
-            method: 'POST',
+            method: "POST",
             headers: {
               Authorization: `Bearer ${tokenService.getToken()}`,
             },
@@ -87,10 +96,5 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
-};
+// Export des constantes
+export { AuthProvider, useAuth };

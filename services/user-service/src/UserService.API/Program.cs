@@ -46,9 +46,13 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     ));
 
 // Configuration des services
+builder.Services.Configure<RabbitMQConfiguration>(
+    builder.Configuration.GetSection("RabbitMQ"));
+builder.Services.AddScoped<IMessageHandlerService, MessageHandlerService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService.Core.Services.UserService>();
 builder.Services.AddSingleton<IMessageBusClient, RabbitMQClient>();
+builder.Services.AddHostedService<RabbitMQConsumer>();
 
 // Healthchecks
 builder.Services.AddHealthChecks()

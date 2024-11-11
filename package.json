@@ -9,6 +9,7 @@
   "scripts": {
     "start": "docker compose up",
     "start:build": "docker compose up --build",
+    "big:reset:before:restart": "node ./scripts/big-reset-before-restart.js",
 
     "install:all": "npm install && npm run install:services",
     "install:services": "npm run install:shared && npm run install:auth && npm run install:quote && npm run install:gateway && npm run install:frontend",
@@ -28,6 +29,31 @@
     "build:gateway": "cd services/api-gateway && npm run build", 
     "build:frontend": "cd services/frontend && npm run build",
 
+    "build:auth:report": "cd services/auth-service && npm run build > ../report-build-auth.txt 2>&1 || exit 0",
+    "lint:auth:report": "cd services/auth-service && npm run lint -- --no-color --format json -o ../report-eslint-auth.json || exit 0",
+    "test:auth:report": "cd services/auth-service && npm run test:coverage -- --no-color > ../report-tests-auth.txt 2>&1 || exit 0",
+
+    "build:quote:report": "cd services/quote-service && npm run build > ../report-build-quote.txt 2>&1 || exit 0",
+    "lint:quote:report": "cd services/quote-service && npm run lint -- --no-color --format json -o ../report-eslint-quote.json || exit 0",
+    "test:quote:report": "cd services/quote-service && npm run test:coverage -- --no-color > ../report-tests-quote.txt 2>&1 || exit 0",
+
+    "build:gateway:report": "cd services/api-gateway && npm run build > ../report-build-gateway.txt 2>&1 || exit 0",
+    "lint:gateway:report": "cd services/api-gateway && npm run lint -- --no-color --format json -o ../report-eslint-gateway.json || exit 0",
+    "test:gateway:report": "cd services/api-gateway && npm run test:coverage -- --no-color > ../report-tests-gateway.txt 2>&1 || exit 0",
+
+    "build:frontend:report": "cd services/frontend && npm run build > ../report-build-frontend.txt 2>&1 || exit 0",
+    "lint:frontend:report": "cd services/frontend && npm run lint -- --no-color --format json -o ../report-eslint-frontend.json || exit 0",
+    "test:frontend:report": "cd services/frontend && npm run test:coverage -- --no-color > ../report-tests-frontend.txt 2>&1 || exit 0",
+
+    "build:user:report": "dotnet build ./services/user-service/src/UserService.API/UserService.API.csproj -c Release > ./services/user-service/report-build.txt 2>&1 || exit 0",
+    "analyze:user:report": "dotnet build ./services/user-service/src/UserService.API/UserService.API.csproj -c Release /p:RunAnalyzersDuringBuild=true /p:ErrorLog=./services/user-service/report-analyze.sarif || exit 0",
+    "test:user:report": "dotnet test ./services/user-service/user-service.sln --logger \"trx;LogFileName=./services/user-service/report-tests.trx\" > ./services/user-service/report-tests.txt 2>&1 || exit 0",
+
+    "reports:all": "npm run build:reports && npm run lint:reports && npm run test:reports",
+    "build:reports": "npm run build:auth:report && npm run build:quote:report && npm run build:gateway:report && npm run build:frontend:report && npm run build:user:report",
+    "lint:reports": "npm run lint:auth:report && npm run lint:quote:report && npm run lint:gateway:report && npm run lint:frontend:report && npm run analyze:user:report",
+    "test:reports": "npm run test:auth:report && npm run test:quote:report && npm run test:gateway:report && npm run test:frontend:report && npm run test:user:report",
+
     "dev:all:win": "start npm run dev:auth && start npm run dev:quote && start npm run dev:user && start npm run dev:gateway && start npm run dev:frontend",
     "dev:quote": "cd services/quote-service && npm run dev",
     "dev:auth": "cd services/auth-service && npm run dev",
@@ -45,8 +71,9 @@
 
     "clean": "npm run clean:all",
     "clean:all": "npm run clean:dist && npm run clean:modules",
-    "clean:dist": "rimraf \"./services/*/dist\" \"./shared/dist\"",
+    "clean:dist": "rimraf ./services/*/dist ./shared/dist",
     "clean:modules": "rimraf \"./node_modules\" \"./services/*/node_modules\" \"./shared/node_modules\" \"./services/user-service/**/bin\" \"./services/user-service/**/obj\"",
+    "clean:reports": "node ./scripts/cleanReports.js",
 
     "lint": "npm run lint:all",
     "lint:all": "npm run lint:auth && npm run lint:quote && npm run lint:gateway && npm run lint:frontend",
@@ -59,6 +86,7 @@
     "docker:up": "docker-compose up",
     "docker:down": "docker-compose down",
     "docker:clean": "docker-compose down -v",
+    "docker:recreate": "docker-compose up -d --build --force-recreate",
 
     "dev": "docker compose --env-file .env.development up",
     "dev:build": "docker compose --env-file .env.development up --build",

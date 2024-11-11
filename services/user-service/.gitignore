@@ -67,3 +67,7 @@ artifacts/
 *.pidb
 *.svclog
 *.scc
+
+# report files
+report-*.json
+report-*.txt

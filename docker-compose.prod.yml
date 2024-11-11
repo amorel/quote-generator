@@ -56,7 +56,7 @@ services:
       - "80:80" # Utilisation de nginx en production
     environment:
       - NODE_ENV=production
-      - VITE_API_URL=${API_URL}
+      - VITE_API_URL=${VITE_API_URL}
     depends_on:
       - api-gateway
     restart: unless-stopped
@@ -70,6 +70,7 @@ services:
     ports:
       - "3002:3002"
     environment:
+      - RABBITMQ_URL=amqp://admin:password@rabbitmq:5672
       - NODE_ENV=production
     depends_on:
       - shared

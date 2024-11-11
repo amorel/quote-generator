@@ -22,7 +22,6 @@ build/
 
 # IDE & Editors
 .idea/
-.vscode/
 *.sublime-project
 *.sublime-workspace
 *.swp
