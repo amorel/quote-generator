@@ -21,7 +21,7 @@ class HttpService {
     config: RequestConfig = {}
   ): Promise<T> {
     const token = tokenService.getToken();
-    console.log("Token présent:", !!token);
+    // console.log("Token présent:", !!token);
 
     // Créer les headers de base à partir des headers existants
     const headers: CustomHeadersInit = {
@@ -29,14 +29,13 @@ class HttpService {
     };
 
     // Ajouter Content-Type seulement s'il n'est pas déjà défini
-    if (!headers["Content-Type"]) {
+    if (config.data) {
       headers["Content-Type"] = "application/json";
     }
 
     // Ajouter le token d'autorisation s'il existe
     if (token) {
       headers.Authorization = `Bearer ${token}`;
-      console.log("Authorization header set:", headers.Authorization);
     }
 
     const requestConfig: RequestInit = {

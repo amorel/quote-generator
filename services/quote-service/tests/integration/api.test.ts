@@ -8,6 +8,8 @@ import { QuoteController } from "../../src/interface/api/controllers/QuoteContro
 import { GetRandomQuotesUseCase } from "../../src/application/use-cases/quotes/GetRandomQuotes";
 import { GetQuoteByIdUseCase } from "../../src/application/use-cases/quotes/GetQuoteById";
 import { QuotePresenter } from "../../src/interface/api/presenters/QuotePresenter";
+import { RabbitMQBase } from "@quote-generator/shared";
+import { ToggleQuoteFavoriteUseCase } from "@/application/use-cases/quotes/ToggleQuoteFavorite";
 
 interface MockServices {
   quoteRepository: IQuoteRepository;
@@ -27,6 +29,7 @@ const mockQuotes = [
 ];
 
 class MockJWTService {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   verifyToken(token: string) {
     return {
       id: "test-user-id",
@@ -64,17 +67,29 @@ describe("API Integration Tests", () => {
       const mockQuoteRepository = new MockQuoteRepository();
       const quotePresenter = new QuotePresenter();
 
+      const mockRabbitMQClient = {
+        connect: jest.fn(),
+        publish: jest.fn(),
+        subscribe: jest.fn(),
+        close: jest.fn(),
+      } as unknown as RabbitMQBase;
+
+      const toggleQuoteFavoriteUseCase = new ToggleQuoteFavoriteUseCase(
+        mockRabbitMQClient
+      );
+
       const mockServices: MockServices = {
         quoteRepository: mockQuoteRepository,
         jwtService: new MockJWTService(),
         quoteController: new QuoteController(
           new GetRandomQuotesUseCase(mockQuoteRepository, quotePresenter),
-          new GetQuoteByIdUseCase(mockQuoteRepository, quotePresenter)
+          new GetQuoteByIdUseCase(mockQuoteRepository, quotePresenter),
+          toggleQuoteFavoriteUseCase
         ),
       };
 
       jest.spyOn(Container, "getInstance").mockImplementation(
-        () =>
+        async () =>
           ({
             get: (key: string) => {
               if (key in mockServices) {

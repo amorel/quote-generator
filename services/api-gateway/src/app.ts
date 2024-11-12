@@ -74,17 +74,70 @@ export async function build(): Promise<FastifyInstance> {
     rewritePrefix: "/auth",
   });
 
-  app.register(proxy as any, {
+  app.addHook(
+    "onRequest",
+    (request: FastifyRequest, reply: FastifyReply, done) => {
+      if (request.url.includes("/quotes")) {
+        console.log("🚀 Gateway received request:", {
+          url: request.url,
+          method: request.method,
+          headers: request.headers,
+        });
+      }
+      done();
+    }
+  );
+
+  app.register(proxy, {
     prefix: "/quotes",
     upstream: quoteServiceUrl,
     rewritePrefix: "/quotes",
-    logLevel: "debug",
-    http: {
-      timeout: 5000,
+    preHandler: async (request: FastifyRequest, reply: FastifyReply) => {
+      // Vérifie l'authentification pour les routes liées aux favoris
+      if (request.url.includes("/favorite")) {
+        console.log("❗ Headers envoyés au service quote:", request.headers);
+        console.log("❗ URL complète:", request.url);
+        console.log("❗ Méthode:", request.method);
+
+        const token = request.headers.authorization?.replace("Bearer ", "");
+        console.log("🔑 Token extracted:", token ? "present" : "missing");
+
+        if (!token) {
+          console.log("❌ No token provided");
+          reply.code(401).send({ error: "Unauthorized" });
+          return;
+        }
+
+        try {
+          console.log("🔄 Validating token...");
+          await authService.validateToken(token);
+          console.log("✅ Token validated successfully");
+        } catch (error) {
+          console.log("❌ Token validation failed:", error);
+          reply.code(401).send({ error: "Session expired" });
+          return;
+        }
+
+        console.log("✨ Authentication successful for favorite request");
+      }
     },
   });
 
-  console.log('Quote service URL:', quoteServiceUrl);
+  app.addHook(
+    "onResponse",
+    (request: FastifyRequest, reply: FastifyReply, done) => {
+      if (request.url.includes("/quotes")) {
+        console.log("📨 Gateway sent response:", {
+          url: request.url,
+          statusCode: reply.statusCode,
+          headers: reply.getHeaders(),
+        });
+      }
+      done();
+    }
+  );
+
+  console.log("Quote service URL:", quoteServiceUrl);
 
   app.register(proxy, {
     prefix: "/users",

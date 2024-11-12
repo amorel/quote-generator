@@ -17,6 +17,7 @@ export async function build(authService?: AuthService) {
   app.get("/health", async () => ({ status: "ok" }));
 
   app.get("/debug/auth-info", {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     handler: async (request: FastifyRequest, reply: FastifyReply) => {
       return {
         headers: request.headers,

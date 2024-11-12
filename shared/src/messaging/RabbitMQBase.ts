@@ -1,13 +1,7 @@
-// shared/src/messaging/RabbitMQBase.ts
 import amqp, { Connection, Channel, ConsumeMessage } from "amqplib";
 import { EventMessage } from "../types/events";
-import { EXCHANGES, QUEUES } from "../constants/messaging";
-import {
-  RabbitMQConfig,
-  PublishOptions,
-  SubscribeOptions,
-  RabbitMQMessage,
-} from "./types";
+import { EXCHANGES, QUEUES, ROUTING_KEYS } from "../constants/messaging";
+import { RabbitMQConfig, PublishOptions, SubscribeOptions } from "./types";
 
 export class RabbitMQBase {
   protected connection: Connection | null = null;
@@ -22,6 +16,22 @@ export class RabbitMQBase {
       prefetch: 1,
       ...config,
     };
+    this.connect().catch((error) => {
+      console.error(`Failed to connect to RabbitMQ:`, error);
+    });
+  }
+
+  private async setupQueueBindings(): Promise<void> {
+    if (!this.channel) return;
+
+    // Bind user service queue to quote events
+    await this.channel.bindQueue(
+      QUEUES.USER_EVENTS,
+      EXCHANGES.QUOTE_EVENTS,
+      ROUTING_KEYS.QUOTE.FAVORITED
+    );
+
+    console.log("Queue bindings configured");
   }
 
   async connect(): Promise<void> {
@@ -48,7 +58,7 @@ export class RabbitMQBase {
   async publish<T>(
     exchange: string,
     routingKey: string,
-    message: EventMessage<T>,
+    message: T, // Changé pour accepter n'importe quel type
     options: PublishOptions = {}
   ): Promise<void> {
     if (!this.channel) {
@@ -60,7 +70,7 @@ export class RabbitMQBase {
 
       const publishOptions = {
         persistent: true,
-        messageId: message.id || crypto.randomUUID(),
+        messageId: crypto.randomUUID(),
         timestamp: Date.now(),
         headers: {
           "x-retry-count": 0,
@@ -69,10 +79,12 @@ export class RabbitMQBase {
         ...options,
       };
 
+      const messageBuffer = Buffer.from(JSON.stringify(message));
+
       const success = this.channel.publish(
         exchange,
         routingKey,
-        Buffer.from(JSON.stringify(message)),
+        messageBuffer,
         publishOptions
       );
 
@@ -145,20 +157,38 @@ export class RabbitMQBase {
       durable: true,
     });
 
-    // Configuration des exchanges principaux
-    const mainExchanges = [
-      EXCHANGES.USER_EVENTS,
-      EXCHANGES.QUOTE_EVENTS,
-      EXCHANGES.NOTIFICATION_EVENTS,
+    // Configuration des queues principales
+    await this.channel.assertQueue(QUEUES.USER_EVENTS, {
+      durable: true,
+    });
+    await this.channel.assertQueue(QUEUES.QUOTE_EVENTS, {
+      durable: true,
+    });
+
+    // Configuration des exchanges principaux et leurs bindings
+    const exchangesAndBindings = [
+      {
+        exchange: EXCHANGES.USER_EVENTS,
+        routingKey: ROUTING_KEYS.USER.ALL,
+        queue: QUEUES.USER_EVENTS,
+      },
+      {
+        exchange: EXCHANGES.QUOTE_EVENTS,
+        routingKey: ROUTING_KEYS.QUOTE.ALL,
+        queue: QUEUES.QUOTE_EVENTS,
+      },
     ];
 
-    for (const exchange of mainExchanges) {
+    for (const { exchange, routingKey, queue } of exchangesAndBindings) {
       await this.channel.assertExchange(exchange, "topic", {
         durable: true,
       });
+
+      // Bind la queue à l'exchange
+      await this.channel.bindQueue(queue, exchange, routingKey);
     }
 
-    await this.setupDeadLetterQueues();
+    console.log("Exchanges and queues setup completed");
   }
 
   private async setupDeadLetterQueues(): Promise<void> {

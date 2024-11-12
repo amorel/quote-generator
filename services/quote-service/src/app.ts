@@ -40,10 +40,46 @@ interface AuthorParamsRequest {
 }
 
 export async function build(): Promise<FastifyInstance> {
-  const app = Fastify({
-    logger: true,
+  const app = Fastify({ logger: true });
+  console.log("Starting app initialization...");
+  const container = await Container.getInstance();
+  console.log("Container initialized");
+
+  const quoteController = await container.get<QuoteController>(
+    "quoteController"
+  );
+  const tagController = await container.get<TagController>("tagController");
+  const authorController = await container.get<AuthorController>(
+    "authorController"
+  );
+  console.log("Controllers retrieved");
+
+  // Plugins
+  await app.register(swagger, {
+    swagger: {
+      info: {
+        title: "Quote Generator API",
+        description: "API pour générer des citations aléatoires",
+        version: "1.0.0",
+      },
+      tags: [
+        {
+          name: "quotes",
+          description: "Endpoints pour la gestion des citations",
+        },
+        { name: "tags", description: "Endpoints pour la gestion des tags" },
+        {
+          name: "authors",
+          description: "Endpoints pour la gestion des auteurs",
+        },
+        { name: "system", description: "Endpoints système" },
+      ],
+    },
   });
-  const container = Container.getInstance();
+
+  await app.register(swaggerUi, {
+    routePrefix: "/documentation",
+  });
 
   // Configuration des gestionnaires d'erreur
   app.setErrorHandler((error: FastifyError, request, reply) => {
@@ -78,36 +114,10 @@ export async function build(): Promise<FastifyInstance> {
     });
   });
 
-  // Plugins
-  await app.register(swagger, {
-    swagger: {
-      info: {
-        title: "Quote Generator API",
-        description: "API pour générer des citations aléatoires",
-        version: "1.0.0",
-      },
-      tags: [
-        {
-          name: "quotes",
-          description: "Endpoints pour la gestion des citations",
-        },
-        { name: "tags", description: "Endpoints pour la gestion des tags" },
-        {
-          name: "authors",
-          description: "Endpoints pour la gestion des auteurs",
-        },
-        { name: "system", description: "Endpoints système" },
-      ],
-    },
-  });
-
-  await app.register(swaggerUi, {
-    routePrefix: "/documentation",
-  });
-
   // Routes
   app.get("/health", async () => ({ status: "ok" }));
 
+  console.log("Registering quote routes...");
   app.get<QuoteQueryRequest>(
     "/quotes/random",
     {
@@ -141,7 +151,6 @@ export async function build(): Promise<FastifyInstance> {
       },
     },
     async (request, reply) => {
-      const quoteController = container.get<QuoteController>("quoteController");
       return quoteController.getRandomQuotes(request, reply);
     }
   );
@@ -173,7 +182,6 @@ export async function build(): Promise<FastifyInstance> {
       },
     },
     async (request, reply) => {
-      const quoteController = container.get<QuoteController>("quoteController");
       return quoteController.getQuoteById(request, reply);
     }
   );
@@ -199,7 +207,6 @@ export async function build(): Promise<FastifyInstance> {
       },
     },
     async (request, reply) => {
-      const tagController = container.get<TagController>("tagController");
       return tagController.getAllTags(request, reply);
     }
   );
@@ -229,7 +236,6 @@ export async function build(): Promise<FastifyInstance> {
       },
     },
     async (request, reply) => {
-      const tagController = container.get<TagController>("tagController");
       return tagController.getTagById(request, reply);
     }
   );
@@ -258,8 +264,6 @@ export async function build(): Promise<FastifyInstance> {
       },
     },
     async (request, reply) => {
-      const authorController =
-        container.get<AuthorController>("authorController");
       return authorController.getAllAuthors(request, reply);
     }
   );
@@ -292,8 +296,6 @@ export async function build(): Promise<FastifyInstance> {
       },
     },
     async (request, reply) => {
-      const authorController =
-        container.get<AuthorController>("authorController");
       return authorController.getAuthorById(request, reply);
     }
   );
@@ -351,11 +353,15 @@ export async function build(): Promise<FastifyInstance> {
         const container = Container.getInstance();
 
         // Récupération des contrôleurs
-        const quoteController =
-          container.get<QuoteController>("quoteController");
-        const tagController = container.get<TagController>("tagController");
-        const authorController =
-          container.get<AuthorController>("authorController");
+        const quoteController = (await container).get<QuoteController>(
+          "quoteController"
+        );
+        const tagController = (await container).get<TagController>(
+          "tagController"
+        );
+        const authorController = (await container).get<AuthorController>(
+          "authorController"
+        );
 
         console.log("Controllers retrieved");
 
@@ -410,6 +416,90 @@ export async function build(): Promise<FastifyInstance> {
       }
     }
   );
+
+  console.log("Registering favorite routes...");
+  app.post<{
+    Params: { id: string };
+  }>(
+    "/quotes/:id/favorite",
+    {
+      schema: {
+        tags: ["quotes"],
+        description: "Add quote to favorites",
+        params: {
+          type: "object",
+          required: ["id"],
+          properties: {
+            id: { type: "string" },
+          },
+        },
+        response: {
+          200: {
+            type: "object",
+            properties: {
+              status: { type: "string" },
+              message: { type: "string" },
+            },
+          },
+        },
+      },
+    },
+    async (request, reply) => {
+      try {
+        return await quoteController.toggleFavorite(request, reply);
+      } catch (error) {
+        console.error("Error processing favorite:", error);
+        return reply.status(500).send({
+          status: "error",
+          message: "Internal server error",
+        });
+      }
+    }
+  );
+
+  app.delete<{
+    Params: { id: string };
+  }>(
+    "/quotes/:id/favorite",
+    {
+      schema: {
+        tags: ["quotes"],
+        description: "Remove quote from favorites",
+        params: {
+          type: "object",
+          required: ["id"],
+          properties: {
+            id: { type: "string" },
+          },
+        },
+        response: {
+          200: {
+            type: "object",
+            properties: {
+              status: { type: "string" },
+              message: { type: "string" },
+            },
+          },
+        },
+      },
+    },
+    async (request, reply) => {
+      try {
+        return await quoteController.toggleFavorite(request, reply);
+      } catch (error) {
+        request.log.error(error);
+        return reply.status(500).send({
+          status: "error",
+          message: "Internal server error",
+        });
+      }
+    }
+  );
+
+  await app.ready();
+  console.log("\nRegistered routes:");
+  console.log(app.printRoutes());
+  console.log("\nApp ready and routes registered");
 
   return app;
 }

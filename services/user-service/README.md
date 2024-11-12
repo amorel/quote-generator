@@ -1,364 +1,114 @@
-# User Service - Quote Generator
+# User Service
 
-Service responsible for managing user profiles, preferences, and reading history for the Quote Generator application.
+## Project Overview
 
-## Table of Contents
+The **User Service** is a modular web application developed using **ASP.NET Core** with a clean, scalable architecture. It manages user data, preferences, and interactions, providing a robust foundation for user-centric features such as personalized recommendations, activity tracking, and notifications. The service utilizes **PostgreSQL** for data persistence and integrates with **RabbitMQ** for message-based communication between services.
 
-- [User Service - Quote Generator](#user-service---quote-generator)
-  - [Table of Contents](#table-of-contents)
-  - [Features](#features)
-  - [Architecture](#architecture)
-    - [Event-Driven Architecture](#event-driven-architecture)
-  - [Getting Started](#getting-started)
-    - [Prerequisites](#prerequisites)
-    - [Environment Variables](#environment-variables)
-    - [Installation](#installation)
-  - [Event System](#event-system)
-    - [Consumed Events](#consumed-events)
-      - [User Events](#user-events)
-      - [Quote Events](#quote-events)
-  - [API Reference](#api-reference)
-    - [User Profile Management](#user-profile-management)
-      - [Get User Profile](#get-user-profile)
-      - [Update User Preferences](#update-user-preferences)
-      - [Manage Favorite Quotes](#manage-favorite-quotes)
-  - [Data Models](#data-models)
-    - [User Profile](#user-profile)
-  - [Testing](#testing)
-    - [Test Structure](#test-structure)
-  - [Monitoring](#monitoring)
-    - [Health Check](#health-check)
-    - [Performance Metrics](#performance-metrics)
-    - [RabbitMQ Monitoring](#rabbitmq-monitoring)
-  - [Development](#development)
-    - [Debug Mode](#debug-mode)
-    - [Event Testing](#event-testing)
-    - [Code Quality](#code-quality)
-    - [Best Practices](#best-practices)
-    - [Error Handling](#error-handling)
+## Project Structure
 
-## Features
+The project follows the principles of **Clean Architecture** and **Domain-Driven Design (DDD)**. The main components of the project structure are as follows:
 
-- 👤 User profile management
-- ⭐ Favorite quotes handling
-- 📊 Reading history tracking
-- 🎯 Personalized recommendations
-- 🔔 Notification preferences
-- 📱 Theme preferences
-- 📈 Usage statistics
-- 🔄 Event-driven updates
-
-## Architecture
-
-### Event-Driven Architecture
-
-```plaintext
-┌──────────────┐         ┌──────────────┐
-│              │         │              │
-│ Auth Service │         │ Quote Service│
-│              │         │              │
-└───────┬──────┘         └──────┬───────┘
-        │                       │
-        │                       │
-┌───────▼───────────────────────▼───────┐
-│                                       │
-│             Message Broker            │
-│              (RabbitMQ)               │
-│                                       │
-└───────────────────┬───────────────────┘
-                    │
-            ┌───────▼───────┐
-            │               │
-            │ User Service  │
-            │               │
-            └───────┬───────┘
-                    │
-            ┌───────▼───────┐
-            │               │
-            │   MongoDB     │
-            │               │
-            └───────────────┘
 ```
+user-service/
+├── src/
+│   ├── UserService.API                 # Presentation layer (REST API)
+│   │   ├── Controllers/                # API controllers for handling HTTP requests
+│   │   ├── Middleware/                 # Custom middleware
+│   │   ├── Extensions/                 # Service configuration extensions
+│   │   └── Program.cs                  # Application entry point
+│   │
+│   ├── UserService.Core                # Domain layer (core business logic)
+│   │   ├── Domain/                     # Entities, value objects, and domain events
+│   │   │   ├── Entities/               # Core domain entities
+│   │   │   ├── ValueObjects/           # Value objects encapsulating key concepts
+│   │   │   └── Events/                 # Domain events
+│   │   ├── Interfaces/                 # Interfaces for ports (repositories, services)
+│   │   └── Services/                   # Core business services
+│   │
+│   ├── UserService.Infrastructure      # Infrastructure layer (data access, messaging)
+│   │   ├── Data/                       # Database context and configurations
+│   │   │   ├── Context/                # EF Core DbContext
+│   │   │   ├── Configurations/         # Entity configurations for EF Core
+│   │   │   └── Migrations/             # Database migration scripts
+│   │   ├── Messaging/                  # RabbitMQ communication services
+│   │   └── Repositories/               # Repository implementations
+│   │
+│   └── UserService.Shared              # Shared DTOs and event definitions
+│       ├── DTOs/                       # Data Transfer Objects for API and service interactions
+│       └── Events/                     # Event definitions shared across services
+│
+└── tests/
+    ├── UserService.UnitTests           # Unit tests for core logic
+    └── UserService.IntegrationTests    # Integration tests for service interactions
+```
+
+## Key Features
+
+- **User Profile Management**: Create, update, and retrieve user profiles.
+- **Favorites Management**: Add and remove favorite items, and synchronize with related services.
+- **Personalized Recommendations**: Provide customized suggestions based on user activity and preferences.
+- **Notifications**: Send daily and weekly updates, with configurable notification preferences.
+- **Analytics & History**: Track user interactions and generate activity statistics.
+- **Message-Based Communication**: Use RabbitMQ for publishing and consuming domain events.
+
+## Technologies Used
+
+- **ASP.NET Core**: For building the web API.
+- **Entity Framework Core**: For ORM and database interactions.
+- **PostgreSQL**: For data persistence.
+- **RabbitMQ**: For messaging and event-driven communication.
+- **Dapper**: For advanced database queries.
+- **Moq & xUnit**: For unit and integration testing.
+
+## Prerequisites
+
+- **.NET 7 SDK**
+- **PostgreSQL** (Ensure a running instance with appropriate connection settings)
+- **RabbitMQ** (Ensure a running instance with access credentials)
+- **Docker** (optional for containerized deployment)
 
 ## Getting Started
 
-### Prerequisites
-- Node.js >= 20.x
-- MongoDB
-- RabbitMQ
+1. **Clone the Repository**:
 
-### Environment Variables
-```env
-NODE_ENV=development
-PORT=3003
-MONGODB_URI=mongodb://localhost:27017/users
-MESSAGE_BROKER_URL=amqp://guest:guest@localhost:5672
-RABBITMQ_HEARTBEAT=30
-RABBITMQ_RECONNECT_INTERVAL=3000
-```
+   ```bash
+   git clone https://github.com/yourusername/user-service.git
+   cd user-service
+   ```
+2. **Configure the Application**:
 
-### Installation
+   - Update `appsettings.json` and `appsettings.Development.json` with your PostgreSQL and RabbitMQ connection details.
+3. **Run Database Migrations**:
 
-1. Install dependencies:
-```bash
-npm install
-```
+   ```bash
+   cd src/UserService.Infrastructure
+   dotnet ef migrations add InitialCreate
+   dotnet ef database update
+   ```
+4. **Start the Application**:
 
-2. Build:
-```bash
-npm run build
-```
+   ```bash
+   cd src/UserService.API
+   dotnet run
+   ```
+5. **Run the Tests**:
 
-3. Start service:
-```bash
-# Development
-npm run dev
+   ```bash
+   dotnet test
+   ```
 
-# Production
-npm start
-```
+## Usage
 
-## Event System
+Access the API at `http://localhost:5000` (or the port specified in your launch configuration). Use tools like **Postman** or **curl** to interact with the endpoints.
 
-### Consumed Events
+## Contributing
 
-#### User Events
-```typescript
-interface UserCreatedEvent {
-  type: "user.created";
-  data: {
-    userId: string;
-    email: string;
-    role: string;
-    timestamp: number;
-  }
-}
+Feel free to submit issues or pull requests. For major changes, please discuss them in an issue first.
 
-interface UserUpdatedEvent {
-  type: "user.updated";
-  data: {
-    userId: string;
-    email: string;
-    role: string;
-    timestamp: number;
-  }
-}
-```
+## License
 
-#### Quote Events
-```typescript
-interface QuoteFavoritedEvent {
-  type: "quote.favorited";
-  data: {
-    userId: string;
-    quoteId: string;
-    timestamp: number;
-  }
-}
-```
+This project is licensed under the MIT License. See `LICENSE` for more details.
 
-## API Reference
+---
 
-### User Profile Management
-
-#### Get User Profile
-```http
-GET /users/:id
-```
-
-Response:
-```json
-{
-  "id": "user_id",
-  "email": "user@example.com",
-  "profile": {
-    "name": "John Doe",
-    "avatar": "avatar_url",
-    "preferences": {
-      "theme": "light",
-      "notifications": {
-        "dailyQuote": true,
-        "weeklyDigest": true
-      },
-      "preferredTags": ["motivation", "success"],
-      "favoriteAuthors": ["author_id"]
-    },
-    "stats": {
-      "quotesViewed": 100,
-      "favoriteCount": 25,
-      "createdAt": "2024-02-21T10:00:00.000Z"
-    }
-  },
-  "favoriteQuotes": ["quote_id1", "quote_id2"]
-}
-```
-
-#### Update User Preferences
-```http
-PUT /users/:id/preferences
-Content-Type: application/json
-
-{
-  "theme": "dark",
-  "notifications": {
-    "dailyQuote": true,
-    "weeklyDigest": false
-  }
-}
-```
-
-#### Manage Favorite Quotes
-```http
-POST /users/:id/favorites/:quoteId
-DELETE /users/:id/favorites/:quoteId
-```
-
-## Data Models
-
-### User Profile
-```typescript
-interface UserProfile {
-  id: string;
-  email: string;
-  role: string;
-  profile: {
-    name?: string;
-    avatar?: string;
-    preferences: UserPreferences;
-    stats: UserStats;
-  };
-  favoriteQuotes: string[];
-}
-
-interface UserPreferences {
-  theme: "light" | "dark";
-  notifications: {
-    dailyQuote: boolean;
-    weeklyDigest: boolean;
-  };
-  preferredTags: string[];
-  favoriteAuthors: string[];
-}
-
-interface UserStats {
-  quotesViewed: number;
-  favoriteCount: number;
-  createdAt: Date;
-}
-```
-
-## Testing
-
-```bash
-# Run tests
-npm test
-
-# Coverage report
-npm run test:coverage
-```
-
-### Test Structure
-```
-tests/
-├── unit/
-│   ├── services/
-│   ├── repositories/
-│   └── event-handlers/
-├── integration/
-│   └── user-profile.test.ts
-└── mocks/
-```
-
-## Monitoring
-
-### Health Check
-```http
-GET /health
-
-Response:
-{
-  "status": "ok",
-  "services": {
-    "database": "connected",
-    "messageQueue": "connected"
-  },
-  "timestamp": "2024-02-21T10:00:00.000Z"
-}
-```
-
-### Performance Metrics
-```http
-GET /metrics
-
-Response:
-{
-  "users": {
-    "total": 1000,
-    "active": 750
-  },
-  "events": {
-    "processed": 5000,
-    "failed": 10
-  },
-  "response_time": {
-    "avg": 50,
-    "p95": 150
-  }
-}
-```
-
-### RabbitMQ Monitoring
-- Connection health
-- Message processing rates
-- Error rates
-- Reconnection attempts
-
-## Development
-
-### Debug Mode
-```bash
-DEBUG=user-service:* npm run dev
-```
-
-### Event Testing
-```bash
-# Publish test event
-npm run publish-event -- user.created
-
-# Monitor event processing
-npm run monitor-events
-```
-
-### Code Quality
-- ESLint configuration
-- Prettier formatting
-- Jest tests
-- TypeScript strict mode
-
-### Best Practices
-1. Event handling validation
-2. Error retry policies
-3. Graceful shutdowns
-4. Transaction management
-5. Event idempotency
-
-### Error Handling
-```typescript
-class UserServiceError extends Error {
-  constructor(
-    message: string,
-    public code: number,
-    public details?: any
-  ) {
-    super(message);
-  }
-}
-
-// Error response format
-{
-  status: "error",
-  message: string,
-  code: number,
-  details?: any
-}
-```
+**Note**: Ensure your database and RabbitMQ instances are up and running before starting the service for proper functionality.

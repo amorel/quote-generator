@@ -1,0 +1,129 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "chrome",
+      "request": "launch",
+      "name": "Debug Frontend",
+      "url": "http://localhost:3006",
+      "webRoot": "${workspaceFolder}/services/frontend",
+      "sourceMaps": true,
+      "sourceMapPathOverrides": {
+        "webpack:///./*": "${webRoot}/*",
+        "webpack:///src/*": "${webRoot}/src/*"
+      },
+      "preLaunchTask": "Start Frontend"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug API Gateway Service",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/services/api-gateway/src/index.ts",
+      "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/tsx",
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/**",
+        "!**/node_modules/**"
+      ],
+      "env": {
+        "NODE_ENV": "development",
+        "AUTH_SERVICE_URL": "http://localhost:3001",
+        "QUOTE_SERVICE_URL": "http://localhost:3002",
+        "USER_SERVICE_URL": "http://localhost:3003"
+      }
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug Quote Service",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/services/quote-service/src/index.ts",
+      "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/tsx",
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/**",
+        "!**/node_modules/**"
+      ],
+      "env": {
+        "NODE_ENV": "development",
+        "JWT_SECRET": "dev-secret",
+        "PORT": "3002",
+        "DEBUG": "true",
+        "AUTH_SERVICE_URL": "http://localhost:3001",
+        "MONGO_INITDB_ROOT_USERNAME": "admin",
+        "MONGO_INITDB_ROOT_PASSWORD": "password",
+        "MONGO_HOST_QUOTE": "localhost",
+        "MONGO_PORT_QUOTE": "27017",
+        "MONGO_PORT_INTERNAL_EXTERNAL": "27017",
+        "MONGO_DATABASE_QUOTE": "quotes",
+        "MONGO_OPTIONS": "?authSource=admin"
+      }
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug Auth Service",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/services/auth-service/src/index.ts",
+      "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/tsx",
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/**",
+        "!**/node_modules/**"
+      ],
+      "env": {
+        "NODE_ENV": "development",
+        "PORT": "3001",
+        "MONGO_INITDB_ROOT_USERNAME": "admin",
+        "MONGO_INITDB_ROOT_PASSWORD": "password",
+        "MONGO_HOST_AUTH": "localhost",
+        "MONGO_PORT_INTERNAL_EXTERNAL": "27018"
+      }
+    },
+    {
+      "name": "Debug User Service",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/services/user-service/src/UserService.API/bin/Debug/net8.0/UserService.API.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/services/user-service/src/UserService.API",
+      "stopAtEntry": false,
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    {
+      "name": "Docker: Quote Service (Node.js, attention, il faut aussi modifier le CMD dans Dockerfile)",
+      "type": "node",
+      "request": "attach",
+      "port": 9229,
+      "address": "localhost",
+      "localRoot": "${workspaceFolder}/services/quote-service",
+      "remoteRoot": "/app/services/quote-service",
+      "protocol": "inspector"
+    },
+    {
+      "name": "Docker: User Service (ASP.NET Core, attention, il faut aussi modifier le CMD dans Dockerfile)",
+      "type": "coreclr",
+      "request": "attach",
+      "processId": "${command:pickRemoteProcess}",
+      "pipeTransport": {
+        "pipeProgram": "docker",
+        "pipeArgs": ["exec", "-i", "user-service"],
+        "debuggerPath": "/vsdbg/vsdbg",
+        "pipeCwd": "${workspaceRoot}"
+      }
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Debug All Services",
+      "configurations": [
+        "Debug Auth Service",
+        "Debug Quote Service",
+        "Debug API Gateway Service",
+        "Debug User Service",
+        "Debug Frontend"
+      ]
+    }
+  ]
+}

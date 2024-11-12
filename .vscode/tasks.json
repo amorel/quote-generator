@@ -1,0 +1,114 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/services/user-service/user-service.sln",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "Start Development Environment",
+      "dependsOn": [
+        "Start Auth Service",
+        "Start Quote Service",
+        "Start API Gateway",
+        "Start Frontend",
+        "Start User Service"
+      ],
+      "dependsOrder": "parallel",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "Start Auth Service",
+      "type": "npm",
+      "script": "dev",
+      "path": "services/auth-service",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "group": "services"
+      }
+    },
+    {
+      "label": "Start Quote Service",
+      "type": "npm",
+      "script": "dev",
+      "path": "services/quote-service",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "group": "services"
+      }
+    },
+    {
+      "label": "Start API Gateway",
+      "type": "npm",
+      "script": "dev",
+      "path": "services/api-gateway",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "group": "services"
+      }
+    },
+    {
+      "label": "Start User Service",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "watch",
+        "run",
+        "--project",
+        "${workspaceFolder}/services/user-service/src/UserService.API/UserService.API.csproj"
+      ],
+      "problemMatcher": "$msCompile",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "group": "services"
+      },
+      "options": {
+        "env": {
+          "ASPNETCORE_ENVIRONMENT": "Development",
+          "ASPNETCORE_URLS": "http://localhost:3003"
+        }
+      }
+    },
+    {
+      "label": "Start Frontend",
+      "type": "npm",
+      "script": "dev",
+      "path": "services/frontend",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "custom",
+        "pattern": {
+          "regexp": "^$"
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "VITE v", // Le pattern qui indique le début
+          "endsPattern": "Local:.+:\\d+" // Le pattern qui indique que c'est prêt
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "group": "services"
+      }
+    }
+  ]
+}

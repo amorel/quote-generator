@@ -22,7 +22,6 @@ build/
 
 # IDE & Editors
 .idea/
-.vscode/
 *.sublime-project
 *.sublime-workspace
 *.swp
@@ -30,6 +29,7 @@ build/
 .DS_Store
 ._*
 Thumbs.db
+.vs/
 
 # Logs
 logs/
@@ -85,3 +85,6 @@ temp/
 
 # DynamoDB Local files
 .dynamodb/
+
+# Services
+services/user-service-old/

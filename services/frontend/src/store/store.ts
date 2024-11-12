@@ -6,6 +6,7 @@ const preloadedState = {
   quote: {
     current: null,
     history: historyPersistenceService.loadHistory(),
+    favorites: historyPersistenceService.loadFavorites(),
     loading: false,
     error: null,
   },
@@ -18,10 +19,10 @@ export const store = configureStore({
   preloadedState,
 });
 
-// Sauvegarde l'historique à chaque changement d'état
 store.subscribe(() => {
   const state = store.getState();
   historyPersistenceService.saveHistory(state.quote.history);
+  historyPersistenceService.saveFavorites(Array.from(state.quote.favorites));
 });
 
 export type RootState = ReturnType<typeof store.getState>;
