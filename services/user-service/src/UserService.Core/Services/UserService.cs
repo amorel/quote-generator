@@ -13,7 +13,7 @@ namespace UserService.Core.Services
             _userRepository = userRepository;
         }
 
-        public async Task<User?> GetUserByIdAsync(Guid id)
+        public async Task<User?> GetUserByIdAsync(string id)  // Changé de Guid à string
         {
             return await _userRepository.GetByIdAsync(id);
         }
@@ -33,7 +33,7 @@ namespace UserService.Core.Services
             await _userRepository.UpdateAsync(user);
         }
 
-        public async Task DeleteUserAsync(Guid id)
+        public async Task DeleteUserAsync(string id)  // Changé de Guid à string
         {
             await _userRepository.DeleteAsync(id);
         }

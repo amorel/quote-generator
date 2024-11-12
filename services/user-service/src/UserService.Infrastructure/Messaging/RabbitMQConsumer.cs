@@ -74,30 +74,54 @@ namespace UserService.Infrastructure.Messaging
                 _logger.LogError(ex, "Failed to initialize RabbitMQ consumer");
                 throw;
             }
+
+            try
+            {
+                SetupQueueBindings().Wait();
+                _logger.LogInformation("RabbitMQ Consumer initialized successfully");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to initialize RabbitMQ Consumer");
+                throw;
+            }
         }
 
         private void SetupQueues()
         {
             try
             {
-                string queueName = _options.Value.QueueName;
-                _logger.LogInformation("Declaring queue: {QueueName}", queueName);
+                _logger.LogInformation("Declaring queue: {QueueName}", _options.Value.QueueName);
 
-                var arguments = new Dictionary<string, object>
-                {
-                    { "x-dead-letter-exchange", "dlx" },
-                    { "x-dead-letter-routing-key", "user.events.dead" }
-                };
+                // Déclarer d'abord l'exchange DLX
+                _channel.ExchangeDeclare(
+                    exchange: "dlx",
+                    type: "topic",
+                    durable: true
+                );
 
+                // Déclarer l'exchange principal
+                _channel.ExchangeDeclare(
+                    exchange: "quote.events.exchange",
+                    type: "topic",
+                    durable: true
+                );
+
+                // Déclarer la queue sans les arguments DLX pour commencer
                 _channel.QueueDeclare(
-                    queue: queueName,
+                    queue: _options.Value.QueueName,
                     durable: true,
                     exclusive: false,
                     autoDelete: false,
-                    arguments: arguments);
+                    arguments: null  // Retiré les arguments DLX pour le moment
+                );
 
-                // Configuration de base du canal
-                _channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
+                // Binding avec l'exchange des quotes
+                _channel.QueueBind(
+                    queue: _options.Value.QueueName,
+                    exchange: "quote.events.exchange",
+                    routingKey: "quote.#"  // Pour capturer tous les événements quote
+                );
 
                 _logger.LogInformation("Queue setup completed successfully");
             }
@@ -150,6 +174,35 @@ namespace UserService.Infrastructure.Messaging
             using var scope = _serviceScopeFactory.CreateScope();
             var messageHandler = scope.ServiceProvider.GetRequiredService<IMessageHandlerService>();
             await messageHandler.HandleMessage(message);
+        }
+
+        private async Task SetupQueueBindings()
+        {
+            try
+            {
+                _channel.ExchangeDeclare(
+                    exchange: "quote.events.exchange",
+                    type: "topic",
+                    durable: true);
+
+                _channel.QueueDeclare(
+                    queue: _options.Value.QueueName,
+                    durable: true,
+                    exclusive: false,
+                    autoDelete: false);
+
+                _channel.QueueBind(
+                    queue: _options.Value.QueueName,
+                    exchange: "quote.events.exchange",
+                    routingKey: "quote.favorited");
+
+                _logger.LogInformation($"Queue {_options.Value.QueueName} bound to exchange quote.events.exchange");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error setting up queue bindings");
+                throw;
+            }
         }
 
         public override void Dispose()

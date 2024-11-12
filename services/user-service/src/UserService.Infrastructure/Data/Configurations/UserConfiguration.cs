@@ -10,6 +10,10 @@ namespace UserService.Infrastructure.Data.Configurations
         {
             builder.HasKey(u => u.Id);
 
+            builder.Property(u => u.Id)
+                .HasMaxLength(50)
+                .IsRequired();
+
             builder.Property(u => u.Email)
                 .IsRequired()
                 .HasMaxLength(256);

@@ -137,42 +137,66 @@ app.Run();
 // Méthode pour ajouter des données de test
 static async Task SeedTestData(ApplicationDbContext context)
 {
-    var testUser = new UserService.Core.Domain.Entities.User
+    try
     {
-        Id = Guid.NewGuid(),
-        Email = "test@example.com",
-        Username = "testuser",
-        Role = "user"
-    };
+        // Création du user test
+        var testUser = new UserService.Core.Domain.Entities.User
+        {
+            Id = "67321fac8a7cd9153616fd6a", // ID MongoDB pour correspondre avec l'auth-service
+            Email = "test@example.com",
+            Username = "testuser",
+            Role = "user"
+        };
 
-    var testAdmin = new UserService.Core.Domain.Entities.User
+        // Création de l'admin test
+        var testAdmin = new UserService.Core.Domain.Entities.User
+        {
+            Id = "67321fac8a7cd9153616fd6b", // ID format MongoDB
+            Email = "admin@example.com",
+            Username = "admin",
+            Role = "admin"
+        };
+
+        await context.Users.AddRangeAsync(testUser, testAdmin);
+
+        // Création des settings
+        var userSettings = new UserService.Core.Domain.Entities.UserSettings
+        {
+            Id = "settings-" + GenerateMongoId(), // ID format MongoDB
+            UserId = testUser.Id,
+            Theme = "light",
+            EmailNotifications = true
+        };
+
+        var adminSettings = new UserService.Core.Domain.Entities.UserSettings
+        {
+            Id = "settings-" + GenerateMongoId(), // ID format MongoDB
+            UserId = testAdmin.Id,
+            Theme = "dark",
+            EmailNotifications = true
+        };
+
+        await context.UserSettings.AddRangeAsync(userSettings, adminSettings);
+        await context.SaveChangesAsync();
+
+        Console.WriteLine("Test data seeded successfully.");
+        Console.WriteLine($"Created test user with ID: {testUser.Id}");
+        Console.WriteLine($"Created admin user with ID: {testAdmin.Id}");
+    }
+    catch (Exception ex)
     {
-        Id = Guid.NewGuid(),
-        Email = "admin@example.com",
-        Username = "admin",
-        Role = "admin"
-    };
+        Console.WriteLine($"Error seeding test data: {ex.Message}");
+        throw;
+    }
+}
 
-    await context.Users.AddRangeAsync(testUser, testAdmin);
-
-    var userSettings = new UserService.Core.Domain.Entities.UserSettings
-    {
-        Id = Guid.NewGuid(),
-        UserId = testUser.Id,
-        Theme = "light",
-        EmailNotifications = true
-    };
-
-    var adminSettings = new UserService.Core.Domain.Entities.UserSettings
-    {
-        Id = Guid.NewGuid(),
-        UserId = testAdmin.Id,
-        Theme = "dark",
-        EmailNotifications = true
-    };
-
-    await context.UserSettings.AddRangeAsync(userSettings, adminSettings);
-    await context.SaveChangesAsync();
+// Méthode helper pour générer un ID style MongoDB
+static string GenerateMongoId()
+{
+    var timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
+    var random = new Random();
+    var randomPart = random.Next(100000, 999999).ToString();
+    return $"{timestamp}{randomPart}";
 }
 
 // Nécessaire pour les tests d'intégration

@@ -58,7 +58,7 @@ export class RabbitMQBase {
   async publish<T>(
     exchange: string,
     routingKey: string,
-    message: EventMessage<T>,
+    message: T, // Changé pour accepter n'importe quel type
     options: PublishOptions = {}
   ): Promise<void> {
     if (!this.channel) {
@@ -70,7 +70,7 @@ export class RabbitMQBase {
 
       const publishOptions = {
         persistent: true,
-        messageId: message.id || crypto.randomUUID(),
+        messageId: crypto.randomUUID(),
         timestamp: Date.now(),
         headers: {
           "x-retry-count": 0,
@@ -79,10 +79,12 @@ export class RabbitMQBase {
         ...options,
       };
 
+      const messageBuffer = Buffer.from(JSON.stringify(message));
+
       const success = this.channel.publish(
         exchange,
         routingKey,
-        Buffer.from(JSON.stringify(message)),
+        messageBuffer,
         publishOptions
       );
 

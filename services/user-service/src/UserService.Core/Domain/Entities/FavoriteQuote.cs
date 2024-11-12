@@ -2,8 +2,8 @@ namespace UserService.Core.Domain.Entities
 {
     public class FavoriteQuote
     {
-        public Guid Id { get; set; }
-        public Guid UserId { get; set; }
+        public string Id { get; set; } = string.Empty;
+        public string UserId { get; set; } = string.Empty;
         public string QuoteId { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
 

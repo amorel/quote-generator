@@ -87,6 +87,7 @@
     "docker:down": "docker-compose down",
     "docker:clean": "docker-compose down -v",
     "docker:recreate": "docker-compose up -d --build --force-recreate",
+    "docker:db": "docker-compose up -d rabbitmq quote-db auth-db user-db",
 
     "dev": "docker compose --env-file .env.development up",
     "dev:build": "docker compose --env-file .env.development up --build",

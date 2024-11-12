@@ -36,53 +36,36 @@ public class MessageHandlerService : IMessageHandlerService
 
     public async Task HandleMessage(string message)
     {
+        _logger.LogInformation("[MESSAGE_HANDLER] Raw message received: {Message}", message);
+
         try
         {
-            var eventMessage = JsonSerializer.Deserialize<EventMessage>(message);
-            if (eventMessage == null)
-            {
-                _logger.LogWarning("Failed to deserialize message: {Message}", message);
-                return;
-            }
+            var eventMessage = JsonDocument.Parse(message);
+            var root = eventMessage.RootElement;
 
-            switch (eventMessage.Type)
-            {
-                case "quote.favorited":
-                    {
-                        var data = JsonSerializer.Deserialize<QuoteFavoritedEvent>(
-                            eventMessage.Data.ToString() ?? "{}"
-                        );
-                        if (data != null)
-                        {
-                            await _userRepository.AddFavoriteQuoteAsync(
-                                Guid.Parse(data.UserId),
-                                data.QuoteId
-                            );
-                            LogFavoriteAdded(_logger, data.QuoteId, data.UserId, null);
-                        }
-                        break;
-                    }
+            var type = root.GetProperty("type").GetString();
 
-                case "quote.unfavorited":
-                    {
-                        var data = JsonSerializer.Deserialize<QuoteUnfavoritedEvent>(
-                            eventMessage.Data.ToString() ?? "{}"
-                        );
-                        if (data != null)
-                        {
-                            await _userRepository.RemoveFavoriteQuoteAsync(
-                                Guid.Parse(data.UserId),
-                                data.QuoteId
-                            );
-                            LogFavoriteRemoved(_logger, data.QuoteId, data.UserId, null);
-                        }
-                        break;
-                    }
+            _logger.LogInformation("[MESSAGE_HANDLER] Processing event type: {Type}", type);
+
+            if (type == "quote.favorited")
+            {
+                var data = root.GetProperty("data");
+                var quoteId = data.GetProperty("quoteId").GetString();
+                var userId = data.GetProperty("userId").GetString();
+
+                _logger.LogInformation("[MESSAGE_HANDLER] Adding favorite: QuoteId={QuoteId}, UserId={UserId}",
+                    quoteId, userId);
+
+                if (quoteId != null && userId != null)
+                {
+                    await _userRepository.AddFavoriteQuoteAsync(userId, quoteId);
+                    _logger.LogInformation("[MESSAGE_HANDLER] Successfully added favorite");
+                }
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error processing message: {Message}", message);
+            _logger.LogError(ex, "[MESSAGE_HANDLER] Error processing message");
             throw;
         }
     }

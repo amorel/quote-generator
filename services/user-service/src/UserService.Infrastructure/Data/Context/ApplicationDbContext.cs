@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using UserService.Core.Domain.Entities;
+using UserService.Infrastructure.Data.Configurations;
 
 namespace UserService.Infrastructure.Data
 {
@@ -19,21 +20,24 @@ namespace UserService.Infrastructure.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<User>()
-                .HasKey(u => u.Id);
+            modelBuilder.ApplyConfiguration(new UserConfiguration());
+            modelBuilder.ApplyConfiguration(new UserSettingsConfiguration());
 
-            modelBuilder.Entity<UserSettings>()
-                .HasOne(s => s.User)
-                .WithOne()
-                .HasForeignKey<UserSettings>(s => s.UserId);
+            modelBuilder.Entity<User>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).ValueGeneratedNever(); // Important car nous utilisons des IDs externes
+            });
 
-            modelBuilder.Entity<FavoriteQuote>()
-                .HasKey(f => f.Id);
+            modelBuilder.Entity<FavoriteQuote>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).ValueGeneratedNever();
 
-            modelBuilder.Entity<FavoriteQuote>()
-                .HasOne(f => f.User)
-                .WithMany()
-                .HasForeignKey(f => f.UserId);
+                entity.HasOne(e => e.User)
+                    .WithMany()
+                    .HasForeignKey(e => e.UserId);
+            });
         }
     }
 }

@@ -39,11 +39,7 @@ export class ToggleQuoteFavoriteUseCase {
       },
     };
 
-    console.log("📝 Created event:", {
-      id: event.id,
-      type: event.type,
-      data: event.data,
-    });
+    console.log("📝 Created event:", event);
 
     const routingKey = isFavorite
       ? ROUTING_KEYS.QUOTE.FAVORITED
