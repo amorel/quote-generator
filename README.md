@@ -1,6 +1,8 @@
 # Quote Generator - Microservices Architecture
 
-A random quote generator based on a modern microservices architecture using Node.js, TypeScript and RabbitMQ.
+###### A modern quote generator built with microservices architecture, demonstrating best practices in web development. Built with Node.js, ASP.NET Core, TypeScript, React, Fastify, MongoDB, PostgreSQL, RabbitMQ, and Docker. Features include: Clean Architecture, DDD, Event-Driven Architecture, CQRS, automated testing, and comprehensive API documentation.
+
+![Microservices Architecture](./image/README/architecture.png "Microservices Architecture")
 
 ## Overview
 
@@ -12,6 +14,95 @@ Built with a focus on scalability, reliability and performance, this application
 - SOLID principles
 - Comprehensive testing
 - Docker containerization
+
+## 🛠 Tech Stack
+
+### Backend Services
+- **Auth Service**: Node.js + TypeScript + Fastify + MongoDB
+- **Quote Service**: Node.js + TypeScript + Fastify + MongoDB
+- **User Service**: ASP.NET Core 8.0 + PostgreSQL
+- **API Gateway**: Node.js + TypeScript + Fastify
+
+### Frontend
+- **Framework**: React 18
+- **State Management**: Redux Toolkit
+- **Styling**: CSS Modules
+- **Build Tool**: Vite
+
+### Infrastructure
+- **Message Broker**: RabbitMQ
+- **Databases**: 
+  - MongoDB (Auth & Quotes)
+  - PostgreSQL (Users)
+- **Containerization**: Docker + Docker Compose
+- **API Documentation**: Swagger/OpenAPI
+
+## 🏗 Architecture & Patterns
+
+### Clean Architecture
+- Domain Layer (Entities, Value Objects)
+- Application Layer (Use Cases, DTOs)
+- Infrastructure Layer (Repositories, External Services)
+- Interface Layer (Controllers, Presenters)
+
+### Domain-Driven Design (DDD)
+- Bounded Contexts
+- Aggregates
+- Value Objects
+- Domain Events
+- Repository Pattern
+
+### Event-Driven Architecture
+- Asynchronous Communication
+- Message Queues
+- Event Publishing/Subscription
+- Event Sourcing
+
+### CQRS (Command Query Responsibility Segregation)
+- Separate Command and Query Models
+- Optimized Read/Write Operations
+
+## 🔧 Design Patterns
+- Repository Pattern
+- Factory Pattern
+- Strategy Pattern
+- Observer Pattern
+- Circuit Breaker
+- Retry Pattern
+- Decorator Pattern
+
+## 🏭 CI/CD & DevOps
+- GitHub Actions
+- Docker Containerization
+- Infrastructure as Code
+- Automated Testing
+- Continuous Integration
+- Continuous Deployment
+
+## 📊 Testing Strategies
+- Unit Tests (Jest, xUnit)
+- Integration Tests
+- E2E Tests
+- Test Coverage Reports
+- Mocking & Stubbing
+
+## 🛡 Security
+- JWT Authentication
+- Role-Based Access Control
+- API Gateway Security
+- Input Validation
+- Rate Limiting
+- CORS Configuration
+
+## 🎯 Best Practices
+
+### Code Quality
+- TypeScript for Type Safety
+- ESLint & Prettier
+- SOLID Principles
+- Clean Code Practices
+- Code Reviews
+- Documentation
 
 ## Architecture
 
@@ -29,51 +120,77 @@ The application consists of several independent microservices:
 - Asynchronous communication via RabbitMQ for events
 - JWT for inter-service security
 
-```plaintext
-┌──────────┐     ┌──────────────┐
-│          │     │              │
-│ Frontend │─────▶ API Gateway │
-│          │     │              │
-└──────────┘     └──────┬───────┘
-                        │
-         ┌──────────────┼───────────────┐
-         │              │               │
-    ┌────▼────┐   ┌────▼─────┐     ┌────▼────┐
-    │         │   │          │     │         │
-    │  Auth   │   │  Quote   │     │  User   │
-    │ Service │   │ Service  │     │ Service │
-    │         │   │          │     │         │
-    └────┬────┘   └────┬─────┘     └────┬────┘
-         │             │                │
-    ┌────▼─────────────▼────────────────▼───┐
-    │                                       │
-    │            Message Broker             │
-    │             (RabbitMQ)                │
-    │                                       │
-    └───────────────────────────────────────┘
+#### Authentication process and retrieval of a quote
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Gateway
+    participant AuthService
+    participant QuoteService
+    participant UserService
+    participant RabbitMQ
+
+    Client->>Gateway: POST /auth/login
+    Gateway->>AuthService: Forward login request
+    AuthService->>AuthService: Validate credentials
+    AuthService-->>Gateway: Return JWT token
+    Gateway-->>Client: Return JWT token
+
+    Client->>Gateway: GET /quotes/random (with JWT)
+    Gateway->>Gateway: Validate JWT
+    Gateway->>QuoteService: Forward request
+    QuoteService->>QuoteService: Generate random quote
+    QuoteService->>RabbitMQ: Publish quote.viewed event
+    QuoteService-->>Gateway: Return quote
+    Gateway-->>Client: Return quote
+
+    RabbitMQ->>UserService: Consume quote.viewed event
+    UserService->>UserService: Update user history
 ```
 
-## Technology Stack
+### Add to Favorites process
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Gateway
+    participant QuoteService
+    participant UserService
+    participant RabbitMQ
 
-### Backend
+    Client->>Gateway: POST /quotes/:id/favorite
+    Gateway->>Gateway: Validate JWT
+    Gateway->>QuoteService: Forward favorite request
+    QuoteService->>RabbitMQ: Publish quote.favorited event
+    QuoteService-->>Gateway: Return success
+    Gateway-->>Client: Return success
 
-- Node.js/TypeScript
-- Fastify for REST APIs
-- MongoDB for persistence
-- RabbitMQ for event-driven architecture
-- JWT for authentication
+    RabbitMQ->>UserService: Consume quote.favorited event
+    UserService->>UserService: Add to favorites
+    UserService->>UserService: Update user stats
+```
 
-### Frontend
+### New user registration process
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Gateway
+    participant AuthService
+    participant UserService
+    participant RabbitMQ
 
-- React/TypeScript
-- Redux Toolkit for state management
-- React Router for navigation
+    Client->>Gateway: POST /auth/register
+    Gateway->>AuthService: Forward register request
+    AuthService->>AuthService: Validate input
+    AuthService->>AuthService: Hash password
+    AuthService->>AuthService: Create user
+    AuthService->>RabbitMQ: Publish user.created event
+    AuthService-->>Gateway: Return success + JWT
+    Gateway-->>Client: Return success + JWT
 
-### Infrastructure
-
-- Docker & Docker Compose
-- Jest & Supertest for testing
-- Swagger for API documentation
+    RabbitMQ->>UserService: Consume user.created event
+    UserService->>UserService: Create user profile
+    UserService->>UserService: Initialize preferences
+```
 
 ## Getting Started
 
@@ -81,8 +198,6 @@ The application consists of several independent microservices:
 
 - Node.js >= 20.x
 - Docker & Docker Compose
-- MongoDB
-- RabbitMQ
 
 ### Installation
 
