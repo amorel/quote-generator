@@ -11,9 +11,9 @@
     "preview": "vite preview",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:frontend:coverage": "jest --coverage",
-    "test:frontend:report": "jest --coverage > report-jest.txt 2>&1 || exit 0",
-    "build:frontend:report": "tsc -b > report-tsc.txt 2>&1 || exit 0"
+    "test:coverage": "jest --coverage",
+    "test:report": "jest --coverage --no-color --silent > report-jest.txt 2>&1 || exit 0",
+    "build:report": "tsc -b > report-tsc.txt 2>&1 || exit 0"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.3.0",

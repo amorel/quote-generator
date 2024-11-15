@@ -215,8 +215,6 @@ export async function build(): Promise<FastifyInstance> {
     "/tags/:id",
     {
       schema: {
-        tags: ["tags"],
-        description: "Obtenir un tag par son ID",
         params: {
           type: "object",
           required: ["id"],
@@ -228,9 +226,10 @@ export async function build(): Promise<FastifyInstance> {
           200: {
             type: "object",
             properties: {
-              _id: { type: "string" },
+              id: { type: "string" },
               name: { type: "string" },
             },
+            required: ["id", "name"],
           },
         },
       },
@@ -272,8 +271,6 @@ export async function build(): Promise<FastifyInstance> {
     "/authors/:id",
     {
       schema: {
-        tags: ["authors"],
-        description: "Obtenir un auteur par son ID",
         params: {
           type: "object",
           required: ["id"],
@@ -285,12 +282,13 @@ export async function build(): Promise<FastifyInstance> {
           200: {
             type: "object",
             properties: {
-              _id: { type: "string" },
+              id: { type: "string" },
               name: { type: "string" },
-              link: { type: "string" },
               bio: { type: "string" },
               description: { type: "string" },
+              link: { type: "string" },
             },
+            required: ["id", "name", "bio", "description"],
           },
         },
       },

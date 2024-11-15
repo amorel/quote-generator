@@ -69,29 +69,23 @@ user-service/
 
 ## Getting Started
 
-1. **Clone the Repository**:
-
-   ```bash
-   git clone https://github.com/yourusername/user-service.git
-   cd user-service
-   ```
-2. **Configure the Application**:
+1. **Configure the Application**:
 
    - Update `appsettings.json` and `appsettings.Development.json` with your PostgreSQL and RabbitMQ connection details.
-3. **Run Database Migrations**:
+2. **Run Database Migrations**:
 
    ```bash
    cd src/UserService.Infrastructure
    dotnet ef migrations add InitialCreate
    dotnet ef database update
    ```
-4. **Start the Application**:
+3. **Start the Application**:
 
    ```bash
    cd src/UserService.API
    dotnet run
    ```
-5. **Run the Tests**:
+4. **Run the Tests**:
 
    ```bash
    dotnet test

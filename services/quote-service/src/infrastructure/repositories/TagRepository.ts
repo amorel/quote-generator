@@ -16,12 +16,16 @@ export class TagRepository implements ITagRepository {
 
   async findById(id: string): Promise<Tag | null> {
     try {
+      console.log("🔍 [TagRepository] Looking for tag with id:", id);
       const tag = await TagModel.findById(id);
+      console.log("📦 [TagRepository] Found tag:", tag);
       if (!tag) return null;
 
-      return new Tag(tag._id, TagName.create(tag.name));
+      const tagEntity = new Tag(tag._id, TagName.create(tag.name));
+      console.log("🎯 [TagRepository] Returning entity:", tagEntity);
+      return tagEntity;
     } catch (error) {
-      console.error("Error in TagRepository.findById:", error);
+      console.error("❌ [TagRepository] Error:", error);
       throw error;
     }
   }

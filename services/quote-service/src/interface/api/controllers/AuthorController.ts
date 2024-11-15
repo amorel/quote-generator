@@ -22,14 +22,22 @@ export class AuthorController {
   }
 
   async getAuthorById(
-    request: FastifyRequest<{
-      Params: { id: string };
-    }>,
+    request: FastifyRequest<{ Params: { id: string } }>,
     reply: FastifyReply
   ) {
     try {
+      console.log("📝 [AuthorController] Request params:", request.params);
       const author = await this.getAuthorByIdUseCase.execute(request.params.id);
-      return reply.send(author);
+      console.log("📦 [AuthorController] Use case result:", author);
+      const response = {
+        id: author.id,
+        name: author.name,
+        bio: author.bio,
+        description: author.description,
+        link: author.link,
+      };
+      console.log("📤 [AuthorController] Sending response:", response);
+      return reply.send(response);
     } catch (error) {
       if (error instanceof NotFoundError) {
         return reply.status(404).send({

@@ -1,4 +1,3 @@
-/** @type {import('ts-jest').JestConfigWithTsJest} */
 export default {
   preset: "ts-jest",
   testEnvironment: "jsdom",
@@ -9,10 +8,14 @@ export default {
   setupFilesAfterEnv: ["<rootDir>/src/tests/setup.ts"],
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
+    "@quote-generator/shared": "<rootDir>/../../shared/src",
   },
   globals: {
-    "process.env": {
-      VITE_API_URL: "http://localhost:3000",
+    "ts-jest": {
+      tsconfig: {
+        jsx: "react-jsx",
+        moduleResolution: "node",
+      },
     },
   },
 };

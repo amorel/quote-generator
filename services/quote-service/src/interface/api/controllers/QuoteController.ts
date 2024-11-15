@@ -57,8 +57,7 @@ export class QuoteController {
   ) {
     try {
       const quote = await this.getQuoteByIdUseCase.execute(request.params.id);
-      reply.send(quote);
-      return quote;
+      return reply.send(quote);
     } catch (error) {
       if (error instanceof NotFoundError) {
         return reply.status(404).send({

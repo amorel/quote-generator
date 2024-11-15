@@ -22,15 +22,21 @@ export class TagController {
   }
 
   async getTagById(
-    request: FastifyRequest<{
-      Params: { id: string };
-    }>,
+    request: FastifyRequest<{ Params: { id: string } }>,
     reply: FastifyReply
   ) {
     try {
+      console.log("📝 [TagController] Request params:", request.params);
       const tag = await this.getTagByIdUseCase.execute(request.params.id);
-      return reply.send(tag);
+      console.log("📦 [TagController] Use case result:", tag);
+      const response = {
+        id: tag.id,
+        name: tag.name,
+      };
+      console.log("📤 [TagController] Sending response:", response);
+      return reply.send(response);
     } catch (error) {
+      console.error("❌ [TagController] Error:", error);
       if (error instanceof NotFoundError) {
         return reply.status(404).send({
           status: "error",
