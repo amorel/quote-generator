@@ -1,15 +1,22 @@
 FROM node:20-alpine
 WORKDIR /app
 
-# Shared module setup
+# Build shared first
 COPY shared ./shared
-RUN cd shared && npm install && npm run build
+WORKDIR /app/shared
+RUN npm install
+RUN npm run build
+RUN echo "=== CONTENU DU DOSSIER DIST ===" && \
+    ls -la dist && \
+    echo "=============================="
 
-# Service dependencies
+# Build quote-service
+WORKDIR /app
 COPY services/quote-service ./services/quote-service
-RUN cd services/quote-service && npm install && npm run build
-
 WORKDIR /app/services/quote-service
+RUN npm install
+RUN npm run build
+
 CMD ["npm", "start"]
 
 # Dockerfile pour services Node.js (c'est pour débugger avec VSCode, voir dans le fichier .vscode/launch.json)

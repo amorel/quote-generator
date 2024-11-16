@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using UserService.Core.Interfaces.Services;
 using UserService.Core.Domain.Entities;
+using Prometheus;
+using UserService.Core.Metrics;
 
 namespace UserService.API.Controllers
 {
@@ -26,14 +28,31 @@ namespace UserService.API.Controllers
         [HttpGet]
         public async Task<ActionResult<List<User>>> GetAll()
         {
-            return Ok(await _userService.GetAllUsersAsync());
+            using (UserMetrics.UserOperationDuration.NewTimer())
+            {
+                var users = await _userService.GetAllUsersAsync();
+                UserMetrics.ActiveUsersGauge.Set(users.Count);
+                return Ok(users);
+            }
         }
 
         [HttpPost]
         public async Task<ActionResult<User>> Create(User user)
         {
-            var created = await _userService.CreateUserAsync(user);
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+            using (UserMetrics.UserOperationDuration.NewTimer())
+            {
+                try
+                {
+                    var created = await _userService.CreateUserAsync(user);
+                    UserMetrics.UsersCreatedTotal.Inc();
+                    return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+                }
+                catch (Exception)
+                {
+                    // Gérer l'erreur...
+                    throw;
+                }
+            }
         }
 
         [HttpPut("{id}")]

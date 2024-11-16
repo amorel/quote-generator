@@ -11,6 +11,8 @@
     "start:build": "docker compose up --build",
     "big:reset:before:restart": "node ./scripts/big-reset-before-restart.js",
 
+    "info:report": "node -e \"console.log(`Pattern des commandes : \\n- Chaque commande suit la structure <action>:<service>:report \\n- Actions : build, lint, test, analyze \\n- Services : auth, quote, gateway, frontend, user \\n- Utilise reports:all pour tout exécuter ou des commandes spécifiques comme build:auth:report pour cibler un service/action précis.`)\"",
+
     "install:all": "npm install && npm run install:services",
     "install:services": "npm run install:shared && npm run install:auth && npm run install:quote && npm run install:gateway && npm run install:frontend",
     "install:shared": "cd shared && npm install",
@@ -45,7 +47,15 @@
     "lint:frontend:report": "cd services/frontend && npm run lint -- --no-color --format json -o ../report-eslint-frontend.json || exit 0",
     "test:frontend:report": "cd services/frontend && npm run test:coverage -- --no-color > ../report-tests-frontend.txt 2>&1 || exit 0",
 
-    "build:user:report": "dotnet build ./services/user-service/src/UserService.API/UserService.API.csproj -c Release > ./services/user-service/report-build.txt 2>&1 || exit 0",
+    "build:user:report:prepare": "node scripts/prepare-build-report.js",
+    "build:user:report": "npm-run-all --sequential build:user:report:prepare build:user:report:projects build:user:report:combine",
+    "build:user:report:projects": "npm-run-all --sequential build:user:report:core build:user:report:api build:user:report:infrastructure build:user:report:shared",
+    "build:user:report:core": "node scripts/build-project.js Core",
+    "build:user:report:api": "node scripts/build-project.js API",
+    "build:user:report:infrastructure": "node scripts/build-project.js Infrastructure",
+    "build:user:report:shared": "node scripts/build-project.js Shared",
+    "build:user:report:combine": "node scripts/combine-build-reports.js",
+    
     "analyze:user:report": "dotnet build ./services/user-service/src/UserService.API/UserService.API.csproj -c Release /p:RunAnalyzersDuringBuild=true /p:ErrorLog=./services/user-service/report-analyze.sarif || exit 0",
     "test:user:report": "dotnet test ./services/user-service/user-service.sln --logger \"trx;LogFileName=./services/user-service/report-tests.trx\" > ./services/user-service/report-tests.txt 2>&1 || exit 0",
 
@@ -71,8 +81,8 @@
 
     "clean": "npm run clean:all",
     "clean:all": "npm run clean:dist && npm run clean:modules",
-    "clean:dist": "rimraf ./services/*/dist ./shared/dist",
-    "clean:modules": "rimraf \"./node_modules\" \"./services/*/node_modules\" \"./shared/node_modules\" \"./services/user-service/**/bin\" \"./services/user-service/**/obj\"",
+    "clean:dist": "rimraf \"./services/api-gateway/dist\" \"./services/auth-service/dist\" \"./services/quote-service/dist\" \"./shared/dist\"",
+    "clean:modules": "rimraf \"node_modules\" \"services/api-gateway/node_modules\" \"services/auth-service/node_modules\" \"services/quote-service/node_modules\" \"services/frontend/node_modules\" \"shared/node_modules\" \"services/user-service/bin\" \"services/user-service/obj\"",
     "clean:reports": "node ./scripts/cleanReports.js",
 
     "lint": "npm run lint:all",
@@ -88,6 +98,7 @@
     "docker:clean": "docker-compose down -v",
     "docker:recreate": "docker-compose up -d --build --force-recreate",
     "docker:db": "docker-compose up -d rabbitmq quote-db auth-db user-db",
+    "docker:clean:sh": "bash ./scripts/clean-docker.sh",
 
     "dev": "docker compose --env-file .env.development up",
     "dev:build": "docker compose --env-file .env.development up --build",

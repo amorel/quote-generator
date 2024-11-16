@@ -1,0 +1,49 @@
+{
+  "panels": [
+    {
+      "title": "Requests per Path",
+      "targets": [
+        {
+          "expr": "rate(gateway_http_requests_total[5m])",
+          "legendFormat": "{{method}} {{path}}"
+        }
+      ]
+    },
+    {
+      "title": "Request Duration",
+      "targets": [
+        {
+          "expr": "rate(gateway_http_request_duration_seconds_sum[5m]) / rate(gateway_http_request_duration_seconds_count[5m])",
+          "legendFormat": "{{method}} {{path}}"
+        }
+      ]
+    },
+    {
+      "title": "HTTP Status Codes",
+      "targets": [
+        {
+          "expr": "sum(rate(gateway_http_requests_total[5m])) by (status)",
+          "legendFormat": "Status {{status}}"
+        }
+      ]
+    },
+    {
+      "title": "Proxy Requests by Service",
+      "targets": [
+        {
+          "expr": "rate(gateway_proxy_requests_total[5m])",
+          "legendFormat": "{{service}}"
+        }
+      ]
+    },
+    {
+      "title": "Authentication Failures",
+      "targets": [
+        {
+          "expr": "rate(gateway_auth_failures_total[5m])",
+          "legendFormat": "{{reason}}"
+        }
+      ]
+    }
+  ]
+}

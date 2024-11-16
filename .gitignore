@@ -88,3 +88,6 @@ temp/
 
 # Services
 services/user-service-old/
+
+# Build reports
+services/user-service/reports/

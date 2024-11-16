@@ -1,3 +1,4 @@
+/// <reference path="./types/fastify.d.ts" />
 import Fastify, {
   FastifyInstance,
   FastifyError,
@@ -10,6 +11,8 @@ import { NotFoundError } from "./interface/errors";
 import { TagController } from "./interface/api/controllers/TagController";
 import { AuthorController } from "./interface/api/controllers/AuthorController";
 import { QuoteController } from "./interface/api/controllers/QuoteController";
+import { quoteMetrics, register } from "./metrics";
+import { QuoteModel } from "./infrastructure/persistence/models/QuoteModel";
 
 interface QuoteQueryRequest {
   Querystring: {
@@ -41,6 +44,16 @@ interface AuthorParamsRequest {
 
 export async function build(): Promise<FastifyInstance> {
   const app = Fastify({ logger: true });
+  // Mettre à jour le nombre de citations actives toutes les 5 minutes
+  setInterval(async () => {
+    try {
+      const totalQuotes = await QuoteModel.countDocuments();
+      quoteMetrics.activeQuotes.set(totalQuotes);
+    } catch (error) {
+      console.error("Error updating active quotes metric:", error);
+    }
+  }, 5 * 60 * 1000);
+
   console.log("Starting app initialization...");
   const container = await Container.getInstance();
   console.log("Container initialized");
@@ -116,6 +129,11 @@ export async function build(): Promise<FastifyInstance> {
 
   // Routes
   app.get("/health", async () => ({ status: "ok" }));
+  
+  // Route pour exposer les métriques
+  app.get("/metrics", async (request, reply) => {
+    return reply.type("text/plain").send(await register.metrics());
+  });
 
   console.log("Registering quote routes...");
   app.get<QuoteQueryRequest>(
@@ -493,6 +511,31 @@ export async function build(): Promise<FastifyInstance> {
       }
     }
   );
+
+  // Hook pour mesurer la durée des requêtes
+  app.addHook("onRequest", (request, reply, done) => {
+    request.metrics = {
+      startTime: process.hrtime(),
+    };
+    done();
+  });
+
+  app.addHook("onResponse", (request, reply, done) => {
+    const { startTime } = request.metrics;
+    const [seconds, nanoseconds] = process.hrtime(startTime);
+    const duration = seconds + nanoseconds / 1e9;
+
+    quoteMetrics.requestDuration.observe(
+      {
+        method: request.method,
+        path: request.url,
+        status: reply.statusCode.toString(),
+      },
+      duration
+    );
+
+    done();
+  });
 
   await app.ready();
   console.log("\nRegistered routes:");

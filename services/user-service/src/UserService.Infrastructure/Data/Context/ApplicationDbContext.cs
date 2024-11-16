@@ -36,7 +36,9 @@ namespace UserService.Infrastructure.Data
 
                 entity.HasOne(e => e.User)
                     .WithMany()
-                    .HasForeignKey(e => e.UserId);
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade) 
+                    .IsRequired();
             });
         }
     }

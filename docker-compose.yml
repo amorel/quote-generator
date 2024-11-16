@@ -21,20 +21,6 @@ services:
     networks:
       - back-network
     restart: unless-stopped
-    # healthcheck:
-    #   test:
-    #     [
-    #       "CMD",
-    #       "wget",
-    #       "--no-verbose",
-    #       "--tries=1",
-    #       "--spider",
-    #       "http://localhost:3000/health",
-    #     ]
-    #   interval: 10s
-    #   timeout: 5s
-    #   retries: 5
-    #   start_period: 30s
     depends_on:
       shared:
         condition: service_completed_successfully
@@ -55,24 +41,7 @@ services:
     networks:
       - back-network
       - front-network
-    # healthcheck:
-    #   test:
-    #     [
-    #       "CMD",
-    #       "wget",
-    #       "--no-verbose",
-    #       "--tries=1",
-    #       "--spider",
-    #       "http://localhost:3000/health",
-    #     ]
-    #   interval: 10s
-    #   timeout: 5s
-    #   retries: 5
-    #   start_period: 30s
     restart: unless-stopped
-    # depends_on:
-    #   auth-service:
-    #     condition: service_healthy
 
   frontend:
     build:
@@ -101,9 +70,6 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
-    # depends_on:
-    #   api-gateway:
-    #     condition: service_healthy
 
   quote-service:
     build:
@@ -118,20 +84,6 @@ services:
       - PORT=3002
     networks:
       - back-network
-    # healthcheck:
-    #   test:
-    #     [
-    #       "CMD",
-    #       "wget",
-    #       "--no-verbose",
-    #       "--tries=1",
-    #       "--spider",
-    #       "http://localhost:3002/health",
-    #     ]
-    #   interval: 10s
-    #   timeout: 5s
-    #   retries: 5
-    #   start_period: 30s
     restart: unless-stopped
     depends_on:
       shared:
@@ -216,6 +168,27 @@ services:
       retries: 5
       start_period: 30s
 
+  mongodb-exporter:
+    image: bitnami/mongodb-exporter:latest
+    environment:
+      - MONGODB_URI=mongodb://admin:password@quote-db:27017,auth-db:27018?authSource=admin
+    command:
+      - '--web.listen-address=:9216'
+      - '--collect-all'
+    depends_on:
+      - quote-db
+      - auth-db
+    ports:
+      - "9216:9216"
+    networks:
+      - back-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9216/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
   user-db:
     image: postgres:15-alpine
     ports:
@@ -246,6 +219,7 @@ services:
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER:-admin}
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS:-password}
       - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbit disk_free_limit 2147483648
+      - RABBITMQ_ENABLE_PROMETHEUS=true
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
@@ -258,11 +232,66 @@ services:
       start_period: 20s
     restart: unless-stopped
 
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - back-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  grafana:
+    image: grafana/grafana
+    depends_on:
+      - prometheus
+    ports:
+      - "3100:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+    networks:
+      - back-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  node-exporter:
+    image: prom/node-exporter
+    container_name: node-exporter
+    restart: unless-stopped
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.rootfs=/rootfs"
+      - "--path.sysfs=/host/sys"
+      - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
+    expose:
+      - 9100
+    networks:
+      - back-network
+
 volumes:
   auth-data:
   quote-data:
   postgres_data:
   rabbitmq_data:
+  grafana-data:
 
 networks:
   front-network:

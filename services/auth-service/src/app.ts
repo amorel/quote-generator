@@ -2,16 +2,25 @@
 import Fastify, { FastifyReply, FastifyRequest } from "fastify";
 import authRoutes from "./routes/auth";
 import { AuthService } from "./services/AuthService";
+import promClient from "prom-client";
+
+// Initialiser le registre
+const register = new promClient.Registry();
 
 export async function build(authService?: AuthService) {
   const app = Fastify({ logger: true });
 
+  // Route pour exposer les métriques
+  app.get("/metrics", async (request, reply) => {
+    return reply.type("text/plain").send(await register.metrics());
+  });
+
   const service = authService || new AuthService();
 
   // Enregistrer les routes d'authentification
-  await app.register(authRoutes, { 
+  await app.register(authRoutes, {
     prefix: "/auth",
-    authService: service
+    authService: service,
   });
 
   app.get("/health", async () => ({ status: "ok" }));

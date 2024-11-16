@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      
+      # Installation des dépendances
+      - name: Install dependencies
+        run: npm run install:all
+      
+      # Build des projets
+      - name: Build
+        run: npm run build:all
+      
+      # Tests
+      - name: Run tests
+        run: npm run test:all
+        
+      # Lint
+      - name: Run linting
+        run: npm run lint
+      
+      # Test Docker build
+      - name: Build Docker images
+        run: docker-compose build
+
+      # Test Docker startup
+      - name: Test Docker Compose
+        run: |
+          docker-compose up -d
+          sleep 30
+          curl http://localhost:3000/health
+          docker-compose down

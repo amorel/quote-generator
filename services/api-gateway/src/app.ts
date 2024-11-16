@@ -7,6 +7,7 @@ import Fastify, {
 } from "fastify";
 import cors from "@fastify/cors";
 import { AuthService } from "./services/AuthService";
+import { register, gatewayMetrics } from "./metrics";
 
 export async function build(): Promise<FastifyInstance> {
   const app = Fastify({ logger: true });
@@ -23,6 +24,7 @@ export async function build(): Promise<FastifyInstance> {
     "/auth/login",
     "/auth/register",
     "/auth/validate",
+    "/metrics",
   ];
 
   // Hook global pour l'authentification
@@ -40,6 +42,7 @@ export async function build(): Promise<FastifyInstance> {
 
       const token = request.headers.authorization?.replace("Bearer ", "");
       if (!token) {
+        gatewayMetrics.authFailures.inc({ reason: "missing_token" });
         return reply.code(401).send({ error: "Non autorisé" });
       }
 
@@ -51,6 +54,7 @@ export async function build(): Promise<FastifyInstance> {
         request.headers["x-user-email"] = userData.email;
         request.user = userData;
       } catch (error) {
+        gatewayMetrics.authFailures.inc({ reason: "invalid_token" });
         console.error("Erreur d'authentification:", error);
         return reply.code(401).send({ error: "Erreur d'authentification" });
       }
@@ -143,6 +147,60 @@ export async function build(): Promise<FastifyInstance> {
     prefix: "/users",
     upstream: userServiceUrl,
     rewritePrefix: "/users",
+  });
+
+  // Ajouter une route pour les métriques
+  app.get("/metrics", async (request, reply) => {
+    return reply.type("text/plain").send(await register.metrics());
+  });
+
+  // Ajouter un hook pour enregistrer les métriques
+  app.addHook("onRequest", (request, reply, done) => {
+    request.metrics = {
+      startTime: process.hrtime(),
+    };
+    done();
+  });
+
+  app.addHook("onResponse", (request, reply, done) => {
+    const { startTime } = request.metrics;
+    const [seconds, nanoseconds] = process.hrtime(startTime);
+    const duration = seconds + nanoseconds / 1e9;
+
+    gatewayMetrics.httpRequestsTotal.inc({
+      method: request.method,
+      path: request.routerPath || request.url,
+      status: reply.statusCode,
+    });
+
+    gatewayMetrics.httpRequestDuration.observe(
+      {
+        method: request.method,
+        path: request.routerPath || request.url,
+        status: reply.statusCode,
+      },
+      duration
+    );
+
+    // Traquer les requêtes proxy par service
+    if (request.url.includes("/auth")) {
+      gatewayMetrics.proxyRequests.inc({
+        service: "auth",
+        status: reply.statusCode,
+      });
+    } else if (request.url.includes("/quotes")) {
+      gatewayMetrics.proxyRequests.inc({
+        service: "quote",
+        status: reply.statusCode,
+      });
+    } else if (request.url.includes("/users")) {
+      gatewayMetrics.proxyRequests.inc({
+        service: "user",
+        status: reply.statusCode,
+      });
+    }
+
+    done();
   });
 
   return app;

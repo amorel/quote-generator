@@ -60,6 +60,22 @@ namespace UserService.Infrastructure.Repositories
                 _logger.LogInformation("[REPOSITORY] Adding favorite quote. UserId: {UserId}, QuoteId: {QuoteId}",
                     userId, quoteId);
 
+                // Vérifier d'abord si l'utilisateur existe
+                var user = await _context.Users.FindAsync(userId);
+                if (user == null)
+                {
+                    throw new InvalidOperationException($"User with ID {userId} not found");
+                }
+
+                // Vérifier si le favori existe déjà
+                var existingFavorite = await _context.FavoriteQuotes
+                    .FirstOrDefaultAsync(f => f.UserId == userId && f.QuoteId == quoteId);
+
+                if (existingFavorite != null)
+                {
+                    return; // Le favori existe déjà
+                }
+
                 var favoriteQuote = new FavoriteQuote
                 {
                     Id = Guid.NewGuid().ToString(),

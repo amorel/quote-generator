@@ -4,6 +4,7 @@ import { GetQuoteByIdUseCase } from "../../../application/use-cases/quotes/GetQu
 import { QuoteFilters } from "../../../domain/value-objects/QuoteFilters";
 import { NotFoundError } from "../../errors";
 import { ToggleQuoteFavoriteUseCase } from "@/application/use-cases/quotes/ToggleQuoteFavorite";
+import { quoteMetrics } from "../../../metrics";
 
 // Interface pour typer la query
 interface QuoteQuerystring {
@@ -28,6 +29,7 @@ export class QuoteController {
 
   async getRandomQuotes(request: QuoteRequest, _reply: FastifyReply) {
     try {
+      quoteMetrics.randomGenerations.inc();
       const filters = QuoteFilters.create({
         limit: request.query.limit,
         maxLength: request.query.maxLength,
@@ -41,6 +43,9 @@ export class QuoteController {
         filters
       );
       const quotes = await this.getRandomQuotesUseCase.execute(filters);
+      quoteMetrics.viewsTotal.inc({
+        quote_id: quotes[0]._id
+      });
       console.log("QuoteController: Quotes retrieved:", quotes);
       return quotes;
     } catch (error) {
@@ -81,6 +86,7 @@ export class QuoteController {
     try {
       const userId = request.headers["x-user-id"] as string;
       const quoteId = request.params.id;
+      quoteMetrics.favoritesTotal.inc({ quote_id: quoteId });
       const isFavorite = request.method === "POST";
 
       console.log("⭐ Toggle favorite debug:", {

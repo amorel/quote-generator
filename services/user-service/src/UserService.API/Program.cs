@@ -4,13 +4,9 @@ using UserService.Core.Interfaces.Repositories;
 using UserService.Infrastructure.Repositories;
 using UserService.Infrastructure.Messaging;
 using UserService.Core.Interfaces.Services;
-using UserService.Core.Services;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.OpenApi.Models;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.Hosting;
+using Prometheus;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -127,6 +123,8 @@ else
     }
 }
 
+app.UseMetricServer();
+app.UseHttpMetrics();
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
