@@ -29,7 +29,9 @@ export class QuoteController {
 
   async getRandomQuotes(request: QuoteRequest, _reply: FastifyReply) {
     try {
+      console.log("⏱️ Incrementing random generations metric");
       quoteMetrics.randomGenerations.inc();
+      
       const filters = QuoteFilters.create({
         limit: request.query.limit,
         maxLength: request.query.maxLength,
@@ -43,8 +45,11 @@ export class QuoteController {
         filters
       );
       const quotes = await this.getRandomQuotesUseCase.execute(filters);
-      quoteMetrics.viewsTotal.inc({
-        quote_id: quotes[0]._id
+
+      console.log("⏱️ Incrementing views metric for quotes:", quotes.map(q => q._id));
+      // Incrémenter les vues pour chaque citation
+      quotes.forEach((quote) => {
+        quoteMetrics.viewsTotal.inc({ quote_id: quote._id });
       });
       console.log("QuoteController: Quotes retrieved:", quotes);
       return quotes;
@@ -62,6 +67,8 @@ export class QuoteController {
   ) {
     try {
       const quote = await this.getQuoteByIdUseCase.execute(request.params.id);
+      // Incrémenter le compteur de vues
+      quoteMetrics.viewsTotal.inc({ quote_id: quote._id });
       return reply.send(quote);
     } catch (error) {
       if (error instanceof NotFoundError) {
@@ -88,6 +95,13 @@ export class QuoteController {
       const quoteId = request.params.id;
       quoteMetrics.favoritesTotal.inc({ quote_id: quoteId });
       const isFavorite = request.method === "POST";
+
+      if (isFavorite) {
+        quoteMetrics.favoritesTotal.inc({ 
+          quote_id: quoteId,
+          user_id: userId
+        });
+      }
 
       console.log("⭐ Toggle favorite debug:", {
         userId,

@@ -34,7 +34,7 @@ export const toggleFavorite = createAsyncThunk(
   async (quoteId: string, { getState }) => {
     const state = getState() as { quote: QuoteState };
     const isFavorite = state.quote.favorites.includes(quoteId);
-
+    
     try {
       await quoteService.toggleFavorite(quoteId, !isFavorite);
       return { quoteId, isFavorite: !isFavorite };

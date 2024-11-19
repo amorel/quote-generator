@@ -1,4 +1,3 @@
-#yaml-schema: grafana
 apiVersion: 1
 
 datasources:
@@ -9,4 +8,6 @@ datasources:
     isDefault: true
     editable: true
     jsonData:
-      timeInterval: "15s"
+      timeInterval: "5s"
+      httpMethod: "POST"
+    version: 1

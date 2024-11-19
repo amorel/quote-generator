@@ -6,6 +6,7 @@ import { useAppDispatch } from "../../hooks/useAppDispatch";
 import { useAppSelector } from "../../hooks/useAppSelector";
 import { useAuth } from "../../contexts/AuthContext";
 import { FavoriteButton } from "./FavoriteButton";
+import { isAuthError } from "../../utils/errorHandler";
 
 export const Quote = () => {
   const { isAuthenticated } = useAuth();
@@ -18,8 +19,8 @@ export const Quote = () => {
   const handleToggleFavorite = async (quoteId: string) => {
     try {
       await dispatch(toggleFavorite(quoteId)).unwrap();
-    } catch (error: unknown) {
-      if (error instanceof Error && error.message.includes("Session expirée")) {
+    } catch (error) {
+      if (isAuthError(error)) {
         navigate("/login");
       }
     }
@@ -27,9 +28,13 @@ export const Quote = () => {
 
   useEffect(() => {
     if (isAuthenticated && !current) {
-      dispatch(fetchRandomQuote());
+      dispatch(fetchRandomQuote()).catch((error) => {
+        if (isAuthError(error)) {
+          navigate("/login");
+        }
+      });
     }
-  }, [dispatch, isAuthenticated, current]);
+  }, [dispatch, isAuthenticated, current, navigate]);
 
   if (!isAuthenticated) {
     return <div>Veuillez vous connecter pour voir les citations</div>;

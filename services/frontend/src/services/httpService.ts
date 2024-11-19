@@ -1,3 +1,4 @@
+import { AuthError, AppError, handleError } from "../utils/errorHandler";
 import { tokenService } from "./tokenService";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
@@ -20,45 +21,43 @@ class HttpService {
     endpoint: string,
     config: RequestConfig = {}
   ): Promise<T> {
-    const token = tokenService.getToken();
-    // console.log("Token présent:", !!token);
-
-    // Créer les headers de base à partir des headers existants
-    const headers: CustomHeadersInit = {
-      ...(config.headers as CustomHeadersInit),
-    };
-
-    // Ajouter Content-Type seulement s'il n'est pas déjà défini
-    if (config.data) {
-      headers["Content-Type"] = "application/json";
-    }
-
-    // Ajouter le token d'autorisation s'il existe
-    if (token) {
-      headers.Authorization = `Bearer ${token}`;
-    }
-
-    const requestConfig: RequestInit = {
-      ...config,
-      headers,
-    };
-
-    if (config.data) {
-      requestConfig.body = JSON.stringify(config.data);
-    }
-
     try {
+      const token = tokenService.getToken();
+      const headers: CustomHeadersInit = {
+        ...(config.headers as CustomHeadersInit),
+      };
+
+      if (config.data) {
+        headers["Content-Type"] = "application/json";
+      }
+
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
+      const requestConfig: RequestInit = {
+        ...config,
+        headers,
+      };
+
+      if (config.data) {
+        requestConfig.body = JSON.stringify(config.data);
+      }
+
       const response = await fetch(`${API_URL}${endpoint}`, requestConfig);
 
       if (!response.ok) {
         if (response.status === 401) {
           window.dispatchEvent(new CustomEvent("auth:required"));
-          throw new Error("Session expirée. Veuillez vous reconnecter.");
+          throw new AuthError();
         }
 
         const errorData = await response.json().catch(() => null);
-        throw new Error(
-          errorData?.message || response.statusText || "Une erreur est survenue"
+        throw new AppError(
+          errorData?.message ||
+            response.statusText ||
+            "Une erreur est survenue",
+          `HTTP_${response.status}`
         );
       }
 
@@ -68,10 +67,7 @@ class HttpService {
 
       return response as unknown as T;
     } catch (error) {
-      if (error instanceof Error) {
-        throw error;
-      }
-      throw new Error("Une erreur réseau est survenue");
+      return handleError(error, `HTTP Request ${endpoint}`);
     }
   }
 
