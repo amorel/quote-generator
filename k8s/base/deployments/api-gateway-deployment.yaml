@@ -15,7 +15,7 @@ spec:
    spec:
      containers:
        - name: api-gateway
-         image: quote-generator-api-gateway:${TAG}
+         image: quote-generator-api-gateway
          imagePullPolicy: Never
          ports:
            - containerPort: 3000

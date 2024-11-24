@@ -28,7 +28,12 @@ for service in shared api-gateway auth-service quote-service user-service; do
     minikube image load quote-generator-$service:$TAG || error_exit "Échec du chargement de l'image $service"
 done
 
-echo -e "${GREEN}4. Déploiement des services...${NC}"
+echo -e "${GREEN}4. Préparation des fichiers de monitoring...${NC}"
+echo "Génération des configurations Grafana..."
+./scripts/prepare-k8s.sh || error_exit "Échec de la préparation des fichiers de monitoring"
+
+
+echo -e "${GREEN}5. Déploiement des services...${NC}"
 echo "Application des configurations Kubernetes avec la version $TAG..."
 kubectl apply -k k8s/base || error_exit "Échec du déploiement Kubernetes"
 
@@ -44,14 +49,14 @@ echo "Redémarrage services dépendants..."
 kubectl rollout restart deployment -n quote-generator quote-service user-service
 
 # Attente du démarrage des pods
-echo -e "${GREEN}5. Attente du démarrage des pods (30s)...${NC}"
+echo -e "${GREEN}6. Attente du démarrage des pods (30s)...${NC}"
 sleep 30
 
-echo -e "${GREEN}6. État des pods :${NC}"
+echo -e "${GREEN}7. État des pods :${NC}"
 kubectl get pods -n quote-generator
 
 # Vérification des versions déployées
-echo -e "${GREEN}6.1. Vérification des versions déployées :${NC}"
+echo -e "${GREEN}7.1. Vérification des versions déployées :${NC}"
 for service in api-gateway auth-service quote-service user-service; do
     DEPLOYED_VERSION=$(kubectl get deployment $service -n quote-generator -o jsonpath="{.spec.template.spec.containers[0].image}" | cut -d: -f2)
     if [ "$DEPLOYED_VERSION" = "$TAG" ]; then
@@ -61,9 +66,9 @@ for service in api-gateway auth-service quote-service user-service; do
     fi
 done
 
-echo -e "${GREEN}7. Configuration des tunnels...${NC}"
+echo -e "${GREEN}8. Configuration des tunnels...${NC}"
 # Fermeture des tunnels existants
-pkill -f "minikube service"
+taskkill /F /IM "minikube.exe" /FI "WINDOWTITLE eq minikube service*" > nul 2>&1 || true
 
 # Création des tunnels en arrière-plan
 nohup minikube service api-gateway-service -n quote-generator > gateway-tunnel.log 2>&1 &

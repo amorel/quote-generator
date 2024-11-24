@@ -1,6 +1,6 @@
 #!/bin/bash
 # Arrêt des tunnels existants
-pkill -f "minikube service"
+taskkill /F /IM "minikube.exe" /FI "WINDOWTITLE eq minikube service*" > nul 2>&1 || true
 
 # Démarrage des nouveaux tunnels
 nohup minikube service api-gateway-service -n quote-generator > gateway-tunnel.log 2>&1 &

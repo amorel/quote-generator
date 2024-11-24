@@ -1,38 +1,40 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
- name: grafana 
- namespace: quote-generator
+  name: grafana 
+  namespace: quote-generator
 spec:
- replicas: 1
- selector:
-   matchLabels:
-     app: grafana
- template:
-   metadata:
-     labels:
-       app: grafana
-   spec:
-     containers:
-       - name: grafana
-         image: grafana/grafana
-         ports:
-           - containerPort: 3000
-         resources:
-           requests:
-             cpu: "100m"
-             memory: "128Mi"
-           limits:
-             cpu: "300m"
-             memory: "256Mi"
-         volumeMounts:
-           - name: grafana-storage
-             mountPath: /var/lib/grafana
-           - name: grafana-config
-             mountPath: /etc/grafana
-           - name: grafana-dashboards
-             mountPath: /etc/grafana/dashboards
-     volumes:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+        - name: grafana
+          image: grafana/grafana
+          ports:
+            - containerPort: 3000
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "300m"
+              memory: "256Mi"
+          volumeMounts:
+            - name: grafana-storage
+              mountPath: /var/lib/grafana
+            - name: grafana-config
+              mountPath: /etc/grafana
+            - name: dashboards
+              mountPath: /etc/grafana/dashboards
+            - name: provisioning
+              mountPath: /etc/grafana/provisioning
+      volumes:
         - name: grafana-storage
           emptyDir: {}
         - name: grafana-config
@@ -48,3 +50,13 @@ spec:
                 path: quotes-dashboard.json
               - key: api-gateway.json
                 path: api-gateway.json
+              - key: system-metrics.json
+                path: system-metrics.json
+        - name: provisioning
+          configMap:
+            name: grafana-provisioning
+            items:
+              - key: prometheus.yaml
+                path: datasources/prometheus.yaml
+              - key: default.yaml
+                path: dashboards/default.yaml

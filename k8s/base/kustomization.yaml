@@ -62,13 +62,27 @@ configMapGenerator:
   behavior: create
   envs:
   - config/.env  
-  literals:    # Surcharges et variables supplémentaires pour Kubernetes
+  literals:    
   - ConnectionStrings__DefaultConnection=Host=user-db;Port=5432;Database=userservice;Username=postgres;Password=postgres
 
 - name: grafana-config
   behavior: create
-  literals:
-  - grafana.ini=configs/grafana.ini
+  files:
+  - grafana.ini=./config/grafana.ini
+
+- name: grafana-dashboards-config
+  behavior: create
+  files:
+  - services-overview.json=monitoring/generated/grafana/dashboards/services-overview.json
+  - quotes-dashboard.json=monitoring/generated/grafana/dashboards/quotes-dashboard.json
+  - api-gateway.json=monitoring/generated/grafana/dashboards/api-gateway.json
+  - system-metrics.json=monitoring/generated/grafana/dashboards/system-metrics.json
+
+- name: grafana-provisioning
+  behavior: create
+  files:
+  - prometheus.yaml=monitoring/generated/grafana/provisioning/datasources/prometheus.yaml
+  - default.yaml=monitoring/generated/grafana/provisioning/dashboards/default.yaml
 
 secretGenerator:
 - name: app-secrets
