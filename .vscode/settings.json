@@ -1,7 +1,8 @@
 {
-    "yaml.schemas": {
-      "https://raw.githubusercontent.com/grafana/grafana/main/conf/provisioning/datasources/sample.yaml": [
-        "monitoring/grafana/provisioning/datasources/*.{yml,yaml}"
-      ]
-    }
+  "yaml.schemas": {
+    "https://raw.githubusercontent.com/grafana/grafana/main/conf/provisioning/datasources/sample.yaml": [
+      "monitoring/grafana/provisioning/datasources/*.{yml,yaml}",
+      "k8s/base/monitoring/generated/grafana/provisioning/datasources/*.{yml,yaml}"
+    ]
   }
+}

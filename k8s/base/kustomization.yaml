@@ -22,8 +22,8 @@ resources:
   - deployments/mongodb-deployments.yaml
   - deployments/postgres-deployment.yaml
   - deployments/rabbitmq-deployment.yaml
-  - monitoring/prometheus.yaml
-  - monitoring/grafana.yaml
+  - deployments/grafana-deployment.yaml
+  - deployments/prometheus-deployment.yaml
   - config/prometheus-config.yaml
   - config/rabbitmq-config.yaml
 
@@ -73,16 +73,16 @@ configMapGenerator:
 - name: grafana-dashboards-config
   behavior: create
   files:
-  - services-overview.json=monitoring/generated/grafana/dashboards/services-overview.json
-  - quotes-dashboard.json=monitoring/generated/grafana/dashboards/quotes-dashboard.json
-  - api-gateway.json=monitoring/generated/grafana/dashboards/api-gateway.json
-  - system-metrics.json=monitoring/generated/grafana/dashboards/system-metrics.json
+    - monitoring/generated/grafana/dashboards/services-overview.json
+    - monitoring/generated/grafana/dashboards/quotes-dashboard.json
+    - monitoring/generated/grafana/dashboards/api-gateway.json
+    - monitoring/generated/grafana/dashboards/system-metrics.json
 
 - name: grafana-provisioning
   behavior: create
   files:
-  - prometheus.yaml=monitoring/generated/grafana/provisioning/datasources/prometheus.yaml
-  - default.yaml=monitoring/generated/grafana/provisioning/dashboards/default.yaml
+    - prometheus.yaml=monitoring/generated/grafana/provisioning/datasources/prometheus.yaml
+    - default.yaml=monitoring/generated/grafana/provisioning/dashboards/default.yaml
 
 secretGenerator:
 - name: app-secrets
