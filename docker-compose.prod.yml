@@ -5,6 +5,8 @@ services:
       dockerfile: shared/Dockerfile
       args:
         NODE_ENV: production
+    image: quote-generator-shared:${TAG}
+    
 
   auth-service:
     build:
@@ -12,6 +14,7 @@ services:
       dockerfile: services/auth-service/Dockerfile
       args:
         NODE_ENV: production
+    image: quote-generator-auth-service:${TAG}
     ports:
       - "3001:3001"
     environment:
@@ -33,6 +36,7 @@ services:
       dockerfile: services/api-gateway/Dockerfile
       args:
         NODE_ENV: production
+    image: quote-generator-api-gateway:${TAG}
     ports:
       - "3000:3000"
     environment:
@@ -52,6 +56,7 @@ services:
     build:
       context: .
       dockerfile: services/frontend/Dockerfile.prod
+    image: quote-generator-frontend:${TAG}
     ports:
       - "80:80" # Utilisation de nginx en production
     environment:
@@ -67,6 +72,7 @@ services:
       dockerfile: services/quote-service/Dockerfile
       args:
         NODE_ENV: production
+    image: quote-generator-quote-service:${TAG}
     ports:
       - "3002:3002"
     environment:
@@ -88,6 +94,7 @@ services:
       dockerfile: services/user-service/Dockerfile
       args:
         NODE_ENV: production
+    image: quote-generator-user-service:${TAG}
     ports:
       - "3003:3003"
     environment:

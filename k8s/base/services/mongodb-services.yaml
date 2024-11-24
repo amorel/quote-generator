@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-db
+  namespace: quote-generator
+spec:
+  ports:
+    - port: 27017
+      targetPort: 27017
+  selector:
+    app: auth-db
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: quote-db
+  namespace: quote-generator
+spec:
+  ports:
+    - port: 27017
+      targetPort: 27017
+  selector:
+    app: quote-db

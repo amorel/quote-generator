@@ -22,19 +22,17 @@ import { ToggleQuoteFavoriteUseCase } from "./application/use-cases/quotes/Toggl
 
 export class Container {
   private static instance: Container;
+  private initialized: boolean = false;
   private services: Map<string, any> = new Map();
   private useCases: Map<string, any> = new Map();
   private presenters: Map<string, any> = new Map();
   private controllers: Map<string, any> = new Map();
 
-  private constructor() {
-    this.initializeMessaging();
-    this.initializeQuoteServices();
-    this.initializeAuthorServices();
-    this.initializeTagServices();
-  }
+  private constructor() {}
 
   private async initializeMessaging() {
+    console.log(`RABBITMQ_URL: ${process.env.RABBITMQ_URL}`);
+
     const rabbitMQConfig: RabbitMQConfig = {
       url: process.env.RABBITMQ_URL || "amqp://admin:password@localhost:5672",
       serviceName: "quote-service",
@@ -48,6 +46,7 @@ export class Container {
     // Attendre la connexion
     try {
       await rabbitMQClient.connect();
+      this.services.set("rabbitMQClient", rabbitMQClient);
       console.log("✅ RabbitMQ connected successfully");
       this.services.set("rabbitMQClient", rabbitMQClient);
     } catch (error) {
@@ -149,16 +148,22 @@ export class Container {
   static async getInstance(): Promise<Container> {
     if (!Container.instance) {
       Container.instance = new Container();
-      await Container.instance.initializeServices();
+      await Container.instance.initialize();
+    } else if (!Container.instance.initialized) {
+      await Container.instance.initialize();
     }
     return Container.instance;
   }
 
-  private async initializeServices() {
+  private async initialize() {
+    if (this.initialized) return;
+
     await this.initializeMessaging();
     this.initializeQuoteServices();
     this.initializeAuthorServices();
     this.initializeTagServices();
+
+    this.initialized = true;
   }
 
   get<T>(serviceName: string): T {

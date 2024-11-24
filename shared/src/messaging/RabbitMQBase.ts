@@ -16,9 +16,6 @@ export class RabbitMQBase {
       prefetch: 1,
       ...config,
     };
-    this.connect().catch((error) => {
-      console.error(`Failed to connect to RabbitMQ:`, error);
-    });
   }
 
   private async setupQueueBindings(): Promise<void> {
@@ -261,6 +258,7 @@ export class RabbitMQBase {
       const message = JSON.parse(msg.content.toString()) as EventMessage<T>;
       await handler(message);
       this.channel.ack(msg);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       const retryCount = (msg.properties.headers?.["x-retry-count"] || 0) + 1;
       const maxRetries = 3;

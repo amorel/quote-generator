@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: user-db
+ namespace: quote-generator
+spec:
+ selector:
+   matchLabels:
+     app: user-db
+ template:
+   metadata:
+     labels:
+       app: user-db
+   spec:
+     containers:
+     - name: postgres
+       image: postgres:15
+       env:
+       - name: POSTGRES_PASSWORD
+         valueFrom:
+           secretKeyRef:
+             name: app-secrets
+             key: POSTGRES_PASSWORD
+       - name: POSTGRES_USER
+         value: postgres
+       - name: POSTGRES_DB
+         value: userservice
+       ports:
+       - containerPort: 5432
+       resources:
+         requests:
+           memory: "256Mi"
+           cpu: "100m"
+         limits:
+           memory: "512Mi" 
+           cpu: "200m"

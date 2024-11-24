@@ -7,7 +7,13 @@ RUN cd shared && npm install && npm run build
 
 # Service dependencies
 COPY services/auth-service ./services/auth-service
-RUN cd services/auth-service && npm install && npm run build
-
 WORKDIR /app/services/auth-service
+
+# Build et debug
+RUN npm install && \
+    npm run build && \
+    echo "=== Contenu de database.js ===" && \
+    cat dist/src/config/database.js && \
+    echo "=== Fin du fichier ==="
+
 CMD ["npm", "start"]

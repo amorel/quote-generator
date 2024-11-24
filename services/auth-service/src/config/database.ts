@@ -36,6 +36,15 @@ let lastError: Error | null = null;
 
 export async function connectDB() {
   try {
+    console.log("=== START DEBUG INFO ===\n");
+    console.log(`NODE_ENV: ${process.env.NODE_ENV}\n`);
+    console.log(`MONGO_PORT: ${process.env.MONGO_PORT}\n`);
+    console.log(`MONGO_HOST_AUTH: ${process.env.MONGO_HOST_AUTH}\n`);
+    console.log(
+      "Config:",
+      config[(process.env.NODE_ENV as EnvironmentKey) || "development"]
+    );
+    console.log("================================");
     // Si on est en environnement de test et qu'on veut utiliser une BD en mémoire
     if (
       process.env.NODE_ENV === "test" &&
@@ -57,18 +66,40 @@ export async function connectDB() {
     const env = (process.env.NODE_ENV || "development") as EnvironmentKey;
     const envConfig = config[env];
 
+    console.log("Current config:\n");
+    console.log(JSON.stringify(config[env], null, 2) + "\n");
+
     // Récupère les variables d'environnement ou utilise les valeurs par défaut
     const username =
       process.env.MONGO_INITDB_ROOT_USERNAME || envConfig.username;
     const password =
       process.env.MONGO_INITDB_ROOT_PASSWORD || envConfig.password;
     const host = process.env.MONGO_HOST_AUTH || envConfig.host;
-    const port = process.env.MONGO_PORT_INTERNAL_EXTERNAL || envConfig.port;
+    const port = process.env.MONGO_PORT || envConfig.port;
+    console.log(`Final values:\n`);
+    console.log(`host: ${host}\n`);
+    console.log(`port: ${port}\n`);
     const database = process.env.MONGO_DATABASE_AUTH || envConfig.database;
     const options = process.env.MONGO_OPTIONS || envConfig.options;
 
+    console.log("Debug - Variables for URI construction:", {
+      username,
+      // password: '<hidden>',
+      host,
+      port,
+      database,
+      options,
+      env,
+      envConfig,
+    });
     // Construit l'URI de connexion
     const uri = `mongodb://${username}:${password}@${host}:${port}/${database}${options}`;
+    console.log(
+      "Debug - Final URI:",
+      uri.replace(/\/\/.*@/, "//<credentials>@")
+    );
+    console.log(`Debug - Final URI: ${uri.replace(/\/\/.*@/, "//<credentials>@")}\n`);
+    console.log("=== END DEBUG INFO ===\n");
 
     // Configure Mongoose
     mongoose.set("strictQuery", true);
@@ -79,8 +110,6 @@ export async function connectDB() {
       socketTimeoutMS: 45000,
       family: 4,
     };
-
-    console.log(uri);
 
     // Tentative de connexion
     await mongoose.connect(uri, mongooseOptions);
@@ -101,7 +130,7 @@ export async function connectDB() {
     // Gestion des événements de connexion
     mongoConnection.on("error", (error: Error) => {
       lastError = error;
-      console.error("❌ MongoDB connection error:", error);
+      console.error("❌ MongoDB connection error (On):", error);
     });
 
     mongoConnection.on("disconnected", () => {
@@ -129,7 +158,7 @@ export async function connectDB() {
   } catch (error) {
     lastError = error instanceof Error ? error : new Error("Unknown error");
 
-    console.error("❌ MongoDB connection error:");
+    console.error("❌ MongoDB connection error (Catch):");
     console.error("Error details:", {
       message: error instanceof Error ? error.message : "Unknown error",
       stack: error instanceof Error ? error.stack : undefined,

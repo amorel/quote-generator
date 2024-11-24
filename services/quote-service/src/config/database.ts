@@ -45,13 +45,14 @@ export async function connectDB() {
     const password =
       process.env.MONGO_INITDB_ROOT_PASSWORD || envConfig.password;
     const host = process.env.MONGO_HOST_QUOTE || envConfig.host;
-    const port = process.env.MONGO_PORT_INTERNAL_EXTERNAL || envConfig.port;
+    const port = process.env.MONGO_PORT || envConfig.port;
     const database = process.env.MONGO_DATABASE_QUOTE || envConfig.database;
     const options = process.env.MONGO_OPTIONS || envConfig.options;
 
     // Construit l'URI de connexion
     const uri = `mongodb://${username}:${password}@${host}:${port}/${database}${options}`;
-
+    console.log("Connection URL:", uri);
+    
     // Configure Mongoose
     mongoose.set("strictQuery", true);
 
@@ -83,7 +84,7 @@ export async function connectDB() {
     // Gestion des événements de connexion
     mongoConnection.on("error", (error: Error) => {
       lastError = error;
-      console.error("❌ MongoDB connection error:", error);
+      console.error("❌ MongoDB connection error: (On)", error);
     });
 
     mongoConnection.on("disconnected", () => {
@@ -111,7 +112,7 @@ export async function connectDB() {
   } catch (error) {
     lastError = error instanceof Error ? error : new Error("Unknown error");
 
-    console.error("❌ MongoDB connection error:");
+    console.error("❌ MongoDB connection error: (Catch)");
     console.error("Error details:", {
       message: error instanceof Error ? error.message : "Unknown error",
       stack: error instanceof Error ? error.stack : undefined,
