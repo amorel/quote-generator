@@ -31,16 +31,16 @@ resources:
 images:
 - name: quote-generator-api-gateway
   newName: quote-generator-api-gateway
-  newTag: "v1.0.10"
+  newTag: "v1.0.11"
 - name: quote-generator-auth-service
   newName: quote-generator-auth-service
-  newTag: "v1.0.10"
+  newTag: "v1.0.11"
 - name: quote-generator-quote-service
   newName: quote-generator-quote-service
-  newTag: "v1.0.10"
+  newTag: "v1.0.11"
 - name: quote-generator-user-service
   newName: quote-generator-user-service
-  newTag: "v1.0.10"
+  newTag: "v1.0.11"
 - name: mongodb
   newName: mongo
   newTag: latest

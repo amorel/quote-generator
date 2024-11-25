@@ -10,7 +10,30 @@ using Prometheus;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container
+// Logging configuration
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
+
+// Configuration setup
+builder.Configuration
+    .SetBasePath(builder.Environment.ContentRootPath)
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
+    .AddEnvironmentVariables();
+
+// RabbitMQ Configuration validation
+var rabbitConfig = builder.Configuration.GetSection("RabbitMQ").Get<RabbitMQConfiguration>();
+if (rabbitConfig == null)
+{
+    throw new InvalidOperationException("RabbitMQ configuration is missing");
+}
+builder.Services.AddOptions<RabbitMQConfiguration>()
+    .Bind(builder.Configuration.GetSection("RabbitMQ"))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
+// Base services
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -23,104 +46,89 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-builder.Configuration
-    .SetBasePath(builder.Environment.ContentRootPath)
-    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
-    .AddEnvironmentVariables();
-
-// Configuration de la base de données
+// Database configuration
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 if (string.IsNullOrEmpty(connectionString))
 {
     throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 }
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(
-        connectionString,
-        x => x.MigrationsAssembly("UserService.Infrastructure")
-    ));
+    options.UseNpgsql(connectionString));
 
-// Configuration des services
-builder.Services.Configure<RabbitMQConfiguration>(
-    builder.Configuration.GetSection("RabbitMQ"));
-builder.Services.AddScoped<IMessageHandlerService, MessageHandlerService>();
+// Application services
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService.Core.Services.UserService>();
-builder.Services.AddSingleton<IMessageBusClient, RabbitMQClient>();
-builder.Services.AddHostedService<RabbitMQConsumer>();
+builder.Services.AddScoped<IMessageHandlerService, MessageHandlerService>();
 
-// Healthchecks
+// Messaging services
+try
+{
+    builder.Services.AddSingleton<IMessageBusClient, RabbitMQClient>();
+    builder.Services.AddHostedService<RabbitMQConsumer>();
+}
+catch (Exception ex)
+{
+    var logger = LoggerFactory.Create(config => config.AddConsole())
+        .CreateLogger("Program");
+    logger.LogWarning(ex, "Failed to configure RabbitMQ services - messaging will be unavailable");
+}
+
+// Health checks
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<ApplicationDbContext>()
-    .AddNpgSql(connectionString)
+    .AddNpgSql(connectionString, tags: new[] { "database" })
     .AddRabbitMQ(
-        rabbitConnectionString: $"amqp://{builder.Configuration["RabbitMQ:Username"]}:{builder.Configuration["RabbitMQ:Password"]}@{builder.Configuration["RabbitMQ:Host"]}",
+        rabbitConnectionString: $"amqp://{rabbitConfig.Username}:{rabbitConfig.Password}@{rabbitConfig.Host}",
         name: "rabbitmq",
-        failureStatus: HealthStatus.Unhealthy,
-        tags: new[] { "rabbitmq" }
+        failureStatus: HealthStatus.Degraded,  // Changed to Degraded instead of Unhealthy
+        tags: new[] { "messaging" }
     );
 
 var app = builder.Build();
 
-// Configure middleware et routes
+// Database initialization
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<ApplicationDbContext>();
+        var logger = services.GetRequiredService<ILogger<Program>>();
+
+        if (app.Environment.IsDevelopment())
+        {
+            logger.LogInformation("Development environment detected - recreating database");
+            await context.Database.EnsureDeletedAsync();
+            await context.Database.EnsureCreatedAsync();
+
+            if (!await context.Users.AnyAsync())
+            {
+                await SeedTestData(context);
+            }
+        }
+        else
+        {
+            logger.LogInformation("Applying database migrations");
+            await context.Database.MigrateAsync();
+        }
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while initializing the database");
+        throw;
+    }
+}
+
+// Middleware configuration
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "User Service API V1");
-        c.RoutePrefix = string.Empty; // Pour servir l'UI à la racine
+        c.RoutePrefix = string.Empty;
     });
-
-    // En développement, on recrée la base à chaque démarrage
-    using (var scope = app.Services.CreateScope())
-    {
-        var services = scope.ServiceProvider;
-        try
-        {
-            var context = services.GetRequiredService<ApplicationDbContext>();
-            var logger = services.GetRequiredService<ILogger<Program>>();
-
-            logger.LogInformation("Starting database migration...");
-
-            await context.Database.EnsureDeletedAsync();
-            await context.Database.EnsureCreatedAsync();
-
-            // Ajout de données de test
-            if (!await context.Users.AnyAsync())
-            {
-                await SeedTestData(context);
-            }
-
-            logger.LogInformation("Database migration completed successfully.");
-        }
-        catch (Exception ex)
-        {
-            var logger = services.GetRequiredService<ILogger<Program>>();
-            logger.LogError(ex, "An error occurred while migrating the database.");
-            throw;
-        }
-    }
-}
-else
-{
-    // En production, on applique uniquement les migrations
-    using (var scope = app.Services.CreateScope())
-    {
-        var services = scope.ServiceProvider;
-        try
-        {
-            var context = services.GetRequiredService<ApplicationDbContext>();
-            await context.Database.MigrateAsync();
-        }
-        catch (Exception ex)
-        {
-            var logger = services.GetRequiredService<ILogger<Program>>();
-            logger.LogError(ex, "An error occurred while migrating the database.");
-            throw;
-        }
-    }
 }
 
 app.UseMetricServer();

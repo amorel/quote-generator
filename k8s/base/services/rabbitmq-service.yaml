@@ -11,11 +11,11 @@ spec:
   ports:
     - name: amqp
       port: 5672
-      targetPort: amqp
+      targetPort: 5672    
     - name: management
       port: 15672
-      targetPort: management
+      targetPort: 15672   
     - name: prometheus
       port: 15692
-      targetPort: prometheus
+      targetPort: 15692   
   type: ClusterIP
