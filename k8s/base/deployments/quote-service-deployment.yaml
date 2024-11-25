@@ -32,7 +32,7 @@ spec:
             - |
               echo "=== Debug Info ==="
               echo "NODE_ENV: $NODE_ENV"
-              echo "MONGO_HOST: $MONGO_HOST"
+              echo "MONGO_HOST_QUOTE : $MONGO_HOST_QUOTE "
               echo "MONGO_PORT: $MONGO_PORT"
               echo "MONGO_DATABASE: $MONGO_DATABASE"
               echo "=== Starting Service ==="
@@ -42,7 +42,7 @@ spec:
           env:
             - name: NODE_ENV
               value: "production"
-            - name: MONGO_HOST
+            - name: MONGO_HOST_QUOTE 
               value: "quote-db"
             - name: MONGO_PORT
               value: "27017"

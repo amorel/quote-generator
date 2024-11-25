@@ -8,16 +8,16 @@ NC='\033[0m'
 # Configuration
 SERVICE_NAME="quote-service"
 NAMESPACE="quote-generator"
-VERSION="1.0.3"
-DOCKERFILE_PATH="services/quote-service/Dockerfile"
+VERSION="1.0.9"
 
 # Afficher la version actuelle
 echo -e "${GREEN}Version actuelle :${NC}"
 kubectl describe deployment ${SERVICE_NAME} -n ${NAMESPACE} | grep Image:
 
-# Construction de l'image
+# Construction de l'image avec docker-compose
 echo -e "\n${GREEN}Construction de l'image v${VERSION}...${NC}"
-if docker build -t ${SERVICE_NAME}:${VERSION} -f ${DOCKERFILE_PATH} .; then
+export TAG=${VERSION}
+if docker-compose build shared quote-service; then
     echo -e "${GREEN}✓ Image construite${NC}"
 else
     echo -e "${RED}✗ Échec de la construction${NC}"
@@ -26,12 +26,12 @@ fi
 
 # Chargement dans minikube
 echo -e "\n${GREEN}Chargement dans minikube...${NC}"
-minikube image load ${SERVICE_NAME}:${VERSION}
+minikube image load quote-generator-quote-service:${VERSION}
 
 # Mise à jour du déploiement
 echo -e "\n${GREEN}Mise à jour du déploiement...${NC}"
 kubectl set image deployment/${SERVICE_NAME} \
-    ${SERVICE_NAME}=${SERVICE_NAME}:${VERSION} \
+    ${SERVICE_NAME}=quote-generator-quote-service:${VERSION} \
     -n ${NAMESPACE}
 
 # Surveillance du déploiement
