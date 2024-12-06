@@ -1,14 +1,12 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: grafana
+  name: frontend-service
   namespace: quote-generator
 spec:
   selector:
-    app: grafana
+    app: frontend
   ports:
-    - name: http
-      port: 3100
-      targetPort: 3000
-      protocol: TCP
+    - port: 3006
+      targetPort: 3006
   type: ClusterIP

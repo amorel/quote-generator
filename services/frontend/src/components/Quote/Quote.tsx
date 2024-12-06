@@ -41,7 +41,7 @@ export const Quote = () => {
   }
 
   if (error) return <div>Error: {error}</div>;
-  if (!current) return <div>Loading...</div>;
+  if (!current || !current._id) return <div>Loading...</div>;
 
   return (
     <div className={styles.container}>

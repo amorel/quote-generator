@@ -35,6 +35,8 @@ export class QuoteRepository implements IQuoteRepository {
         { $sample: { size: filters.limit || 1 } },
       ]);
 
+      console.log("Quotes from DB:", quotes);
+
       return quotes.map(
         (quote) =>
           new Quote(

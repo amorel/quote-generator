@@ -1,7 +1,17 @@
 import { AuthError, AppError, handleError } from "../utils/errorHandler";
 import { tokenService } from "./tokenService";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+declare global {
+  interface Window {
+    APP_CONFIG: {
+      API_URL: string;
+    };
+  }
+}
+
+const API_URL = window.APP_CONFIG?.API_URL || 'http://localhost:3000';
+console.log("window.APP_CONFIG?.API_URL:", window.APP_CONFIG?.API_URL);
+console.log("API_URL:", API_URL);
 
 export interface RequestData {
   [key: string]: unknown;
@@ -38,13 +48,18 @@ class HttpService {
       const requestConfig: RequestInit = {
         ...config,
         headers,
+        credentials: "same-origin",
       };
 
       if (config.data) {
         requestConfig.body = JSON.stringify(config.data);
       }
 
+      console.log("Sending request to:", `${API_URL}${endpoint}`);
+
       const response = await fetch(`${API_URL}${endpoint}`, requestConfig);
+
+      console.log("Response:", response);
 
       if (!response.ok) {
         if (response.status === 401) {

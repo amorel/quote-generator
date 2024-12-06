@@ -40,6 +40,8 @@ export async function connectDB() {
     console.log(`NODE_ENV: ${process.env.NODE_ENV}\n`);
     console.log(`MONGO_PORT: ${process.env.MONGO_PORT}\n`);
     console.log(`MONGO_HOST_AUTH: ${process.env.MONGO_HOST_AUTH}\n`);
+    console.log(`MONGO_DATABASE_AUTH: ${process.env.MONGO_DATABASE_AUTH}\n`);
+    console.log(`MONGO_ROOT_USERNAME: ${process.env.MONGO_ROOT_USERNAME}\n`);
     console.log(
       "Config:",
       config[(process.env.NODE_ENV as EnvironmentKey) || "development"]

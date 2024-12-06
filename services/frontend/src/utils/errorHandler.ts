@@ -21,7 +21,7 @@ export const isAuthError = (error: unknown): boolean => {
   if (error instanceof Error) {
     return (
       error.message.includes("Session expirée") ||
-      error.message.includes("Non autorisé") ||
+      error.message.includes("Non autorisé (frontend)") ||
       error.message.includes("401") ||
       error.message.includes("Unauthorized")
     );

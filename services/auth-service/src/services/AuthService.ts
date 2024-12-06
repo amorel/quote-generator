@@ -33,7 +33,7 @@ export class AuthService {
 
     return {
       user: {
-        id: savedUser.getId(),
+        _id: savedUser.getId(),
         email: savedUser.getEmail(),
         role: savedUser.getRole(),
       },
@@ -62,7 +62,7 @@ export class AuthService {
 
       return {
         user: {
-          id: user.getId(),
+          _id: user.getId(),
           email: user.getEmail(),
           role: user.getRole(),
         },

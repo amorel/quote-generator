@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: quote-generator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: quote-generator-frontend
+          imagePullPolicy: Never
+          volumeMounts:
+            - name: frontend-config
+              mountPath: /app/services/frontend/public/config.js
+              subPath: config.js
+            - name: frontend-config
+              mountPath: /app/services/frontend/dist/config.js
+              subPath: config.js
+          ports:
+            - containerPort: 3006
+          env:
+            - name: NODE_ENV
+              value: "development"
+            - name: VITE_PORT
+              value: "3006"
+            - name: HOST
+              value: "0.0.0.0"
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3006
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3006
+            initialDelaySeconds: 45
+            periodSeconds: 15
+            timeoutSeconds: 3
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "200m"
+              memory: "256Mi"
+      volumes:
+        - name: frontend-config
+          configMap:
+            name: frontend-config

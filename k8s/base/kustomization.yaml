@@ -3,18 +3,20 @@ kind: Kustomization
 
 namespace: quote-generator
 
-# Liste des ressources
 resources:
   - namespace.yaml
+  - ingress.yaml
   - persistentvolumeclaims/mongodb-pvcs.yaml
   - services/api-gateway-service.yaml
   - services/auth-service.yaml
   - services/quote-service.yaml
   - services/user-service.yaml
-  - services/mongodb-services.yaml 
+  - services/mongodb-services.yaml
   - services/postgres-service.yaml
   - services/rabbitmq-service.yaml
   - services/grafana-service.yaml
+  - services/frontend-service.yaml
+  - deployments/frontend-deployment.yaml
   - deployments/api-gateway-deployment.yaml
   - deployments/auth-service-deployment.yaml
   - deployments/quote-service-deployment.yaml
@@ -27,76 +29,100 @@ resources:
   - config/prometheus-config.yaml
   - config/rabbitmq-config.yaml
 
-# Configuration des images
 images:
-- name: quote-generator-api-gateway
-  newName: quote-generator-api-gateway
-  newTag: "v1.0.11"
-- name: quote-generator-auth-service
-  newName: quote-generator-auth-service
-  newTag: "v1.0.11"
-- name: quote-generator-quote-service
-  newName: quote-generator-quote-service
-  newTag: "v1.0.11"
-- name: quote-generator-user-service
-  newName: quote-generator-user-service
-  newTag: "v1.0.11"
-- name: mongodb
-  newName: mongo
-  newTag: latest
-- name: postgres
-  newName: postgres
-  newTag: "15-alpine"
-- name: rabbitmq
-  newName: rabbitmq
-  newTag: "3-management"
-- name: grafana
-  newName: grafana/grafana
-  newTag: latest
-- name: prometheus
-  newName: prom/prometheus
-  newTag: latest
+  - name: quote-generator-api-gateway
+    newName: quote-generator-api-gateway
+    newTag: "v1.0.40"
+  - name: quote-generator-auth-service
+    newName: quote-generator-auth-service
+    newTag: "v1.0.40"
+  - name: quote-generator-quote-service
+    newName: quote-generator-quote-service
+    newTag: "v1.0.40"
+  - name: quote-generator-user-service
+    newName: quote-generator-user-service
+    newTag: "v1.0.40"
+  - name: quote-generator-frontend
+    newName: quote-generator-frontend
+    newTag: "v1.0.40"
+  - name: k8s.gcr.io/ingress-nginx/controller
+    newName: k8s.gcr.io/ingress-nginx/controller
+    newTag: "v1.8.1"
+  - name: mongodb
+    newName: mongo
+    newTag: latest
+  - name: postgres
+    newName: postgres
+    newTag: "15-alpine"
+  - name: rabbitmq
+    newName: rabbitmq
+    newTag: "3-management"
+  - name: grafana
+    newName: grafana/grafana
+    newTag: latest
+  - name: prometheus
+    newName: prom/prometheus
+    newTag: latest
 
 configMapGenerator:
-- name: app-config
-  behavior: create
-  envs:
-  - config/.env  
-  literals:    
-  - ConnectionStrings__DefaultConnection=Host=user-db;Port=5432;Database=userservice;Username=postgres;Password=postgres
+  - name: frontend-config
+    files:
+      - config.js=config/config.js
+  - name: app-config
+    behavior: create
+    envs:
+      - config/.env
+    literals:
+      - ConnectionStrings__DefaultConnection=Host=user-db;Port=5432;Database=userservice;Username=postgres;Password=postgres
+      - VITE_API_URL=http://localhost
+      - VITE_PORT=3006
+      - CORS_ORIGIN=http://localhost
+      - RabbitMQ__ConnectionString=amqp://admin:password@rabbitmq:5672
+      - RabbitMQ__Host=rabbitmq
+      - RabbitMQ__Username=admin
+      - RabbitMQ__Password=password
+      - RabbitMQ__QueueName=user.events.queue
 
-- name: grafana-config
-  behavior: create
-  files:
-  - grafana.ini=./config/grafana.ini
+  - name: grafana-config
+    behavior: create
+    files:
+      - grafana.ini=./config/grafana.ini
+    literals:
+      - GF_SERVER_ROOT_URL=http://localhost/grafana
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
 
-- name: grafana-dashboards-config
-  behavior: create
-  files:
-    - monitoring/generated/grafana/dashboards/services-overview.json
-    - monitoring/generated/grafana/dashboards/quotes-dashboard.json
-    - monitoring/generated/grafana/dashboards/api-gateway.json
-    - monitoring/generated/grafana/dashboards/system-metrics.json
+  - name: grafana-dashboards-config
+    behavior: create
+    files:
+      - generated/grafana/dashboards/services-overview.json
+      - generated/grafana/dashboards/quotes-dashboard.json
+      - generated/grafana/dashboards/api-gateway.json
+      - generated/grafana/dashboards/system-metrics.json
 
-- name: grafana-provisioning
-  behavior: create
-  files:
-    - prometheus.yaml=monitoring/generated/grafana/provisioning/datasources/prometheus.yaml
-    - default.yaml=monitoring/generated/grafana/provisioning/dashboards/default.yaml
+  - name: grafana-provisioning
+    behavior: create
+    files:
+      - prometheus.yaml=generated/grafana/provisioning/datasources/prometheus.yaml
+      - default.yaml=generated/grafana/provisioning/dashboards/default.yaml
+
+  - name: postgres-init
+    behavior: create
+    files:
+      - init.sql=generated/databases/postgres/init.sql
 
 secretGenerator:
-- name: app-secrets
-  behavior: create
-  literals:
-  - MONGO_ROOT_USERNAME=admin
-  - MONGO_ROOT_PASSWORD=password
-  - POSTGRES_PASSWORD=postgres
-  - JWT_SECRET=dev-secret
-  - RABBITMQ_DEFAULT_USER=admin
-  - RABBITMQ_DEFAULT_PASS=password
+  - name: app-secrets
+    behavior: create
+    literals:
+      - MONGO_ROOT_USERNAME=admin
+      - MONGO_ROOT_PASSWORD=password
+      - POSTGRES_PASSWORD=postgres
+      - JWT_SECRET=dev-secret
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=password
 
-- name: grafana-credentials
-  behavior: create
-  literals:
-  - admin_user=admin
-  - admin_password=admin
+  - name: grafana-credentials
+    behavior: create
+    literals:
+      - admin_user=admin
+      - admin_password=admin

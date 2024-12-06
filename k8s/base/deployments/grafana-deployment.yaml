@@ -25,6 +25,10 @@ spec:
               value: "admin"
             - name: GF_PATHS_PROVISIONING
               value: "/etc/grafana/provisioning"
+            - name: GF_SERVER_ROOT_URL
+              value: "http://localhost/grafana"
+            - name: GF_SERVER_SERVE_FROM_SUB_PATH
+              value: "true"
           resources:
             requests:
               cpu: "200m"

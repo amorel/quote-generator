@@ -31,7 +31,7 @@ export class QuoteController {
     try {
       console.log("⏱️ Incrementing random generations metric");
       quoteMetrics.randomGenerations.inc();
-      
+
       const filters = QuoteFilters.create({
         limit: request.query.limit,
         maxLength: request.query.maxLength,
@@ -46,7 +46,26 @@ export class QuoteController {
       );
       const quotes = await this.getRandomQuotesUseCase.execute(filters);
 
-      console.log("⏱️ Incrementing views metric for quotes:", quotes.map(q => q._id));
+      // Ajout d'une vérification
+      if (!quotes || quotes.length === 0) {
+        return _reply.status(404).send({
+          status: "error",
+          message: "No quotes found",
+        });
+      }
+
+      // Vérification de la présence des _id
+      quotes.forEach((quote) => {
+        if (!quote._id) {
+          console.error("Invalid quote format:", quote);
+          throw new Error("Quote missing _id");
+        }
+      });
+
+      console.log(
+        "⏱️ Incrementing views metric for quotes:",
+        quotes.map((q) => q._id)
+      );
       // Incrémenter les vues pour chaque citation
       quotes.forEach((quote) => {
         quoteMetrics.viewsTotal.inc({ quote_id: quote._id });
@@ -97,9 +116,9 @@ export class QuoteController {
       const isFavorite = request.method === "POST";
 
       if (isFavorite) {
-        quoteMetrics.favoritesTotal.inc({ 
+        quoteMetrics.favoritesTotal.inc({
           quote_id: quoteId,
-          user_id: userId
+          user_id: userId,
         });
       }
 

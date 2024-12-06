@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using RabbitMQ.Client.Exceptions;
 using System.Text;
 
 namespace UserService.Infrastructure.Messaging
@@ -86,33 +87,45 @@ namespace UserService.Infrastructure.Messaging
             {
                 _logger.LogInformation("Setting up queues and exchanges...");
 
-                // Exchange principal
+                // Déclare l'exchange - cela est idempotent, donc pas besoin de vérification
                 _channel.ExchangeDeclare(
                     exchange: "quote.events.exchange",
                     type: "topic",
                     durable: true
                 );
 
-                // Queue principale
-                _channel.QueueDeclare(
-                    queue: _options.Value.QueueName,
-                    durable: true,
-                    exclusive: false,
-                    autoDelete: false,
-                    arguments: new Dictionary<string, object>
-                    {
-                    { "x-message-ttl", 86400000 } // 24h TTL
-                    }
-                );
+                // Essaie de déclarer la file d'attente de manière passive d'abord
+                try
+                {
+                    _logger.LogInformation("Checking if queue {QueueName} exists...", _options.Value.QueueName);
+                    _channel.QueueDeclarePassive(_options.Value.QueueName);
+                    _logger.LogInformation("Queue {QueueName} already exists, skipping creation", _options.Value.QueueName);
+                }
+                catch (OperationInterruptedException)
+                {
+                    // La file n'existe pas, on la crée avec nos paramètres
+                    _logger.LogInformation("Creating queue {QueueName} with TTL...", _options.Value.QueueName);
+                    _channel.QueueDeclare(
+                        queue: _options.Value.QueueName,
+                        durable: true,
+                        exclusive: false,
+                        autoDelete: false,
+                        arguments: new Dictionary<string, object>
+                        {
+                            { "x-message-ttl", 86400000 } // 24h TTL
+                        }
+                    );
+                }
 
-                // Binding
+                // Les bindings sont idempotents, donc pas besoin de vérification
+                _logger.LogInformation("Setting up queue binding...");
                 _channel.QueueBind(
                     queue: _options.Value.QueueName,
                     exchange: "quote.events.exchange",
                     routingKey: "quote.#"
                 );
 
-                _logger.LogInformation("Queues and exchanges setup completed");
+                _logger.LogInformation("Queues and exchanges setup completed successfully");
             }
             catch (Exception ex)
             {

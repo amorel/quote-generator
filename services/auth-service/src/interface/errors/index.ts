@@ -7,7 +7,7 @@ export class AppError extends Error {
 }
 
 export class UnauthorizedError extends AppError {
-  constructor(message: string = "Non autorisé") {
+  constructor(message: string = "Non autorisé (auth-service)") {
     super(message, 401);
   }
 }

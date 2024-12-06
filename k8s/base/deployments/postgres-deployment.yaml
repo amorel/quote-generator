@@ -27,6 +27,9 @@ spec:
          value: userservice
        ports:
        - containerPort: 5432
+       volumeMounts:
+       - name: init-script
+         mountPath: /docker-entrypoint-initdb.d
        resources:
          requests:
            memory: "256Mi"
@@ -34,3 +37,7 @@ spec:
          limits:
            memory: "512Mi" 
            cpu: "200m"
+     volumes:
+     - name: init-script
+       configMap:
+         name: postgres-init

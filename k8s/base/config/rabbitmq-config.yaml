@@ -14,8 +14,8 @@ data:
     prometheus.tcp.port = 15692
     
     # Gestion de la mémoire
-    vm_memory_high_watermark.relative = 0.7
-    total_memory_available_override_value = 512MB
+    vm_memory_high_watermark.relative = 0.8
+    total_memory_available_override_value = 1024MB
     
     # Gestion du disque
-    disk_free_limit.absolute = 100MB
+    disk_free_limit.absolute = 50MB

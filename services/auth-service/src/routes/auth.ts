@@ -38,13 +38,28 @@ export default async function (fastify: FastifyInstance) {
     },
     async (request, reply) => {
       try {
-        const { email, password } = request.body;
-        const { user, token } = await authService.register(email, password);
+        console.log("📝 Register request received:", {
+          email: request.body?.email,
+          hasPassword: !!request.body?.password,
+          body: request.body, 
+        });
 
-        return reply.code(201).send({ token, user });
+        const { email, password } = request.body;
+        const result = await authService.register(email, password);
+
+        console.log("✅ Register result:", {
+          hasToken: !!result.token,
+          user: result.user,
+        });
+
+        return reply.code(201).send(result);
       } catch (error) {
+        console.error("❌ Register error:", error);
         const err = error as Error;
-        return reply.code(400).send({ error: err.message });
+        return reply.code(400).send({
+          error: err.message,
+          stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
+        });
       }
     }
   );

@@ -12,5 +12,5 @@ module.exports = {
   },
   moduleDirectories: ["node_modules", "src"],
   setupFilesAfterEnv: ["./src/jest.setup.ts"],
-  testTimeout: 30000,
+  testTimeout: 3000,
 };

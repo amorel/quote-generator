@@ -7,6 +7,7 @@ using UserService.Core.Interfaces.Services;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.OpenApi.Models;
 using Prometheus;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -75,12 +76,20 @@ catch (Exception ex)
 
 // Health checks
 builder.Services.AddHealthChecks()
-    .AddDbContextCheck<ApplicationDbContext>()
-    .AddNpgSql(connectionString, tags: new[] { "database" })
+    .AddDbContextCheck<ApplicationDbContext>(
+        name: "database-context",
+        failureStatus: HealthStatus.Degraded
+    )
+    .AddNpgSql(
+        connectionString,
+        name: "postgresql",
+        failureStatus: HealthStatus.Degraded,
+        tags: new[] { "database" }
+    )
     .AddRabbitMQ(
         rabbitConnectionString: $"amqp://{rabbitConfig.Username}:{rabbitConfig.Password}@{rabbitConfig.Host}",
         name: "rabbitmq",
-        failureStatus: HealthStatus.Degraded,  // Changed to Degraded instead of Unhealthy
+        failureStatus: HealthStatus.Degraded,
         tags: new[] { "messaging" }
     );
 
@@ -95,21 +104,27 @@ using (var scope = app.Services.CreateScope())
         var context = services.GetRequiredService<ApplicationDbContext>();
         var logger = services.GetRequiredService<ILogger<Program>>();
 
-        if (app.Environment.IsDevelopment())
+        // Vérifie si la base existe, la crée si elle n'existe pas
+        if (!await context.Database.CanConnectAsync())
         {
-            logger.LogInformation("Development environment detected - recreating database");
-            await context.Database.EnsureDeletedAsync();
+            logger.LogInformation("Database does not exist, creating...");
             await context.Database.EnsureCreatedAsync();
 
+            // Ajoute des données de test uniquement si la base vient d'être créée
             if (!await context.Users.AnyAsync())
             {
+                logger.LogInformation("Seeding initial data...");
                 await SeedTestData(context);
             }
         }
         else
         {
-            logger.LogInformation("Applying database migrations");
-            await context.Database.MigrateAsync();
+            logger.LogInformation("Database already exists, checking for migrations...");
+            if ((await context.Database.GetPendingMigrationsAsync()).Any())
+            {
+                logger.LogInformation("Applying pending migrations...");
+                await context.Database.MigrateAsync();
+            }
         }
     }
     catch (Exception ex)
@@ -136,7 +151,15 @@ app.UseHttpMetrics();
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
-app.MapHealthChecks("/health");
+app.MapHealthChecks("/health", new HealthCheckOptions
+{
+    ResultStatusCodes =
+    {
+        [HealthStatus.Healthy] = StatusCodes.Status200OK,
+        [HealthStatus.Degraded] = StatusCodes.Status200OK,
+        [HealthStatus.Unhealthy] = StatusCodes.Status503ServiceUnavailable
+    }
+});
 
 app.Run();
 

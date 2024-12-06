@@ -14,6 +14,12 @@ export const fetchRandomQuote = createAsyncThunk(
 
     do {
       newQuote = await quoteService.getRandomQuote();
+
+      if (!newQuote || !newQuote._id) {
+        console.error("Invalid quote received:", newQuote);
+        throw new Error("Invalid quote data received from server");
+      }
+
       attempts++;
       // Vérifie si la citation est déjà dans l'historique
       const isDuplicate = state.quote.history.some(
@@ -34,7 +40,7 @@ export const toggleFavorite = createAsyncThunk(
   async (quoteId: string, { getState }) => {
     const state = getState() as { quote: QuoteState };
     const isFavorite = state.quote.favorites.includes(quoteId);
-    
+
     try {
       await quoteService.toggleFavorite(quoteId, !isFavorite);
       return { quoteId, isFavorite: !isFavorite };

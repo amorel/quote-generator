@@ -1,4 +1,4 @@
-# Quote Generator - Microservices Architecture
+# DEMO - Quote Generator - Microservices Architecture
 
 ###### A modern quote generator built with microservices architecture, demonstrating best practices in web development. Built with Node.js, ASP.NET Core, TypeScript, React, Fastify, MongoDB, PostgreSQL, RabbitMQ, Docker, Prometheus and Grafana. Features include: Clean Architecture, DDD, Event-Driven Architecture, CQRS, automated testing, and comprehensive API documentation.
 

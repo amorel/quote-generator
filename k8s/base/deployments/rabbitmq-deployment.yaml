@@ -17,11 +17,11 @@ spec:
         image: rabbitmq:3-management
         resources:
           requests:
-            cpu: "100m"
-            memory: "256Mi"
-          limits:
-            cpu: "500m"
+            cpu: "200m"
             memory: "512Mi"
+          limits:
+            cpu: "1000m"
+            memory: "1Gi"
         ports:
         - name: amqp
           containerPort: 5672
@@ -42,35 +42,17 @@ spec:
               key: RABBITMQ_DEFAULT_PASS
         - name: RABBITMQ_ERLANG_COOKIE
           value: "secret-cookie"
-        - name: RABBITMQ_NODENAME
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.name
-        volumeMounts:
-        - name: config-volume
-          mountPath: /etc/rabbitmq/
-        - name: data-volume
-          mountPath: /var/lib/rabbitmq
-        livenessProbe:
-          exec:
-            command: ["rabbitmq-diagnostics", "ping"]
-          initialDelaySeconds: 60
-          periodSeconds: 60
-          timeoutSeconds: 30
         readinessProbe:
           exec:
             command: ["rabbitmq-diagnostics", "check_port_connectivity"]
-          initialDelaySeconds: 30
+          initialDelaySeconds: 120
           periodSeconds: 30
-          timeoutSeconds: 20
-      volumes:
-      - name: config-volume
-        configMap:
-          name: rabbitmq-config
-          items:
-          - key: rabbitmq.conf
-            path: rabbitmq.conf
-          - key: enabled_plugins
-            path: enabled_plugins
-      - name: data-volume
-        emptyDir: {}
+          timeoutSeconds: 30
+          failureThreshold: 5
+        livenessProbe:
+          exec:
+            command: ["rabbitmq-diagnostics", "ping"]
+          initialDelaySeconds: 180
+          periodSeconds: 60
+          timeoutSeconds: 45
+          failureThreshold: 5

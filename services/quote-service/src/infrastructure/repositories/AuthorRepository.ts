@@ -1,4 +1,3 @@
-// repositories/AuthorRepository.ts
 import { Author } from "../../domain/entities/Author";
 import { IAuthorRepository } from "../../domain/repositories/IAuthorRepository";
 import { AuthorModel } from "../persistence/models/AuthorModel";

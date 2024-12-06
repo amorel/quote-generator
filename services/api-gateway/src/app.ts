@@ -13,9 +13,26 @@ export async function build(): Promise<FastifyInstance> {
   const app = Fastify({ logger: true });
   const authService = new AuthService();
 
+  // Définir les origines autorisées
   await app.register(cors, {
-    origin: true,
+    origin: (origin, cb) => {
+      const allowedOrigins = [
+        "http://localhost:30006",
+        "http://localhost:3006",
+        "http://localhost",
+        "http://localhost:80",
+        "http://127.0.0.1",
+        "http://127.0.0.1:80",
+      ];
+      cb(null, allowedOrigins.includes(origin || ""));
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allowedHeaders: ["Content-Type", "Authorization", "Accept"],
+    exposedHeaders: ["Authorization"],
     credentials: true,
+    maxAge: 600, // Cache les réponses preflight pour 10 minutes
+    preflight: true,
+    preflightContinue: false, // Important pour éviter les redirections sur les requêtes OPTIONS
   });
 
   // Routes publiques qui ne nécessitent pas d'authentification
@@ -43,7 +60,7 @@ export async function build(): Promise<FastifyInstance> {
       const token = request.headers.authorization?.replace("Bearer ", "");
       if (!token) {
         gatewayMetrics.authFailures.inc({ reason: "missing_token" });
-        return reply.code(401).send({ error: "Non autorisé" });
+        return reply.code(401).send({ error: "Non autorisé (api-gateway)" });
       }
 
       try {
@@ -85,6 +102,7 @@ export async function build(): Promise<FastifyInstance> {
         console.log("🚀 Gateway received request:", {
           url: request.url,
           method: request.method,
+          origin: request.headers.origin,
           headers: request.headers,
         });
       }
@@ -97,6 +115,23 @@ export async function build(): Promise<FastifyInstance> {
     upstream: quoteServiceUrl,
     rewritePrefix: "/quotes",
     preHandler: async (request: FastifyRequest, reply: FastifyReply) => {
+      console.log("Quote proxy debug:", {
+        originalUrl: request.url,
+        upstream: quoteServiceUrl,
+        prefix: "/quotes",
+        fullUrl: `${quoteServiceUrl}${request.url.replace("/quotes", "")}`,
+      });
+      console.log("Quote Service Debug:", {
+        originalUrl: request.url,
+        targetUrl: `${quoteServiceUrl}${request.url}`,
+        headers: request.headers,
+        method: request.method,
+        env: {
+          QUOTE_SERVICE_URL: process.env.QUOTE_SERVICE_URL,
+          resolvedUrl: quoteServiceUrl,
+        },
+      });
+
       // Vérifie l'authentification pour les routes liées aux favoris
       if (request.url.includes("/favorite")) {
         console.log("❗ Headers envoyés au service quote:", request.headers);
