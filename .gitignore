@@ -91,3 +91,6 @@ services/user-service-old/
 
 # Build reports
 services/user-service/reports/
+
+# Ignorer les fichiers générés
+k8s/base/generated/
