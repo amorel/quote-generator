@@ -132,14 +132,16 @@ services:
         condition: service_healthy
 
   auth-db:
-    image: mongo:latest
+    build:
+      context: ./mongo-init
+      dockerfile: Dockerfile.auth-db
+    image: quote-generator-auth-db:latest
     ports:
       - "27018:27017"
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
     volumes:
-      - ./mongo-init/auth-db:/docker-entrypoint-initdb.d
       - auth-data:/data/db
     networks:
       - back-network
@@ -155,14 +157,16 @@ services:
       start_period: 30s
 
   quote-db:
-    image: mongo:latest
+    build:
+      context: ./mongo-init
+      dockerfile: Dockerfile.quote-db
+    image: quote-generator-quote-db:latest
     ports:
       - "27017:27017"
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
     volumes:
-      - ./mongo-init/quote-db:/docker-entrypoint-initdb.d
       - quote-data:/data/db
     networks:
       - back-network

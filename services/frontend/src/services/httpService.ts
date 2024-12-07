@@ -10,7 +10,6 @@ declare global {
 }
 
 const API_URL = window.APP_CONFIG?.API_URL || 'http://localhost:3000';
-console.log("window.APP_CONFIG?.API_URL:", window.APP_CONFIG?.API_URL);
 console.log("API_URL:", API_URL);
 
 export interface RequestData {
@@ -48,18 +47,14 @@ class HttpService {
       const requestConfig: RequestInit = {
         ...config,
         headers,
-        credentials: "same-origin",
+        credentials: "include",
       };
 
       if (config.data) {
         requestConfig.body = JSON.stringify(config.data);
       }
 
-      console.log("Sending request to:", `${API_URL}${endpoint}`);
-
       const response = await fetch(`${API_URL}${endpoint}`, requestConfig);
-
-      console.log("Response:", response);
 
       if (!response.ok) {
         if (response.status === 401) {

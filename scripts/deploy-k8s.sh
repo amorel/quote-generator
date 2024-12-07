@@ -31,6 +31,12 @@ for service in shared api-gateway auth-service quote-service user-service fronte
     echo "Chargement de quote-generator-$service:$TAG"
     minikube image load quote-generator-$service:$TAG &
 done
+
+# Chargement des images MongoDB
+echo "Chargement des images MongoDB..."
+minikube image load quote-generator-auth-db:latest &
+minikube image load quote-generator-quote-db:latest &
+
 # Attend que tous les chargements d'images soient terminés
 wait
 

@@ -8,7 +8,7 @@ NC='\033[0m'
 # Configuration
 SERVICE_NAME="frontend"
 NAMESPACE="quote-generator"
-VERSION="v1.0.40"
+VERSION="v1.1.5"
 
 # Afficher la version actuelle
 echo -e "${GREEN}Version actuelle :${NC}"

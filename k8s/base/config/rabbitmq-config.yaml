@@ -19,3 +19,7 @@ data:
     
     # Gestion du disque
     disk_free_limit.absolute = 50MB
+
+    # Configuration UI
+    management.path_prefix = /rabbitmq
+    management.cors.allow_origins.1 = *

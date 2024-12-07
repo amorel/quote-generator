@@ -7,6 +7,9 @@ resources:
   - namespace.yaml
   - ingress.yaml
   - persistentvolumeclaims/mongodb-pvcs.yaml
+  - persistentvolumeclaims/postgres-pvc.yaml
+  - persistentvolumeclaims/prometheus-pvc.yaml
+  - persistentvolumeclaims/grafana-pvc.yaml
   - services/api-gateway-service.yaml
   - services/auth-service.yaml
   - services/quote-service.yaml
@@ -16,6 +19,7 @@ resources:
   - services/rabbitmq-service.yaml
   - services/grafana-service.yaml
   - services/frontend-service.yaml
+  - services/prometheus-service.yaml
   - deployments/frontend-deployment.yaml
   - deployments/api-gateway-deployment.yaml
   - deployments/auth-service-deployment.yaml
@@ -26,31 +30,33 @@ resources:
   - deployments/rabbitmq-deployment.yaml
   - deployments/grafana-deployment.yaml
   - deployments/prometheus-deployment.yaml
-  - config/prometheus-config.yaml
   - config/rabbitmq-config.yaml
 
 images:
   - name: quote-generator-api-gateway
     newName: quote-generator-api-gateway
-    newTag: "v1.0.40"
+    newTag: "v1.1.5"
   - name: quote-generator-auth-service
     newName: quote-generator-auth-service
-    newTag: "v1.0.40"
+    newTag: "v1.1.5"
   - name: quote-generator-quote-service
     newName: quote-generator-quote-service
-    newTag: "v1.0.40"
+    newTag: "v1.1.5"
   - name: quote-generator-user-service
     newName: quote-generator-user-service
-    newTag: "v1.0.40"
+    newTag: "v1.1.5"
   - name: quote-generator-frontend
     newName: quote-generator-frontend
-    newTag: "v1.0.40"
+    newTag: "v1.1.5"
   - name: k8s.gcr.io/ingress-nginx/controller
     newName: k8s.gcr.io/ingress-nginx/controller
     newTag: "v1.8.1"
-  - name: mongodb
-    newName: mongo
-    newTag: latest
+  - name: quote-generator-auth-db
+    newName: quote-generator-auth-db
+    newTag: "latest"
+  - name: quote-generator-quote-db
+    newName: quote-generator-quote-db
+    newTag: "latest"
   - name: postgres
     newName: postgres
     newTag: "15-alpine"
@@ -126,3 +132,7 @@ secretGenerator:
     literals:
       - admin_user=admin
       - admin_password=admin
+
+  - name: prometheus-config
+    files:
+      - prometheus.yml=config/prometheus.yml

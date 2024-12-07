@@ -8,7 +8,56 @@ import promClient from "prom-client";
 const register = new promClient.Registry();
 
 export async function build(authService?: AuthService) {
-  const app = Fastify({ logger: true });
+  const app = Fastify({
+    logger: {
+      level: "debug",
+      transport: {
+        target: "pino-pretty",
+        options: {
+          translateTime: "HH:MM:ss Z",
+          ignore: "pid,hostname",
+        },
+      },
+    },
+  });
+
+  // Hook global pour logger toutes les requêtes
+  app.addHook("onRequest", async (request) => {
+    console.log("🔵 Requête entrante:", {
+      url: request.url,
+      method: request.method,
+      headers: {
+        ...request.headers,
+        authorization: request.headers.authorization ? "PRESENT" : "ABSENT",
+      },
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  // Hook pour logger toutes les réponses
+  app.addHook("onResponse", async (request, reply) => {
+    console.log("🟢 Réponse envoyée:", {
+      url: request.url,
+      method: request.method,
+      statusCode: reply.statusCode,
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  // Hook pour logger les erreurs
+  app.addHook("onError", async (request, reply, error) => {
+    console.error("🔴 Erreur détectée:", {
+      url: request.url,
+      method: request.method,
+      statusCode: reply.statusCode,
+      error: {
+        name: error.name,
+        message: error.message,
+        stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+      },
+      timestamp: new Date().toISOString(),
+    });
+  });
 
   // Route pour exposer les métriques
   app.get("/metrics", async (request, reply) => {

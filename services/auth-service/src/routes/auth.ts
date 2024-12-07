@@ -41,7 +41,7 @@ export default async function (fastify: FastifyInstance) {
         console.log("📝 Register request received:", {
           email: request.body?.email,
           hasPassword: !!request.body?.password,
-          body: request.body, 
+          body: request.body,
         });
 
         const { email, password } = request.body;
@@ -99,6 +99,7 @@ export default async function (fastify: FastifyInstance) {
       console.log("📝 Login request received:", {
         email: request.body.email,
         hasPassword: !!request.body.password,
+        headers: request.headers,
       });
 
       try {
@@ -112,7 +113,12 @@ export default async function (fastify: FastifyInstance) {
         return reply.code(401).send({
           error: err.message,
           details:
-            process.env.NODE_ENV === "development" ? err.stack : undefined,
+            process.env.NODE_ENV === "development"
+              ? {
+                  stack: err.stack,
+                  name: err.name,
+                }
+              : undefined,
         });
       }
     }
