@@ -6,6 +6,7 @@ namespace: quote-generator
 resources:
   - namespace.yaml
   - ingress.yaml
+  - rbac/prometheus-rbac.yaml
   - persistentvolumeclaims/mongodb-pvcs.yaml
   - persistentvolumeclaims/postgres-pvc.yaml
   - persistentvolumeclaims/prometheus-pvc.yaml
@@ -35,19 +36,19 @@ resources:
 images:
   - name: quote-generator-api-gateway
     newName: quote-generator-api-gateway
-    newTag: "v1.1.5"
+    newTag: "v1.1.7"
   - name: quote-generator-auth-service
     newName: quote-generator-auth-service
-    newTag: "v1.1.5"
+    newTag: "v1.1.7"
   - name: quote-generator-quote-service
     newName: quote-generator-quote-service
-    newTag: "v1.1.5"
+    newTag: "v1.1.7"
   - name: quote-generator-user-service
     newName: quote-generator-user-service
-    newTag: "v1.1.5"
+    newTag: "v1.1.7"
   - name: quote-generator-frontend
     newName: quote-generator-frontend
-    newTag: "v1.1.5"
+    newTag: "v1.1.7"
   - name: k8s.gcr.io/ingress-nginx/controller
     newName: k8s.gcr.io/ingress-nginx/controller
     newTag: "v1.8.1"
@@ -108,13 +109,17 @@ configMapGenerator:
   - name: grafana-provisioning
     behavior: create
     files:
-      - prometheus.yaml=generated/grafana/provisioning/datasources/prometheus.yaml
+      - prometheus.yml=config/prometheus.yml
       - default.yaml=generated/grafana/provisioning/dashboards/default.yaml
 
   - name: postgres-init
     behavior: create
     files:
       - init.sql=generated/databases/postgres/init.sql
+
+  - name: prometheus-config
+    files:
+      - prometheus.yml=config/prometheus.yml
 
 secretGenerator:
   - name: app-secrets
@@ -132,7 +137,3 @@ secretGenerator:
     literals:
       - admin_user=admin
       - admin_password=admin
-
-  - name: prometheus-config
-    files:
-      - prometheus.yml=config/prometheus.yml

@@ -3,10 +3,14 @@ kind: Service
 metadata:
   name: prometheus
   namespace: quote-generator
+  labels:
+    app: prometheus
 spec:
   selector:
     app: prometheus
   ports:
-    - port: 9090
+    - name: web
+      port: 9090
       targetPort: 9090
+      protocol: TCP
   type: ClusterIP

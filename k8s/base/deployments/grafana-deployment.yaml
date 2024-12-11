@@ -64,8 +64,8 @@ spec:
           configMap:
             name: grafana-provisioning
             items:
-              - key: prometheus.yaml
-                path: prometheus.yaml
+              - key: prometheus.yml
+                path: prometheus.yml
         - name: grafana-provisioning-dashboards
           configMap:
             name: grafana-provisioning

@@ -32,7 +32,7 @@ const getMonitoringConfig = (): MonitoringConfig => {
   // Configuration commune
   const config = {
     rabbitmq: {
-      url: `${baseUrl}${isKubernetes ? "/rabbitmq/" : ":15672"}`, // Notez le slash ajouté
+      url: `${baseUrl}${isKubernetes ? "/rabbitmq/" : ":15672"}`,
       k8sPath: "/rabbitmq/",
       credentials: {
         username: import.meta.env.VITE_RABBITMQ_USERNAME || "admin",
@@ -48,8 +48,8 @@ const getMonitoringConfig = (): MonitoringConfig => {
       },
     },
     prometheus: {
-      url: `${baseUrl}${isKubernetes ? "/prometheus/" : ":9090"}`, // Notez le slash ajouté
-      k8sPath: "/prometheus/",
+      url: `${baseUrl}${isKubernetes ? "/prometheus/query" : ":9090"}`,
+      k8sPath: "/prometheus/query",
       credentials: {
         username: "-",
         password: "-",

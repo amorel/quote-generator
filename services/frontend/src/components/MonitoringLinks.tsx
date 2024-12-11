@@ -32,19 +32,22 @@ const MonitoringLinks: React.FC = () => {
                 ? `\n%cK8s Path: %c${service.k8sPath}` 
                 : '';
 
-            console.log(
-                `%c${serviceTitle}:
-%cURL: %c${service.url}${k8sInfo}
-%cCredentials: %cusername: ${service.credentials.username} %c| %cpassword: ${service.credentials.password}
-──────────────────────────────────────`,
-                styles.serviceName,
-                styles.serviceName,
-                styles.url,
-                styles.serviceName,
-                styles.credentials,
-                styles.separator,
-                styles.credentials
-            );
+                console.log(
+                    `%c${serviceTitle}:\n%cURL: %c${service.url}${k8sInfo}\n%cCredentials: %cusername: ${service.credentials.username} %c| %cpassword: ${service.credentials.password}\n──────────────────────────────────────`,
+                    styles.serviceName,  // Pour le titre du service
+                    styles.serviceName,  // Pour "URL:"
+                    styles.url,         // Pour l'URL elle-même
+                    styles.serviceName, // Pour "Credentials:"
+                    styles.credentials, // Pour le username
+                    styles.separator,   // Pour le séparateur "|"
+                    styles.credentials  // Pour le password
+                );
+
+            if (!isKubernetes) {
+                console.log("Prometheus est accessible en utilisant cette commande:")
+                console.log("kubectl port-forward -n quote-generator $(kubectl get pods -n quote-generator -l app=prometheus -o name) 9090:9090")
+                console.log("http://localhost:9090")
+            }
         });
 
         if (!isKubernetes) {

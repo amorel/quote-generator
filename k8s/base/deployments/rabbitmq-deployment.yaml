@@ -45,14 +45,14 @@ spec:
         readinessProbe:
           exec:
             command: ["rabbitmq-diagnostics", "check_port_connectivity"]
-          initialDelaySeconds: 120
-          periodSeconds: 30
-          timeoutSeconds: 30
-          failureThreshold: 5
+          initialDelaySeconds: 180  
+          periodSeconds: 60        
+          timeoutSeconds: 45
+          failureThreshold: 10     
         livenessProbe:
           exec:
             command: ["rabbitmq-diagnostics", "ping"]
-          initialDelaySeconds: 180
-          periodSeconds: 60
-          timeoutSeconds: 45
-          failureThreshold: 5
+          initialDelaySeconds: 240  
+          periodSeconds: 90       
+          timeoutSeconds: 60       
+          failureThreshold: 8     
