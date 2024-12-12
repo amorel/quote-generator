@@ -14,46 +14,55 @@ alerting:
 rule_files: []
 
 scrape_configs:
+  # Auto-découverte de Prometheus lui-même
   - job_name: 'prometheus'
+    metrics_path: '/prometheus/metrics'
     static_configs:
       - targets: ['localhost:9090']
 
+  # Services avec configuration statique
   - job_name: 'api-gateway'
     metrics_path: '/metrics'
     static_configs:
-      - targets: ['api-gateway:3000']
+      - targets: ['api-gateway-service.quote-generator.svc.cluster.local:3000']
 
   - job_name: 'auth-service'
     metrics_path: '/metrics'
     static_configs:
-      - targets: ['auth-service:3001']
+      - targets: ['auth-service.quote-generator.svc.cluster.local:3001']
 
   - job_name: 'quote-service'
     metrics_path: '/metrics'
     static_configs:
-      - targets: ['quote-service:3002']
+      - targets: ['quote-service.quote-generator.svc.cluster.local:3002']
 
   - job_name: 'user-service'
     metrics_path: '/metrics'
     static_configs:
-      - targets: ['user-service:3003']
+      - targets: ['user-service.quote-generator.svc.cluster.local:3003']
 
   - job_name: 'rabbitmq'
-    static_configs:
-      - targets: ['rabbitmq:15692']
     metrics_path: '/metrics'
-
-  - job_name: 'mongodb'
     static_configs:
-      - targets: ['mongodb-exporter:9216']
+      - targets: ['rabbitmq.quote-generator.svc.cluster.local:15692']
+
+  - job_name: 'mongodb-exporter'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['mongodb-exporter.quote-generator.svc.cluster.local:9216']
 
   - job_name: 'node-exporter'
+    metrics_path: '/metrics'
     static_configs:
-      - targets: ['node-exporter:9100']
+      - targets: ['node-exporter.quote-generator.svc.cluster.local:9100']
 
+  # Configuration de découverte Kubernetes
   - job_name: 'kubernetes-pods'
     kubernetes_sd_configs:
       - role: pod
+    scheme: http
+    tls_config:
+      insecure_skip_verify: true
     relabel_configs:
       - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
         action: keep
@@ -75,8 +84,11 @@ scrape_configs:
         target_label: kubernetes_pod_name
 
   - job_name: 'kubernetes-services'
+    scheme: http
     kubernetes_sd_configs:
       - role: service
+    tls_config:
+      insecure_skip_verify: true
     relabel_configs:
       - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape]
         action: keep
@@ -87,9 +99,11 @@ scrape_configs:
         regex: (.+)
       - source_labels: [__address__, __meta_kubernetes_service_annotation_prometheus_io_port]
         action: replace
-        regex: ([^:]+)(?::\d+)?;(\d+)
-        replacement: $1:$2
         target_label: __address__
+        regex: (.+)(?::\d+);(\d+)
+        replacement: $1:$2
+      - action: labelmap
+        regex: __meta_kubernetes_service_label_(.+)
       - source_labels: [__meta_kubernetes_namespace]
         action: replace
         target_label: kubernetes_namespace

@@ -6,7 +6,7 @@ namespace: quote-generator
 resources:
   - namespace.yaml
   - ingress.yaml
-  - rbac/prometheus-rbac.yaml
+  - rbac/monitoring-rbac.yaml
   - persistentvolumeclaims/mongodb-pvcs.yaml
   - persistentvolumeclaims/postgres-pvc.yaml
   - persistentvolumeclaims/prometheus-pvc.yaml

@@ -1,0 +1,32 @@
+groups:
+  - name: service.rules
+    rules:
+      # Alerte si un service est down
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service {{ $labels.job }} est down"
+          description: "Le service {{ $labels.job }} est inaccessible depuis 1 minute"
+
+      # Alerte si utilisation CPU élevée
+      - alert: HighCPUUsage
+        expr: rate(process_cpu_seconds_total[5m]) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Utilisation CPU élevée sur {{ $labels.job }}"
+          description: "{{ $labels.job }} utilise plus de 80% du CPU depuis 5 minutes"
+
+      # Alerte si mémoire élevée
+      - alert: HighMemoryUsage
+        expr: process_resident_memory_bytes / process_virtual_memory_bytes * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Utilisation mémoire élevée sur {{ $labels.job }}"
+          description: "{{ $labels.job }} utilise plus de 80% de sa mémoire depuis 5 minutes"

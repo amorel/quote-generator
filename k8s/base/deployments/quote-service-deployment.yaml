@@ -12,11 +12,15 @@ spec:
     metadata:
       labels:
         app: quote-service
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "3002"
+        prometheus.io/path: "/metrics"
     spec:
       initContainers:
         - name: wait-for-dependencies
           image: busybox
-          command: ['sh', '-c']
+          command: ["sh", "-c"]
           args:
             - |
               until nc -z quote-db 27017 && nc -z rabbitmq 5672; do 
@@ -42,7 +46,7 @@ spec:
           env:
             - name: NODE_ENV
               value: "production"
-            - name: MONGO_HOST_QUOTE 
+            - name: MONGO_HOST_QUOTE
               value: "quote-db"
             - name: MONGO_PORT
               value: "27017"

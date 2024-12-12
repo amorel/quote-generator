@@ -11,48 +11,52 @@ spec:
     metadata:
       labels:
         app: rabbitmq
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "15692"
+        prometheus.io/path: "/metrics"
     spec:
       containers:
-      - name: rabbitmq
-        image: rabbitmq:3-management
-        resources:
-          requests:
-            cpu: "200m"
-            memory: "512Mi"
-          limits:
-            cpu: "1000m"
-            memory: "1Gi"
-        ports:
-        - name: amqp
-          containerPort: 5672
-        - name: management
-          containerPort: 15672
-        - name: prometheus
-          containerPort: 15692
-        env:
-        - name: RABBITMQ_DEFAULT_USER
-          valueFrom:
-            secretKeyRef:
-              name: app-secrets
-              key: RABBITMQ_DEFAULT_USER
-        - name: RABBITMQ_DEFAULT_PASS
-          valueFrom:
-            secretKeyRef:
-              name: app-secrets
-              key: RABBITMQ_DEFAULT_PASS
-        - name: RABBITMQ_ERLANG_COOKIE
-          value: "secret-cookie"
-        readinessProbe:
-          exec:
-            command: ["rabbitmq-diagnostics", "check_port_connectivity"]
-          initialDelaySeconds: 180  
-          periodSeconds: 60        
-          timeoutSeconds: 45
-          failureThreshold: 10     
-        livenessProbe:
-          exec:
-            command: ["rabbitmq-diagnostics", "ping"]
-          initialDelaySeconds: 240  
-          periodSeconds: 90       
-          timeoutSeconds: 60       
-          failureThreshold: 8     
+        - name: rabbitmq
+          image: rabbitmq:3-management
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "512Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+          ports:
+            - name: amqp
+              containerPort: 5672
+            - name: management
+              containerPort: 15672
+            - name: prometheus
+              containerPort: 15692
+          env:
+            - name: RABBITMQ_DEFAULT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: RABBITMQ_DEFAULT_USER
+            - name: RABBITMQ_DEFAULT_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: RABBITMQ_DEFAULT_PASS
+            - name: RABBITMQ_ERLANG_COOKIE
+              value: "secret-cookie"
+          readinessProbe:
+            exec:
+              command: ["rabbitmq-diagnostics", "check_port_connectivity"]
+            initialDelaySeconds: 180
+            periodSeconds: 60
+            timeoutSeconds: 45
+            failureThreshold: 10
+          livenessProbe:
+            exec:
+              command: ["rabbitmq-diagnostics", "ping"]
+            initialDelaySeconds: 240
+            periodSeconds: 90
+            timeoutSeconds: 60
+            failureThreshold: 8

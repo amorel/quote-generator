@@ -3,6 +3,10 @@ kind: Service
 metadata:
   name: api-gateway-service
   namespace: quote-generator
+  annotations:         
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "3000"
+    prometheus.io/path: "/metrics"
 spec:
   type: NodePort
   ports:

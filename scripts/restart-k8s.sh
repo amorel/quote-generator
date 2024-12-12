@@ -40,7 +40,7 @@ deployments=(api-gateway auth-service quote-service user-service frontend grafan
 
 for deployment in "${deployments[@]}"; do
     echo -e "${YELLOW}Attente du déploiement $deployment...${NC}"
-    if ! kubectl wait deployment/$deployment --for=condition=Available=True --timeout=300s -n quote-generator; then
+    if ! kubectl wait deployment/$deployment --for=condition=Available=True --timeout=30s -n quote-generator; then
         echo -e "${RED}Timeout pour le déploiement $deployment${NC}"
         debug_deployment $deployment
     fi
